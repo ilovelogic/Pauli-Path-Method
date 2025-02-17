@@ -198,13 +198,14 @@ def main():
     print()
 
     # testing layer propagation
-    print("R_iterations for prior layer IRIRRRRI, new weight = 6")
+    print("R_iterations for prior layer IRIIR, new weight = 3")
     #R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int)
-    R_iterations("IRIIR", 2, 3, 5, [(1,2),(3,4)])
+    R_iterations("IRI", 1, 1, 3, [(1,2)])
     for lil_list in layers:
+        str = ''
         for c in lil_list:
-            print(c)
-        print()
+            str += c
+        print(str)
 
 if __name__ == "__main__":
     main()
