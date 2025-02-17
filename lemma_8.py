@@ -154,7 +154,7 @@ def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int)
     if (len(pos_to_fill) == num_RRs): # no more wiggle room, we must fill all remaining gate inputs with RR     
         cur_pos = pos_to_fill.pop(0)
         rr_start = r_start+2*(3**len(pos_to_fill))
-        rr_end = r_end+3*(3**len(pos_to_fill))
+        rr_end = r_start+3*(3**len(pos_to_fill))
         append_to_layers(cur_pos, ('R','R'), rr_start, rr_end) # copy of layers with 'RR' added to all strs
         add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, rr_end) # one less RR to use,
         # next call will handle adding the next RR
@@ -167,17 +167,18 @@ def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int)
         #       r_end = r_start + 1*3^{len(pos_to_fill)-1} // not inclusive
         # base 3 string, length len(pos_to_fill)?
         cur_pos = pos_to_fill.pop(0)
+
         ir_start = r_start
-        ir_end = r_end+3**len(pos_to_fill)
+        ir_end = r_start+3**len(pos_to_fill)
         append_to_layers(cur_pos, ('I','R'), ir_start, ir_end) # copy of layers with 'IR' added to all strs
 
         ri_start = r_start+3**len(pos_to_fill)
-        ri_end = r_end+2*(3**len(pos_to_fill))
+        ri_end = r_start+2*(3**len(pos_to_fill))
         append_to_layers(cur_pos, ('R','I'), ri_start, ri_end) # copy of layers with 'RI' added to all strs
 
         if (num_RRs != 0):
             rr_start = r_start+2*(3**len(pos_to_fill))
-            rr_end = r_end+3*(3**len(pos_to_fill))
+            rr_end = r_start+3*(3**len(pos_to_fill))
             append_to_layers(cur_pos, ('R','R'), rr_start, rr_end) # copy of layers with 'RR' added to all strs
             add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, rr_end) 
 
@@ -199,7 +200,7 @@ def main():
     # testing layer propagation
     print("R_iterations for prior layer IRIRRRRI, new weight = 6")
     #R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int)
-    R_iterations("IRIRRRRI", 5, 6, 8, [(1,2),(4,5), (6,7)])
+    R_iterations("IRIIR", 2, 3, 5, [(1,2),(3,4)])
     for lil_list in layers:
         for c in lil_list:
             print(c)
