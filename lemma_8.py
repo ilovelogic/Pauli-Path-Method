@@ -1,5 +1,25 @@
 from typing import List
 
+def list_allocs(num_p:int, num_w:int):
+    list_alloc = [[0 for _ in range(num_w+1)] for _ in range(num_p+1)]
+
+    # base cases
+    for w in range(0, num_w):
+        list_alloc[0][w] = 0 # no gates, no way to have a layer
+
+    for p in range(0, num_p): # no weight, only one way to have a layer
+        list_alloc[p][0] = 1
+    
+    for i in range(1, num_p+1):
+        for j in range(1,num_w+1):   #     IR                     RI                     RR
+            if (j > i):
+                list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1] + list_alloc[i-1][j-2]
+            else:
+                list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1]
+            print(f"list_alloc[{i}][{j}] = {list_alloc[i][j]}")
+        
+    return list_alloc
+
 
 def get_hamming_weights(d:int, l:int, n:int): # d = depth, l = upper bound on weight, n = number of qubits
     
@@ -99,7 +119,6 @@ It takes five arguments and uses helper function add_gate_input to build a list 
 Args:
     prior_layer (str) : the sting representing the prior layer of the circuit,
     with each character representing a qubit
-    prior_weight (int) : the Hamming weight of the prior layer
     this_weight (int) : the Hamming weight of the new layer
     n (int) : the number of qubits
     pos_list (List[tuple]) : each tuple contains the indices of the two inputs to one of the gates
@@ -108,7 +127,7 @@ Args:
 Returns:
     List[str]: a list of all valid input/output combos for this layer, with each layer represented as a string
 """
-def R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int, pos_list:List[tuple]):
+def R_iterations(prior_layer:str, this_weight:int, n:int, pos_list:List[tuple]):
 
     if (len(pos_list) > (n/2)):
         print("Invalid number of gates")
@@ -187,25 +206,26 @@ def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int)
         return
 
 def main():
+    list_alloc = list_allocs(7,8)
     # testing weight enumeration
-    all_weight_combos = get_hamming_weights(3, 6, 4)
-    print()
-    print("Weight combinations for d=3, l=6, n=4:")
-    for sublist in all_weight_combos:
-        for element in sublist:
-            print(element, end=", ")
-        print() # move to the next line after each sublist
-    print()
+    #all_weight_combos = get_hamming_weights(3, 6, 4)
+    #print()
+    #print("Weight combinations for d=3, l=6, n=4:")
+    #for sublist in all_weight_combos:
+        #for element in sublist:
+            #print(element, end=", ")
+        #print() # move to the next line after each sublist
+    #print()
 
     # testing layer propagation
-    print("R_iterations for prior layer IRIIR, new weight = 3")
-    #R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int)
-    R_iterations("IRI", 1, 1, 3, [(1,2)])
-    for lil_list in layers:
-        str = ''
-        for c in lil_list:
-            str += c
-        print(str)
+    #print("R_iterations for prior layer IRIIR, new weight = 3")
+    #R_iterations(prior_layer:str, this_weight:int, n:int)
+    #R_iterations("IRIRI", 3, 5, [(0,1),(2,3)])
+    #for lil_list in layers:
+        #str = ''
+        #for c in lil_list:
+            #str += c
+        #print(str)
 
 if __name__ == "__main__":
     main()
