@@ -16,7 +16,7 @@ def list_allocs(num_p:int, num_w:int):
                 list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1] + list_alloc[i-1][j-2]
             else:
                 list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1]
-            print(f"list_alloc[{i}][{j}] = {list_alloc[i][j]}")
+            #print(f"list_alloc[{i}][{j}] = {list_alloc[i][j]}")
         
     return list_alloc
 
@@ -144,7 +144,9 @@ def R_iterations(prior_layer:str, this_weight:int, n:int, pos_list:List[tuple]):
             # enumerate over the index combinations
             pos_to_fill.append((ind1,ind2))
 
-    for i in range(3**(len(pos_to_fill))): # 3^{len(pos_to_fill)} possible selections of IR, RI, and RR
+    list_alloc = list_allocs(len(pos_to_fill),this_weight)
+
+    for i in range(list_alloc[len(pos_to_fill)][this_weight]): # 3^{len(pos_to_fill)} possible selections of IR, RI, and RR
         layers.append(list(layer_str)) # copies layer_str
 
     num_RRs = this_weight - len(pos_to_fill) # number of RRs we can use to fill in the layer
@@ -154,7 +156,7 @@ def R_iterations(prior_layer:str, this_weight:int, n:int, pos_list:List[tuple]):
         print("Could not satisfy user input with a valid layer")
         # no way to make a valid layer, given the weights
     else:
-        add_gate_input(num_RRs, pos_to_fill, 0, 3**(len(pos_to_fill)))
+        add_gate_input(num_RRs, pos_to_fill, 0, list_alloc)
 
 def append_to_layers(indices:tuple, strs:tuple, r_start:int, r_end:int):
     ind1, ind2 = indices
@@ -165,17 +167,17 @@ def append_to_layers(indices:tuple, strs:tuple, r_start:int, r_end:int):
 
 # make layers a global variable
 
-def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int):
+def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, list_alloc:List):
 
     if (len(pos_to_fill) == 0):
         return
     
     if (len(pos_to_fill) == num_RRs): # no more wiggle room, we must fill all remaining gate inputs with RR     
         cur_pos = pos_to_fill.pop(0)
-        rr_start = r_start+2*(3**len(pos_to_fill))
-        rr_end = r_start+3*(3**len(pos_to_fill))
+        rr_start = r_start
+        rr_end = r_start+list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
         append_to_layers(cur_pos, ('R','R'), rr_start, rr_end) # copy of layers with 'RR' added to all strs
-        add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, rr_end) # one less RR to use,
+        add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, list_alloc) # one less RR to use,
         # next call will handle adding the next RR
         return
 
@@ -188,21 +190,21 @@ def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int)
         cur_pos = pos_to_fill.pop(0)
 
         ir_start = r_start
-        ir_end = r_start+3**len(pos_to_fill)
+        ir_end = r_start + list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
         append_to_layers(cur_pos, ('I','R'), ir_start, ir_end) # copy of layers with 'IR' added to all strs
 
-        ri_start = r_start+3**len(pos_to_fill)
-        ri_end = r_start+2*(3**len(pos_to_fill))
+        ri_start = r_start + list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
+        ri_end = r_start + 2*list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
         append_to_layers(cur_pos, ('R','I'), ri_start, ri_end) # copy of layers with 'RI' added to all strs
 
         if (num_RRs != 0):
-            rr_start = r_start+2*(3**len(pos_to_fill))
-            rr_end = r_start+3*(3**len(pos_to_fill))
+            rr_start = r_start + 2*list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
+            rr_end = r_start+list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
             append_to_layers(cur_pos, ('R','R'), rr_start, rr_end) # copy of layers with 'RR' added to all strs
-            add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, rr_end) 
+            add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, list_alloc) 
 
-        add_gate_input(num_RRs, list(pos_to_fill), ir_start, ir_end) 
-        add_gate_input(num_RRs, list(pos_to_fill), ri_start, ri_end) 
+        add_gate_input(num_RRs, list(pos_to_fill), ir_start, list_alloc) 
+        add_gate_input(num_RRs, list(pos_to_fill), ri_start, list_alloc) 
         return
 
 def main():
@@ -218,14 +220,14 @@ def main():
     #print()
 
     # testing layer propagation
-    #print("R_iterations for prior layer IRIIR, new weight = 3")
-    #R_iterations(prior_layer:str, this_weight:int, n:int)
-    #R_iterations("IRIRI", 3, 5, [(0,1),(2,3)])
-    #for lil_list in layers:
-        #str = ''
-        #for c in lil_list:
-            #str += c
-        #print(str)
+    print("R_iterations for prior layer IRIIRIR, new weight = 4")
+    #R_iterations(prior_layer:str, this_weight:int, n:int, pos_list:List)
+    R_iterations("IRIIRIR", 4, 7, [(0,1),(3,4),(5,6)])
+    for lil_list in layers:
+        str = ''
+        for c in lil_list:
+            str += c
+        print(str)
 
 if __name__ == "__main__":
     main()
