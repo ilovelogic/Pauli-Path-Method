@@ -1,9 +1,11 @@
-from typing import List
+from collections import defaultdict
+import copy
+from typing import DefaultDict, List
 from pauli_operator import PauliOperator
 
 class LayerOperators:
 
-    def __init__(self, pauli_ops:List[List[PauliOperator]]=None,gate_pos:List[tuple]=None, backward:int=-1):
+    def __init__(self, pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None,gate_pos:List[tuple]=None, backward:int=-1):
         """
         Initiate the forward and backward lists of operators
         for propagating forward and backward at a given depth of the circuit
@@ -20,8 +22,8 @@ class LayerOperators:
             layer_ops = []
 
             # builds list of all PauliOperators at this depth of the circuit
-            # turns 2D list into a 1D list
-            for sibs in pauli_ops:
+            # turns DefaultDict into a 1D list
+            for sibs in pauli_ops.values():
                 for i in range(len(sibs)):
                     layer_ops.append(sibs[i])
 
@@ -58,7 +60,7 @@ class LayerOperators:
         self.carry_over_qubits = []
 
         for i in range(len(layers)): # for each valid configuration of our layer
-            self.carry_over_qubits.append(layers[i].operator)
+            self.carry_over_qubits.append(copy.deepcopy(layers[i].operator))
             for ind1, ind2 in self.gate_pos: # for each gate between this layer and its neighboring layer
                 if (layers[i].operator[ind1] == 'R' or layers[i].operator[ind2] == 'R'): # non-identity output
                     self.pos_to_fill[i].append((ind1,ind2)) # adds gate to the list of positions 
@@ -69,18 +71,15 @@ class LayerOperators:
 
 
     def find_sibs(self,unsorted_pauli_ops:List[PauliOperator]):
-        sorted_pauli_ops = {} # hash map of PauliOperators
+        sorted_pauli_ops = defaultdict(list) # hash map of PauliOperators
         # where each key maps to a list of all PauliOperators 
-        # with a particular set of non-identity input gate positions
+        # with a particular set of non-gate qubits and non-identity input gate positions
 
         for i in range(len(unsorted_pauli_ops)): # for each PauliOperator
             identifier = (tuple(self.pos_to_fill[i]), tuple(self.carry_over_qubits[i]))
-            # ensures the hash map key exists before appending
-            if identifier not in self.pos_to_fill:
-                sorted_pauli_ops[identifier] = []  # Initialize an empty list for the key
-
             # appends new items to the list associated with the identifier
-            sorted_pauli_ops[identifier].append(unsorted_pauli_ops[i])
+            sorted_pauli_ops[identifier].append(unsorted_pauli_ops[i]) # defaultdict handles new keys
+            # by initializing a new list for that key before trying to append43
         
         if (self.backward):
             self.backward_sibs_list = sorted_pauli_ops
