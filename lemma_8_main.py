@@ -1,4 +1,5 @@
 from typing import List
+from pauli_operator import PathLayer
 
 def list_allocs(num_p:int, num_w:int):
     list_alloc = [[0 for _ in range(num_w+1)] for _ in range(num_p+1)]
@@ -16,7 +17,7 @@ def list_allocs(num_p:int, num_w:int):
                 list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1] + list_alloc[i-1][j-2]
             else:
                 list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1]
-            #print(f"list_alloc[{i}][{j}] = {list_alloc[i][j]}")
+            print(f"list_alloc[{i}][{j}] = {list_alloc[i][j]}")
         
     return list_alloc
 
@@ -208,6 +209,9 @@ def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, list_alloc
         return
 
 def main():
+
+    
+    test_layer = PathLayer(['I','R','I','R'], ['R','I','R','I'],3, [(0,1),(2,3)])
     list_alloc = list_allocs(7,8)
     # testing weight enumeration
     #all_weight_combos = get_hamming_weights(3, 6, 4)

@@ -4,16 +4,16 @@ import copy
 
 class PauliOperator:
 
-    def __init__(self, operator:List[str], prev_ops:List[PauliOperator] = None, next_ops:List[PauliOperator] = None):
+    def __init__(self, operator:List[str], backward_ops:List[PauliOperator] = None, forward_ops:List[PauliOperator] = None):
         """
         Initialize.
         """
                   
         self.operator = operator
-        self.prev_ops = prev_ops
-        self.next_ops = next_ops
+        self.backward_ops = backward_ops
+        self.forward_ops = forward_ops
 
-    def weight_to_layers(self, next_weight:int, pos_to_fill:List[tuple], backward:int):
+    def weight_to_operators(self, next_weight:int, pos_to_fill:List[tuple], backward:int):
         next_gate_weight = next_weight
 
         unordered_pos_to_fill = {pos for gate_pos in pos_to_fill for pos in gate_pos}
@@ -32,17 +32,17 @@ class PauliOperator:
 
         num_RRs = next_gate_weight - len(pos_to_fill) # number of RRs we can use to fill in the layer
 
-        # distingush between rrs and irs
+        # no way to make a valid layer, given the weights
         if num_RRs < 0 or num_RRs > len(pos_to_fill):
-            print("Could not satisfy user input with a valid layer")
-            # no way to make a valid layer, given the weights
+            print("Can't make it work, baby!")
+            
         else:
             if (backward):
-                self.prev_ops = sibs
-                self.add_gate_input(self.prev_ops, num_RRs, pos_to_fill, 0)
+                self.backward_ops = sibs
+                self.add_gate_input(self.backward_ops, num_RRs, pos_to_fill, 0)
             else:
-                self.next_ops = sibs
-                self.add_gate_input(self.next_ops, num_RRs, pos_to_fill, 0)
+                self.forward_ops = sibs
+                self.add_gate_input(self.forward_ops, num_RRs, pos_to_fill, 0)
 
 
     """
