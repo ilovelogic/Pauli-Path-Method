@@ -42,86 +42,85 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
 **Overview**
 
 **Initialization**
-   Circuit(num_qubits:int, depth:int, l:int, gate_pos:List[List[tuple]])
+   '''Circuit(num_qubits:int, depth:int, l:int, gate_pos:List[List[tuple]])'''
 
 **Attributes**
-   num_layers
-   gate_pos
-   max_weight
-   weight_combos
-   pauli_paths
+   - num_layers
+   - gate_pos
+   - max_weight
+   - weight_combos
+   - pauli_paths
 
 **Methods**
-   init_pauli_paths()
-   enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)
+   - init_pauli_paths()
+   - enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)
 
 ---
 
-## pauli_path.py
+### pauli_path.py
 
-### Overview
+**Overview**
 
-### Initialization
-   PauliPath(num_qubits:int, weight_combo:List[int],gate_pos:List[List[tuple]])
+**Initialization**
+   '''PauliPath(num_qubits:int, weight_combo:List[int],gate_pos:List[List[tuple]])'''
 
-### Attributes
-   num_qubits
-   depth
-   weight_combo
-   gate_pos
-   all_ops
+**Attributes**
+   - num_qubits
+   - depth
+   - weight_combo
+   - gate_pos
+   - all_ops
 
-### Methods
-   build_min_configs()
-   unsorted_min_layer_ops(min_weight)
-   min_backward(min_layers,min_depth)
-   min_forward(min_layers,min_layer_ops,min_depth)
-   propagate_next(layers:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)
+**Methods**
+   - build_min_configs()
+   - unsorted_min_layer_ops(min_weight)
+   - min_backward(min_layers,min_depth)
+   - min_forward(min_layers,min_layer_ops,min_depth)
+   - propagate_next(layers:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)
 
 ---
 
-## layer.py
+### layer.py
 
-### Overview
+**Overview**
 
-### Initialization
+**Initialization**
    Layer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None))
 
-### Attributes
-   backward
-   gate_pos
-   forward_sibs
-   bacward_sibs
-   pos_to_fill
-   carry_over_qubits
+**Attributes**
+   - backward
+   - gate_pos
+   - forward_sibs
+   - bacward_sibs
+   - pos_to_fill
+   - carry_over_qubits
 
-### Methods
-   check_qubits(layers:List[PauliOperator])
-   find_sibs(unsorted_pauli_ops:List[PauliOperator])
+**Methods**
+   - check_qubits(layers:List[PauliOperator])
+   - find_sibs(unsorted_pauli_ops:List[PauliOperator])
 
 ---
 
-## pauli_operator.py
+### pauli_operator.py
 
-### Overview
+**Overview**
 
-### Initialization
+**Initialization**
    PauliOperator(operator:List[str], backward_ops:List[PauliOperator] = None, forward_ops:List[PauliOperator] = None)
 
-### Attributes
-   operator
-   backward_ops
-   forward_ops
-   list_alloc
+**Attributes**
+   - operator
+   - backward_ops
+   - forward_ops
+   - list_alloc
 
-### Methods
-   weight_to_operators(next_weight:int, pos_to_fill:List[tuple], backward:int)
-   list_allocs(num_p:int, num_w:int) = static
-   append_to_layers(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int) = static
-   add_gate_input(sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int)
+**Methods**
+   - weight_to_operators(next_weight:int, pos_to_fill:List[tuple], backward:int)
+   - list_allocs(num_p:int, num_w:int) = static
+   - append_to_layers(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int) = static
+   - add_gate_input(sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int)
 
 
 ---
 
-## test_circuit.py
-
+### test_circuit.py

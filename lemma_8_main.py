@@ -1,4 +1,25 @@
 from typing import List
+from pauli_operator import PathLayer
+
+def list_allocs(num_p:int, num_w:int):
+    list_alloc = [[0 for _ in range(num_w+1)] for _ in range(num_p+1)]
+
+    # base cases
+    for w in range(0, num_w):
+        list_alloc[0][w] = 0 # no gates, no way to have a layer
+
+    for p in range(0, num_p): # no weight, only one way to have a layer
+        list_alloc[p][0] = 1
+    
+    for i in range(1, num_p+1):
+        for j in range(1,num_w+1):   #     IR                     RI                     RR
+            if (j > i):
+                list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1] + list_alloc[i-1][j-2]
+            else:
+                list_alloc[i][j] = list_alloc[i-1][j-1] + list_alloc[i-1][j-1]
+            print(f"list_alloc[{i}][{j}] = {list_alloc[i][j]}")
+        
+    return list_alloc
 
 
 def get_hamming_weights(d:int, l:int, n:int): # d = depth, l = upper bound on weight, n = number of qubits
@@ -99,7 +120,6 @@ It takes five arguments and uses helper function add_gate_input to build a list 
 Args:
     prior_layer (str) : the sting representing the prior layer of the circuit,
     with each character representing a qubit
-    prior_weight (int) : the Hamming weight of the prior layer
     this_weight (int) : the Hamming weight of the new layer
     n (int) : the number of qubits
     pos_list (List[tuple]) : each tuple contains the indices of the two inputs to one of the gates
@@ -108,7 +128,7 @@ Args:
 Returns:
     List[str]: a list of all valid input/output combos for this layer, with each layer represented as a string
 """
-def R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int, pos_list:List[tuple]):
+def R_iterations(prior_layer:str, this_weight:int, n:int, pos_list:List[tuple]):
 
     if (len(pos_list) > (n/2)):
         print("Invalid number of gates")
@@ -125,7 +145,9 @@ def R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int, pos_
             # enumerate over the index combinations
             pos_to_fill.append((ind1,ind2))
 
-    for i in range(3**(len(pos_to_fill))): # 3^{len(pos_to_fill)} possible selections of IR, RI, and RR
+    list_alloc = list_allocs(len(pos_to_fill),this_weight)
+
+    for i in range(list_alloc[len(pos_to_fill)][this_weight]): # 3^{len(pos_to_fill)} possible selections of IR, RI, and RR
         layers.append(list(layer_str)) # copies layer_str
 
     num_RRs = this_weight - len(pos_to_fill) # number of RRs we can use to fill in the layer
@@ -135,7 +157,7 @@ def R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int, pos_
         print("Could not satisfy user input with a valid layer")
         # no way to make a valid layer, given the weights
     else:
-        add_gate_input(num_RRs, pos_to_fill, 0, 3**(len(pos_to_fill)))
+        add_gate_input(num_RRs, pos_to_fill, 0, list_alloc)
 
 def append_to_layers(indices:tuple, strs:tuple, r_start:int, r_end:int):
     ind1, ind2 = indices
@@ -146,17 +168,17 @@ def append_to_layers(indices:tuple, strs:tuple, r_start:int, r_end:int):
 
 # make layers a global variable
 
-def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int):
+def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, list_alloc:List):
 
     if (len(pos_to_fill) == 0):
         return
     
     if (len(pos_to_fill) == num_RRs): # no more wiggle room, we must fill all remaining gate inputs with RR     
         cur_pos = pos_to_fill.pop(0)
-        rr_start = r_start+2*(3**len(pos_to_fill))
-        rr_end = r_start+3*(3**len(pos_to_fill))
+        rr_start = r_start
+        rr_end = r_start+list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
         append_to_layers(cur_pos, ('R','R'), rr_start, rr_end) # copy of layers with 'RR' added to all strs
-        add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, rr_end) # one less RR to use,
+        add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, list_alloc) # one less RR to use,
         # next call will handle adding the next RR
         return
 
@@ -169,38 +191,42 @@ def add_gate_input(num_RRs:int, pos_to_fill:List[tuple], r_start:int, r_end:int)
         cur_pos = pos_to_fill.pop(0)
 
         ir_start = r_start
-        ir_end = r_start+3**len(pos_to_fill)
+        ir_end = r_start + list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
         append_to_layers(cur_pos, ('I','R'), ir_start, ir_end) # copy of layers with 'IR' added to all strs
 
-        ri_start = r_start+3**len(pos_to_fill)
-        ri_end = r_start+2*(3**len(pos_to_fill))
+        ri_start = r_start + list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
+        ri_end = r_start + 2*list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
         append_to_layers(cur_pos, ('R','I'), ri_start, ri_end) # copy of layers with 'RI' added to all strs
 
         if (num_RRs != 0):
-            rr_start = r_start+2*(3**len(pos_to_fill))
-            rr_end = r_start+3*(3**len(pos_to_fill))
+            rr_start = r_start + 2*list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
+            rr_end = r_start+list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
             append_to_layers(cur_pos, ('R','R'), rr_start, rr_end) # copy of layers with 'RR' added to all strs
-            add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, rr_end) 
+            add_gate_input(num_RRs-1, list(pos_to_fill), rr_start, list_alloc) 
 
-        add_gate_input(num_RRs, list(pos_to_fill), ir_start, ir_end) 
-        add_gate_input(num_RRs, list(pos_to_fill), ri_start, ri_end) 
+        add_gate_input(num_RRs, list(pos_to_fill), ir_start, list_alloc) 
+        add_gate_input(num_RRs, list(pos_to_fill), ri_start, list_alloc) 
         return
 
 def main():
+
+    
+    test_layer = PathLayer(['I','R','I','R'], ['R','I','R','I'],3, [(0,1),(2,3)])
+    list_alloc = list_allocs(7,8)
     # testing weight enumeration
-    all_weight_combos = get_hamming_weights(3, 6, 4)
-    print()
-    print("Weight combinations for d=3, l=6, n=4:")
-    for sublist in all_weight_combos:
-        for element in sublist:
-            print(element, end=", ")
-        print() # move to the next line after each sublist
-    print()
+    #all_weight_combos = get_hamming_weights(3, 6, 4)
+    #print()
+    #print("Weight combinations for d=3, l=6, n=4:")
+    #for sublist in all_weight_combos:
+        #for element in sublist:
+            #print(element, end=", ")
+        #print() # move to the next line after each sublist
+    #print()
 
     # testing layer propagation
-    print("R_iterations for prior layer IRIIR, new weight = 3")
-    #R_iterations(prior_layer:str, prior_weight:int, this_weight:int, n:int)
-    R_iterations("IRI", 1, 1, 3, [(1,2)])
+    print("R_iterations for prior layer IRIIRIR, new weight = 4")
+    #R_iterations(prior_layer:str, this_weight:int, n:int, pos_list:List)
+    R_iterations("IRIIRIR", 4, 7, [(0,1),(3,4),(5,6)])
     for lil_list in layers:
         str = ''
         for c in lil_list:

@@ -1,5 +1,5 @@
 import unittest
-from lemma_8 import get_hamming_weights, R_iterations
+from pauli_operator import get_hamming_weights, R_iterations
 from typing import List
 
 class TestLemma8Functions(unittest.TestCase):
@@ -39,66 +39,59 @@ class TestLemma8Functions(unittest.TestCase):
     def test_R_iterations_general_case(self):
         """Test general case for R_iterations."""
         prior_layer = "IRIRRRII"
-        prior_weight = 4
-        num_gates = 4
         this_weight = 4
-        odd_start = 0
         n = len(prior_layer)
+        pos_list = [(0,3),(1,2), (5,6),(4,7)]
         
-        result = R_iterations(prior_layer, prior_weight, num_gates, this_weight, odd_start, n)
+        result1 = R_iterations(prior_layer, this_weight, n, pos_list)
         
         # checks that the number of configurations matches expectations
-        self.assertTrue(len(result) > 0)  
+        self.assertTrue(len(result1) > 0)  
 
         # ensures all configurations have the correct weight
-        for layer in result:
+        for layer in result1:
             self.assertEqual(layer.count('R'), this_weight)
 
         prior_layer = "IIRIRRIRI"
-        prior_weight = 4
-        num_gates = 4
         this_weight = 5
-        odd_start = 0
         n = len(prior_layer)
+        pos_list = [(1,7),(2,4),(5,6)]
         
-        result = R_iterations(prior_layer, prior_weight, num_gates, this_weight, odd_start, n)
+        result2 = R_iterations(prior_layer, this_weight, n, pos_list)
         
         # checks that the number of configurations matches expectations
-        self.assertTrue(len(result) > 0)  
+        self.assertTrue(len(result2) > 0)  
         
         # ensures all configurations have the correct weight
-        for layer in result:
+        for layer in result2:
             self.assertEqual(layer.count('R'), this_weight)
 
     def test_R_iterations_edge_case(self):
         """Test edge case for R_iterations with no valid configurations."""
-        prior_layer = "IIIIIIII"
-        prior_weight = 0
-        num_gates = 4
+        prior_layer = "IIIII"
         this_weight = 5
-        odd_start = 0
         n = len(prior_layer)
+        pos_list = [(1,4)]
         
-        result = R_iterations(prior_layer, prior_weight, num_gates, this_weight, odd_start, n)
+        result3 = R_iterations(prior_layer, this_weight, n, pos_list)
 
         # no way to create a valid configuration with this_weight > prior_weight,
         # so the result should be empty.
-        self.assertEqual(result, [])
+        self.assertEqual(result3, [])
 
     def test_R_iterations_single_qubit(self):
         """Test edge case for R_iterations with a single qubit."""
         prior_layer = "I"
-        prior_weight = 0
-        num_gates = 0
-        this_weight = 1
-        odd_start = 0
+        this_weight = 0
         n = len(prior_layer)
+        pos_list = []
         
-        result = R_iterations(prior_layer, prior_weight, num_gates, this_weight, odd_start, n)
+        result4 = R_iterations(prior_layer, this_weight, n, pos_list)
+
         
         # with a single qubit and weight of one non-identity gate,
         # no configuration is possible: []
-        self.assertEqual(result, [])
+        self.assertEqual(result4, ["I"])
 
 if __name__ == "__main__":
     unittest.main()
