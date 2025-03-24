@@ -1,6 +1,6 @@
 # Lemma 8 Implementation: Toward a Polynomial-Time Classical Simulation of Noisy Random Circuit Sampling
 
-A python implementation of the algorithm described in Lemma 8 from the paper "[A polynomial-time classical algorithm for noisy random circuit sampling.](https://arxiv.org/pdf/2211.03999)" Constructs a list of all possible legal Pauli paths given the depth, number of qubits, gate positions, and upperbound on Hamming weight for a 2D architecture quantum circuit.
+A Python implementation of the algorithm described in Lemma 8 from the paper "[A polynomial-time classical algorithm for noisy random circuit sampling.](https://arxiv.org/pdf/2211.03999)" Constructs a list of all possible legal Pauli paths given the depth, number of qubits, gate positions, and upperbound on Hamming weight for a 2D architecture quantum circuit.
 
 ---
 
@@ -8,7 +8,6 @@ A python implementation of the algorithm described in Lemma 8 from the paper "[A
 
 - [Introduction](#introduction)
 - [Architecture Overview](#architecture-overview)
-- [Usage](#usage)
 - [Class Documentation](#class-documentation)
   - [Circuit](#circuitpy)
   - [PauliPath](#pauli_pathpy)
@@ -38,21 +37,21 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
 
 ## Class Documentation
 
-## circuit.py
+### circuit.py
 
-### Overview
+**Overview**
 
-### Initialization
+**Initialization**
    Circuit(num_qubits:int, depth:int, l:int, gate_pos:List[List[tuple]])
 
-### Attributes
+**Attributes**
    num_layers
    gate_pos
    max_weight
    weight_combos
    pauli_paths
 
-### Methods
+**Methods**
    init_pauli_paths()
    enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)
 
