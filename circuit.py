@@ -1,0 +1,74 @@
+from typing import List
+from pauli_path import PauliPath
+
+class Circuit:
+
+    def __init__(self, num_qubits:int, num_layers:int, l:int, gate_pos:List[List[tuple]]):
+        """
+        Initiate all the lists of layers for a given weight configuration.
+        """
+        self.num_qubits = num_qubits
+        self.num_layers = num_layers
+        self.gate_pos = gate_pos
+
+        self.max_weight = l # upper bound on a Pauli path's Hamming weight
+
+        self.weight_combos = []
+
+        self.enumerate_weights([], self.max_weight-self.num_layers, self.num_layers)
+    
+
+    def init_pauli_paths(self):
+        self.pauli_paths = []
+        for weight_combo in self.weight_combos:
+            self.pauli_paths.append(PauliPath(self.num_qubits, weight_combo, self.gate_pos))
+
+
+    """
+    This function determines all solutions to the equation w_1 + w_2 + ... + w_d = k, where w_i >= 1
+
+    It takes three arguments and recursively constructs our list of all weight combinations.
+
+    Args:
+        weight_list (List[int]) : List of the weight combination we're currently working with
+        wiggle_room (int) : Number of layers that can have weight greater than 1
+        num_layers_left (int) : Number of layers waiting for weight
+
+    Returns:
+        void: The function appends to weight_combos, which affects the list in the calling function
+    """
+
+    # Black box function 
+    # w_1 + ... + w_d = k, w_i >= 1
+    # stars (d-k) and bars problem: look for already defined function
+    # tiny optimizations because of how layers map to each other
+
+    # ensure not bottleneck
+    def enumerate_weights(self, weight_list:List[int], wiggle_room:int, num_layers_left:int):
+
+    # base case: no more layers to add weight to
+        if num_layers_left == 0:
+            self.weight_combos.append(weight_list)
+            return
+
+        # base case: no more wiggle room
+        if wiggle_room == 0:
+            weight_list_copy = list(weight_list) # copy of weight_list to avoid overwriting
+            for i in range(num_layers_left): # enumerates num_layers_left times, once for each remaining layer
+                weight_list_copy.append(1) # all remaining layers get weight 1, since there's no wiggle room
+            self.weight_combos.append(weight_list_copy)
+            return
+
+        # recursive case: still have wiggle room and layers to add weight to
+        else:
+            # lower bound on next weight: prior weight / 2, 
+            # which is the case where all gates between prior and current layer have RR as input
+            # upper bound on next weight: prior weight * 2, 
+            # which is the case where all gates between prior and current layer have IR or RI as input
+            # the range represents how much we are adding in addition to the 1 guranteed every layer
+            # need log_2(i) >= num_layers_left, NEED to account for the +1 at each layer
+            for i in range((weight_list[-1]/2)-1, min(len(self.gate_pos[len(weight_list)])*2+1,wiggle_room+1)):
+                weight_list_copy = list(weight_list) # copy of weight_list to avoid overwriting
+                weight_list_copy.append(i+1) # +1 since every weight is guaranteed to be least 1
+                self.enumerate_weights(weight_list_copy, wiggle_room-i, num_layers_left-1)
+            return
