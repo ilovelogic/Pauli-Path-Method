@@ -18,6 +18,7 @@ class Circuit:
         self.weight_combos = []
 
         self.enumerate_weights([], self.max_weight-self.num_layers, self.num_layers)
+        self.init_pauli_paths()
     
 
     def init_pauli_paths(self):
@@ -27,9 +28,10 @@ class Circuit:
 
 
     """
-    This function determines all solutions to the equation w_1 + w_2 + ... + w_d = k, where w_i >= 1
+    This function determines all solutions to the equation w_1 + w_2 + ... + w_d = k, where w_i >= 1,
+    and we take into account the restrictions of the circuit architecture and legal Pauli path requirements
 
-    It takes three arguments and recursively constructs our list of all weight combinations.
+    This function takes three arguments and recursively constructs our list of all weight combinations.
 
     Args:
         weight_list (List[int]) : List of the weight combination we're currently working with
@@ -39,24 +41,17 @@ class Circuit:
     Returns:
         void: The function appends to weight_combos, which affects the list in the calling function
     """
-
-    # Black box function 
-    # w_1 + ... + w_d = k, w_i >= 1
-    # stars (d-k) and bars problem: look for already defined function
-    # tiny optimizations because of how layers map to each other
-
-    # ensure not bottleneck
     def enumerate_weights(self, weight_list:List[int], wiggle_room:int, num_layers_left:int):
 
-    # base case: no more layers to add weight to
+        # Base case: no more layers to add weight to
         if num_layers_left == 0:
             self.weight_combos.append(weight_list)
             return
 
-        # base case: no more wiggle room
+        # Base case: no more wiggle room
         if wiggle_room == 0:
-            if weight_list[-1] == 2:
-                for i in range(num_layers_left): # Enumerates num_layers_left times, once for each remaining layer
+            if weight_list[-1] == 2: # Otherwise we would not meet the legal Pauli path requirements
+                for i in range(num_layers_left):
                     weight_list.append(1) # All remaining layers get weight 1, since there's no wiggle room
                 self.weight_combos.append(weight_list)
             return
@@ -73,7 +68,7 @@ class Circuit:
                 min_extra_weight = 0
                 max_extra_weight = wiggle_room+1
             else:
-                min_extra_weight = weight_list[-1]-len(self.gate_pos[len(weight_list)-1])-1 # -1 since we add 1 in the for loop
+                min_extra_weight = max(0,weight_list[-1]-len(self.gate_pos[len(weight_list)-1])-1) # -1 since we add 1 in the for loop
                 max_extra_weight = min(len(self.gate_pos[len(weight_list)-1])*2, weight_list[-1]*2, wiggle_room+1)
             
             for i in range(min_extra_weight, max_extra_weight):

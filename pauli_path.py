@@ -28,20 +28,22 @@ class PauliPath:
 
         min_layer_ops, pos_to_fill_b, pos_to_fill_f, min_depth = self.build_min_configs()
         self.all_ops[min_depth] = min_layer_ops
-    
-        min_next_sibs_b = self.propagate_next(min_layer_ops.backward_sibs, pos_to_fill_b, 1, min_depth)
-        if (min_depth-2 >= 0):
-            self.all_ops[min_depth-1] = Layer(gate_pos[min_depth-2], 1, min_next_sibs_b)
-        else:
-            self.all_ops[min_depth-1] = Layer()
-            self.all_ops[min_depth-1].forward_sibs = min_next_sibs_b
 
-        min_next_sibs_f = self.propagate_next(self.all_ops[min_depth].forward_sibs, pos_to_fill_f, 0, min_depth)
-        if (min_depth+1 < self.depth-1):
-            self.all_ops[min_depth+1] = Layer(gate_pos[min_depth+1], 0, min_next_sibs_f)
-        else:
-            self.all_ops[min_depth-1] = Layer()
-            self.all_ops[min_depth-1].forward_sibs = min_next_sibs_b
+        if (min_depth-1 >= 0):
+            min_next_sibs_b = self.propagate_next(min_layer_ops.backward_sibs, pos_to_fill_b, 1, min_depth)
+            if (min_depth-2 >= 0):
+                self.all_ops[min_depth-1] = Layer(gate_pos[min_depth-2], 1, min_next_sibs_b)
+            else:
+                self.all_ops[min_depth-1] = Layer()
+                self.all_ops[min_depth-1].forward_sibs = min_next_sibs_b
+        
+        if (min_depth < self.depth-1):
+            min_next_sibs_f = self.propagate_next(self.all_ops[min_depth].forward_sibs, pos_to_fill_f, 0, min_depth)
+            if (min_depth+1 < self.depth-1):
+                self.all_ops[min_depth+1] = Layer(gate_pos[min_depth+1], 0, min_next_sibs_f)
+            else:
+                self.all_ops[min_depth+1] = Layer()
+                self.all_ops[min_depth+1].backward_sibs = min_next_sibs_f
 
         # Propagating backward
         for i in range(min_depth-2, -1, -1): # Goes from min_depth -1 to 0

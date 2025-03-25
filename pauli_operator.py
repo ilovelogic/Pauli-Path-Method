@@ -39,12 +39,6 @@ class PauliOperator:
                 next_gate_weight -= 1 # Every non-gate qubit that is non-identity takes from our 
                 # overall Hamming weight available to gate qubits
 
-        self.list_alloc = self.list_allocs(len(pos_to_fill),next_gate_weight)
-        
-        sibs = []
-        for i in range(self.list_alloc[len(pos_to_fill)][next_gate_weight]): 
-            sibs.append(PauliOperator(copy.deepcopy(self.operator))) # Copies layer_str and uses to initialize PauliOperators
-
         num_RRs = next_gate_weight - len(pos_to_fill) # Number of RRs we can use to fill in the layer
 
         # No way to make a valid layer, given the weights
@@ -54,14 +48,19 @@ class PauliOperator:
             else:
                 self.forward_ops = []
             return
+        
+        self.list_alloc = self.list_allocs(len(pos_to_fill),next_gate_weight)
+
+        sibs = []
+        for i in range(self.list_alloc[len(pos_to_fill)][next_gate_weight]): 
+            sibs.append(PauliOperator(copy.deepcopy(self.operator))) # Copies layer_str and uses to initialize PauliOperators
     
+        if (backward):
+            self.backward_ops = sibs
+            self.add_gate_input(self.backward_ops, num_RRs, pos_to_fill, 0)
         else:
-            if (backward):
-                self.backward_ops = sibs
-                self.add_gate_input(self.backward_ops, num_RRs, pos_to_fill, 0)
-            else:
-                self.forward_ops = sibs
-                self.add_gate_input(self.forward_ops, num_RRs, pos_to_fill, 0)
+            self.forward_ops = sibs
+            self.add_gate_input(self.forward_ops, num_RRs, pos_to_fill, 0)
 
     """
     This function determines the number of entries we need to allocate in our list 
@@ -87,7 +86,7 @@ class PauliOperator:
         list_alloc = [[0 for _ in range(num_w+1)] for _ in range(num_p+1)]
 
         # Base cases
-        for w in range(1, num_w):
+        for w in range(1, num_w+1):
             list_alloc[0][w] = 0 # No positions to fill but positive weight -> no way to have a layer
         list_alloc[0][0] = 1 
         
