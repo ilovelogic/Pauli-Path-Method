@@ -13,7 +13,7 @@ A Python implementation of the algorithm described in Lemma 8 from the paper "[A
   - [PauliPath](#pauli_pathpy)
   - [Layer](#layerpy)
   - [PauliOperator](#pauli_operatorpy)
-- [Contributing](#contributing)
+  - [TestCircuit](#test_circuitpy)
 
 ---
 
@@ -44,9 +44,10 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
 **Overview**
 
 **Initialization**
-   '''Circuit(num_qubits:int, depth:int, l:int, gate_pos:List[List[tuple]])'''
+   '''Circuit(num_qubits:int, num_layers:int, l:int, gate_pos:List[List[tuple]])'''
 
 **Attributes**
+   - num_qubits
    - num_layers
    - gate_pos
    - max_weight
@@ -78,7 +79,7 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
    - unsorted_min_layer_ops(min_weight)
    - min_backward(min_layers,min_depth)
    - min_forward(min_layers,min_layer_ops,min_depth)
-   - propagate_next(layers:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)
+   - propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)
 
 ---
 
@@ -87,7 +88,7 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
 **Overview**
 
 **Initialization**
-   Layer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None))
+   Layer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)
 
 **Attributes**
    - backward
@@ -98,7 +99,7 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
    - carry_over_qubits
 
 **Methods**
-   - check_qubits(layers:List[PauliOperator])
+   - check_qubits(unsorted_pauli_ops:List[PauliOperator])
    - find_sibs(unsorted_pauli_ops:List[PauliOperator])
 
 ---
