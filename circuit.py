@@ -1,3 +1,5 @@
+import copy
+import math
 from typing import List
 from pauli_path import PauliPath
 
@@ -53,22 +55,29 @@ class Circuit:
 
         # base case: no more wiggle room
         if wiggle_room == 0:
-            weight_list_copy = list(weight_list) # copy of weight_list to avoid overwriting
-            for i in range(num_layers_left): # enumerates num_layers_left times, once for each remaining layer
-                weight_list_copy.append(1) # all remaining layers get weight 1, since there's no wiggle room
-            self.weight_combos.append(weight_list_copy)
+            if weight_list[-1] == 2:
+                for i in range(num_layers_left): # Enumerates num_layers_left times, once for each remaining layer
+                    weight_list.append(1) # All remaining layers get weight 1, since there's no wiggle room
+                self.weight_combos.append(weight_list)
             return
 
         # recursive case: still have wiggle room and layers to add weight to
         else:
-            # lower bound on next weight: prior weight / 2, 
+            # Lower bound on next weight: prior weight / 2, 
             # which is the case where all gates between prior and current layer have RR as input
             # upper bound on next weight: prior weight * 2, 
             # which is the case where all gates between prior and current layer have IR or RI as input
             # the range represents how much we are adding in addition to the 1 guranteed every layer
-            # need log_2(i) >= num_layers_left, NEED to account for the +1 at each layer
-            for i in range((weight_list[-1]/2)-1, min(len(self.gate_pos[len(weight_list)])*2+1,wiggle_room+1)):
-                weight_list_copy = list(weight_list) # copy of weight_list to avoid overwriting
+            # need new_weight <= 2^{n-1}-3 if our remaining weight <= 2^{n}-n-3
+            if len(weight_list) == 0:
+                min_extra_weight = 0
+                max_extra_weight = wiggle_room+1
+            else:
+                min_extra_weight = weight_list[-1]-len(self.gate_pos[len(weight_list)-1])-1 # -1 since we add 1 in the for loop
+                max_extra_weight = min(len(self.gate_pos[len(weight_list)-1])*2, weight_list[-1]*2, wiggle_room+1)
+            
+            for i in range(min_extra_weight, max_extra_weight):
+                weight_list_copy = copy.deepcopy(weight_list) # Copy of weight_list to avoid overwriting
                 weight_list_copy.append(i+1) # +1 since every weight is guaranteed to be least 1
                 self.enumerate_weights(weight_list_copy, wiggle_room-i, num_layers_left-1)
             return

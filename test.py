@@ -12,5 +12,9 @@ def main():
         for op in sibs:
             print(op.operator)
 
+    test_circuit = Circuit(6,9,17,[[(1,2),(3,4)],[(0,1),(2,3)],[(1,2),(3,4)],[(3,4)],[(1,2),(3,4)],[(0,1),(2,3)],[(1,2),(3,4)],[(3,4)]])
+    for weight_combo in test_circuit.weight_combos:
+        print(weight_combo)
+
 if __name__ == "__main__":
     main()
