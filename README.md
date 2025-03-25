@@ -37,6 +37,8 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
 
 ## Class Documentation
 
+---
+
 ### circuit.py
 
 **Overview**
