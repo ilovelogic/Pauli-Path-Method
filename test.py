@@ -14,9 +14,12 @@ def main():
         for op in sibs:
             print(op.operator)
     #test_circuit = Circuit(5,4,8,[[(1,2),(3,4)],[(0,1),(2,3)],[(1,2),(3,4)]])
-    test_gate_pos = []
-    for i in range(6):
-        test_gate_pos.append([(1,2),(3,4),(5,6),(7,8),(9,10)])
+    test_gate_pos = [[]]*6
+    for i in range(3):
+        for j in range(0,22,2):
+            test_gate_pos[i].append((j,j+1))
+        for j in range(1,23,2):
+            test_gate_pos[i].append((j,j+1))
     test_circuit = Circuit(25,7,20,test_gate_pos)
     print(time.time())
 
