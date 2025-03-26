@@ -1,4 +1,6 @@
 from __future__ import annotations
+import pdb # for debuggingv
+
 from typing import List
 import copy
 
@@ -17,7 +19,7 @@ class PauliOperator:
     This function determines all possible operators at the Layer one depth away from this operator,
     that this operator can propagate to.
 
-    It takes five arguments and uses helper function add_gate_input to build the propagation list.
+    It takes five arguments and uses helper function find_next_operators to build the propagation list.
 
     Args:
         self (PauliOperator) : The PauliOperator from which we are propagating
@@ -57,10 +59,10 @@ class PauliOperator:
     
         if (backward):
             self.backward_ops = sibs
-            self.add_gate_input(self.backward_ops, num_RRs, pos_to_fill, 0)
+            self.find_next_operators(self.backward_ops, num_RRs, pos_to_fill, 0)
         else:
             self.forward_ops = sibs
-            self.add_gate_input(self.forward_ops, num_RRs, pos_to_fill, 0)
+            self.find_next_operators(self.forward_ops, num_RRs, pos_to_fill, 0)
 
     """
     This function determines the number of entries we need to allocate in our list 
@@ -100,7 +102,7 @@ class PauliOperator:
         return list_alloc
 
     @staticmethod
-    def append_to_layers(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int):
+    def edit_operator(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int):
         ind1, ind2 = indices
         str1, str2 = strs
         for i in range(r_start, r_end):
@@ -108,7 +110,7 @@ class PauliOperator:
             sibs[i].operator[ind2] = str2
 
 
-    def add_gate_input(self, sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int):
+    def find_next_operators(self, sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int):
 
         if (len(pos_to_fill) == 0):
             return
@@ -116,8 +118,8 @@ class PauliOperator:
         if (len(pos_to_fill) == num_RRs): # No more wiggle room, we must fill all remaining gate inputs with RR     
             cur_pos = pos_to_fill.pop(0)
             rr_start = r_start
-            self.append_to_layers(sibs, cur_pos, ('R','R'), rr_start, rr_start+1) # Copy of layers with 'RR' added to all operators
-            self.add_gate_input(sibs, num_RRs-1, list(pos_to_fill), rr_start) # One less RR to use
+            self.edit_operator(sibs, cur_pos, ('R','R'), rr_start, rr_start+1) # Copy of layers with 'RR' added to all operators
+            self.find_next_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) # One less RR to use
             # Next call will handle adding the next RR
             return
 
@@ -126,19 +128,42 @@ class PauliOperator:
 
             ir_start = r_start
             ir_end = r_start + self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
-            self.append_to_layers(sibs, cur_pos, ('I','R'), ir_start, ir_end) # Copy of layers with 'IR' added to all operators
+            self.edit_operator(sibs, cur_pos, ('I','R'), ir_start, ir_end) # Copy of layers with 'IR' added to all operators
 
             ri_start = r_start + self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
             ri_end = r_start + 2*self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
-            self.append_to_layers(sibs, cur_pos, ('R','I'), ri_start, ri_end) # Copy of layers with 'RI' added to all operators
+            self.edit_operator(sibs, cur_pos, ('R','I'), ri_start, ri_end) # Copy of layers with 'RI' added to all operators
 
             if (num_RRs != 0):
                 rr_start = r_start + 2*self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
                 rr_end = r_start+self.list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
-                self.append_to_layers(sibs, cur_pos, ('R','R'), rr_start, rr_end) # Copy of layers with 'RR' added to all operators
-                self.add_gate_input(sibs, num_RRs-1, list(pos_to_fill), rr_start) 
+                self.edit_operator(sibs, cur_pos, ('R','R'), rr_start, rr_end) # Copy of layers with 'RR' added to all operators
+                self.find_next_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) 
 
-            self.add_gate_input(sibs, num_RRs, list(pos_to_fill), ir_start) 
-            self.add_gate_input(sibs, num_RRs, list(pos_to_fill), ri_start) 
+            self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ir_start) 
+            self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ri_start) 
             
             return
+        
+    def r_to_xyz(self):
+        self.r_pos = []
+        for i in range(len(self.operator)):
+            if self.operator[i] == 'R':
+                self.r_pos.append(i)
+        
+        self.xyz_paulis = []
+        for j in range(3 ** len(self.r_pos)):
+            self.xyz_paulis.append(copy.deepcopy(self.operator))
+        self.fill_in_r_pos('X',0,0)
+        self.fill_in_r_pos('Y',0,3 ** (len(self.r_pos)-1))
+        self.fill_in_r_pos('Z',0,2 * (3 ** (len(self.r_pos)-1)))
+
+    def fill_in_r_pos(self, pauli:str, r_pos_i:int, start:int):
+        if r_pos_i == len(self.r_pos):
+            return
+        for i in range(start, start + (3 ** (len(self.r_pos)-r_pos_i-1))):
+            
+            self.xyz_paulis[i][self.r_pos[r_pos_i]] = pauli
+        self.fill_in_r_pos('X', r_pos_i+1,start)
+        self.fill_in_r_pos('Y', r_pos_i+1,start+(3 ** (len(self.r_pos)-r_pos_i-2)))
+        self.fill_in_r_pos('Z', r_pos_i+1,start+(2 * (3 ** (len(self.r_pos)-r_pos_i-2))))
