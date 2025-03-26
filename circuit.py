@@ -68,7 +68,10 @@ class Circuit:
                 min_extra_weight = 0
                 max_extra_weight = wiggle_room+1
             else:
-                min_extra_weight = max(0,weight_list[-1]-len(self.gate_pos[len(weight_list)-1])-1) # -1 since we add 1 in the for loop
+                if len(self.gate_pos[len(weight_list)-1]) < math.floor(weight_list[-1]/2): # there aren't enough gates to half the Hamming weight at the prior layer
+                    min_extra_weight = weight_list[-1]-len(self.gate_pos[len(weight_list)-1])-1 # -1 since we add 1 in the for loop
+                else:
+                    min_extra_weight = math.floor(weight_list[-1]/2)
                 max_extra_weight = min(len(self.gate_pos[len(weight_list)-1])*2, weight_list[-1]*2, wiggle_room+1)
             
             for i in range(min_extra_weight, max_extra_weight):
