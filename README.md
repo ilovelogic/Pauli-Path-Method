@@ -53,12 +53,12 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
    - `forward_ops`: A list containing each of the PauliOperator objects that could come directly after this PauliOperator in a legal PauliPath.
    - `list_alloc`: A 2D array, where list_alloc[i,j] is the number of ways we
    can fill i gates with non-identity I/O using an overall Hamming weight of j
-   - `r_pos`: A list of integers that stores the indices of all the 'R's in our PauliOperator's operator
+   - `r_pos`: A list of ints that stores the indices of all the 'R's in our PauliOperator's operator
    - `xyz_paulis`: A list of string lists, where each string list is a distinct permutation of assigning either 'X', 'Y', or 'Z' to each of the 'R's in our PauliOperator's operator
 
 **Methods**
    - `weight_to_operators(next_weight:int, pos_to_fill:List[tuple], backward:int)`
-   - `list_allocs(num_p:int, num_w:int)`: A static methof
+   - `list_allocs(num_p:int, num_w:int)`: A static method
    - `edit_operator(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int) = static`
    - `find_next_operators(sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int)`
    - `r_to_xyz()`
@@ -75,16 +75,16 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
    `Layer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
 
 **Attributes**
-   - backward
-   - gate_pos
-   - forward_sibs
-   - bacward_sibs
-   - pos_to_fill
-   - carry_over_qubits
+   - `backward`: An int that is 1 if we need to propagate backward from this Layer and 0 otherwise.
+   - `gate_pos`: A list of int tuples, where each int tuple stores the two I/O indices of a gate between this Layer and either the prior Layer (if backward) or the next Layer (otherwise).
+   - `pos_to_fill`: A DefaultDict whose keys are all of the PauliOperator objects at this Layer and whose values are lists of int tuples. Each list of int tuples contains the non-identity I/O gate positions between the PauliOperator key and any PauliOperator at the prior Layer (if backward) or the next Layer (otherwise).
+   - `forward_sibs`: A DefaultDict that sorts all the PauliOperators at this Layer according to their having matching gate positions with non-identity I/O and the same non-gate qubits when propagating forward. The non-identity I/O gate positions list and the list of non-gate qubit strs are both converted into tuples and used as the key for the DefaultDict. The list of "sibling" PauliOperator objects is the value for the DefaultDict.
+   - `bacward_sibs`: A DefaultDict with the same setup as forward_sibs except that it is sorted according to matching the attributes when propagating backward. Both forward_sibs and backward_sibs enjoy the property that each of their "sibling" lists contain a grouping of PauliOperator objects that all propagate to the same list of PauliOperators at a neighboring circuit Layer.
+   - `carry_over_qubits`: 
 
 **Methods**
-   - check_qubits(unsorted_pauli_ops:List[PauliOperator])
-   - find_sibs(unsorted_pauli_ops:List[PauliOperator])
+   - `check_qubits(unsorted_pauli_ops:List[PauliOperator])`
+   - `find_sibs(unsorted_pauli_ops:List[PauliOperator])`
 
 ---
 
@@ -97,18 +97,18 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
    `PauliPath(num_qubits:int, weight_combo:List[int],gate_pos:List[List[tuple]])`
 
 **Attributes**
-   - num_qubits
-   - depth
-   - weight_combo
-   - gate_pos
-   - layers
+   - `num_qubits`
+   - `depth`
+   - `weight_combo`
+   - `gate_pos`
+   - `layers`
 
 **Methods**
-   - build_min_configs()
-   - unsorted_min_layer_ops(min_weight)
-   - min_backward(min_layers,min_depth)
-   - min_forward(min_layers,min_layer_ops,min_depth)
-   - propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)
+   - `build_min_configs()`
+   - `unsorted_min_layer_ops(min_weight)`
+   - `min_backward(min_layers,min_depth)`
+   - `min_forward(min_layers,min_layer_ops,min_depth)`
+   - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`
 
 ---
 
