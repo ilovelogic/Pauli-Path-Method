@@ -1,4 +1,3 @@
-import pdb # for debugging
 import copy
 from collections import defaultdict
 from typing import List, DefaultDict
@@ -17,44 +16,44 @@ class PauliPath:
         self.depth = len(weight_combo) # weight_combo stores exactly one weight for each layer
         self.weight_combo = weight_combo
         self.gate_pos = gate_pos
-        self.all_ops = [None]*self.depth # List of DefaultDicts of all operators possible at each layer
+        self.layers = [None]*self.depth # List of DefaultDicts of all operators possible at each layer
         
         if (num_qubits == 0 or self.depth == 0): # No circuit -> nothing to do
             return
         if (self.depth == 1): # Single layer -> generate for that layer, no propagation
-            self.all_ops[0] = defaultdict(list)
-            self.all_ops[0][(tuple([]), tuple(""))] =  self.unsorted_min_layer_ops(weight_combo[0])
+            self.layers[0] = defaultdict(list)
+            self.layers[0][(tuple([]), tuple(""))] =  self.unsorted_min_layer_ops(weight_combo[0])
             return
 
         min_layer_ops, pos_to_fill_b, pos_to_fill_f, min_depth = self.build_min_configs()
-        self.all_ops[min_depth] = min_layer_ops
+        self.layers[min_depth] = min_layer_ops
 
         if (min_depth-1 >= 0):
             min_next_sibs_b = self.propagate_next(min_layer_ops.backward_sibs, pos_to_fill_b, 1, min_depth)
             if (min_depth-2 >= 0):
-                self.all_ops[min_depth-1] = Layer(gate_pos[min_depth-2], 1, min_next_sibs_b)
+                self.layers[min_depth-1] = Layer(gate_pos[min_depth-2], 1, min_next_sibs_b)
             else:
-                self.all_ops[min_depth-1] = Layer()
-                self.all_ops[min_depth-1].forward_sibs = min_next_sibs_b
+                self.layers[min_depth-1] = Layer()
+                self.layers[min_depth-1].forward_sibs = min_next_sibs_b
         
         if (min_depth < self.depth-1):
-            min_next_sibs_f = self.propagate_next(self.all_ops[min_depth].forward_sibs, pos_to_fill_f, 0, min_depth)
+            min_next_sibs_f = self.propagate_next(self.layers[min_depth].forward_sibs, pos_to_fill_f, 0, min_depth)
             if (min_depth+1 < self.depth-1):
-                self.all_ops[min_depth+1] = Layer(gate_pos[min_depth+1], 0, min_next_sibs_f)
+                self.layers[min_depth+1] = Layer(gate_pos[min_depth+1], 0, min_next_sibs_f)
             else:
-                self.all_ops[min_depth+1] = Layer()
-                self.all_ops[min_depth+1].backward_sibs = min_next_sibs_f
+                self.layers[min_depth+1] = Layer()
+                self.layers[min_depth+1].backward_sibs = min_next_sibs_f
 
         # Propagating backward
         for i in range(min_depth-2, -1, -1): # Goes from min_depth -1 to 0
             # Determines all the sibs that the prior depth can propagate backwards to 
-            next_sibs_b = self.propagate_next(self.all_ops[i+1].backward_sibs, self.all_ops[i+1].pos_to_fill, 1, i+1)
-            self.all_ops[i] = Layer(gate_pos[i-1], 1, next_sibs_b)
+            next_sibs_b = self.propagate_next(self.layers[i+1].backward_sibs, self.layers[i+1].pos_to_fill, 1, i+1)
+            self.layers[i] = Layer(gate_pos[i-1], 1, next_sibs_b)
 
         # Propagating forward
         for i in range(min_depth+2, self.depth): # Goes from min_depth + 2 to self.depth-1
-            next_sibs_f = self.propagate_next(self.all_ops[i-1].forward_sibs, self.all_ops[i-1].pos_to_fill, 0, i)
-            self.all_ops[i] = Layer(gate_pos[min_depth+1], 0, next_sibs_f)
+            next_sibs_f = self.propagate_next(self.layers[i-1].forward_sibs, self.layers[i-1].pos_to_fill, 0, i)
+            self.layers[i] = Layer(gate_pos[min_depth+1], 0, next_sibs_f)
 
         return
     
