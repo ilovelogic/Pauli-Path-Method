@@ -69,7 +69,7 @@ The **Lemma 8 Implementation** plays a key role in classically simulating noisy 
 ### layer.py
 
 **Overview**\
-<img src="images/Layer_forward_backward.png" width="400" />
+<img src="images/Layer_sibs.png" width="400" />
 
 **Initialization**\
    `Layer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
