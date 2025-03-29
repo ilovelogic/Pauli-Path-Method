@@ -36,8 +36,8 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
 ## Architecture Overview
 
 1. **Core Classes**:
-   - `PauliOperator`: Stores a Pauli operator in str representation and the list of all PauliOperator objects that can precede this operator in a legal Pauli path and a list of those that can come after it. Can generate the either of these lists. Each Pauli operator is represented as a list of strings, where each string is either 'I' or 'R'. 'I' is the identity Pauli matrix and 'R' can be 'X', 'Y', or 'Z.'
-   - `PauliOpLayer`: Stores all of the PauliOperator objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which PauliOperators propagate backward to the same list of PauliOperators and one sorted according to which PauliOperators propagate forward to the same PauliOperator list.
+   - `PauliOperator`: Stores a Pauli operator and the list of all PauliOperator objects that can precede this operator in a legal Pauli path and a list of those that can come after it. Can generate both of these lists. Each Pauli operator is represented as a list of strings, where each string is either 'I' or 'R'. 'I' is the identity Pauli matrix and 'R' signifies a non-identity Pauli matrix.
+   - `PauliOpLayer`: Keeps track of all the PauliOperator objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which PauliOperators propagate backward to the same list of PauliOperators and one sorted according to which PauliOperators propagate forward to the same PauliOperator list.
    - `PauliPathTraversal`: Builds a list of PauliOpLayer objects, where the ith PauliOpLayer in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
    - `CircuitSim`: Constructs a list of all possible PauliPathTraversals for a given circuit architecture and upperbound on Hamming weight.
 2. **Testing**:
