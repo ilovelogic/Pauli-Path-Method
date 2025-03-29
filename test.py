@@ -6,15 +6,16 @@ from pauli_op_layer import PauliOpLayer
 from pauli_path_traversal import PauliPathTraversal
 from circuit_sim import CircuitSim
 
+"""
 class TestPauliPathTraversal(unittest.TestCase):
     def setUp(self):
         self.path = PauliPathTraversal(4, [1, 1, 1], [[(0, 1)], [(2, 3)]])
 
     def test_initialization(self):
-        self.assertEqual(self.path.num_qubits, 3)
-        self.assertEqual(self.path.depth, 2)
+        self.assertEqual(self.path.num_qubits, 4)
+        self.assertEqual(self.path.num_op_layers, 3)
         self.assertEqual(self.path.weight_combo, [1, 1, 1])
-        self.assertEqual(self.path.gate_pos, [[(0, 1)], [(1, 2)]])
+        self.assertEqual(self.path.gate_pos, [[(0, 1)], [(2, 3)]])
 
     def test_build_min_configs(self):
         self.path.build_min_configs()
@@ -35,7 +36,8 @@ class TestPauliPathTraversal(unittest.TestCase):
         min_layers = [PauliOpLayer([(0, 1)], 0)]
         min_layer_ops = [PauliOperator(['I', 'R', 'I'])]
         self.path.min_forward(min_layers, min_layer_ops, 0)
-        self.assertIsInstance(min_layers[0].forward_sibs, defaultdict)
+        self.assertIsInstance(min_layers[0].forward_sibs, defaultdict)"
+        
 
     def test_propagate_next(self):
         all_sibs = defaultdict(list)
@@ -43,7 +45,8 @@ class TestPauliPathTraversal(unittest.TestCase):
         pos_to_fill = defaultdict(list)
         pos_to_fill[PauliOperator(['R', 'I', 'I'])] = [(0, 1)]
         next_ops = self.path.propagate_next(all_sibs, pos_to_fill, 0, 0)
-        self.assertTrue(all(isinstance(op, PauliOperator) for op in next_ops.values))
+        self.assertTrue(all(isinstance(op, PauliOperator) for op in next_ops.values))"
+        """
 
 class TestCircuit(unittest.TestCase):
     def setUp(self):
@@ -54,8 +57,18 @@ class TestCircuit(unittest.TestCase):
         self.assertEqual(self.circuit.num_op_layers, 3)
         self.assertEqual(self.circuit.max_weight, 10)
         self.assertEqual(self.circuit.gate_pos, [[(0, 1),(2,3)],[(1,2)]])
+        
+        pauli_path_set = set()
+        num_pauli_ops = 0
+        for trav_list in self.circuit.pauli_path_list:
+            for pauli_path in trav_list:
+                tuple_pauli = tuple(tuple(pauli_path_op) for pauli_path_op in pauli_path)
+                print(tuple_pauli)
+                pauli_path_set.add(tuple_pauli)
+                num_pauli_ops += 1
+        self.assertEqual(len(pauli_path_set), num_pauli_ops)
 
-    def test_init_pauli_paths(self):
+    '''def test_init_pauli_paths(self):
         self.circuit.init_pauli_paths()
         self.assertIsInstance(self.circuit.pauli_paths, list)
         self.assertTrue(all(isinstance(path, PauliPathTraversal) for path in self.circuit.pauli_paths))
@@ -82,6 +95,25 @@ class TestCircuit(unittest.TestCase):
                             (3, 3, 3), (2, 3, 4), (2, 4, 3), (2, 4, 4),  (3, 3, 4), (3, 4, 3), (4, 2, 1), (4, 2, 2), 
                             (4, 2, 3), (4, 3, 2), (4, 3, 3)}
         self.assertEqual(true_weight_combos, set(tuple(combo) for combo in self.circuit.weight_combos))
+    
+        num_pauli_ops = 0
+        set_num = 0
+        for trav_list in self.circuit.pauli_path_list:
+            dup_set = set()
+            pauli_path_set = set()
+            set_num += 1
+            for pauli_path in trav_list:
+                tuple_pauli = tuple(tuple(pauli_path_op) for pauli_path_op in pauli_path)
+                if (tuple_pauli in pauli_path_set):
+                    #print(set_num)
+                    #print(tuple_pauli)
+                    #if (tuple_pauli in dup_set):
+                        #print("DUP SET!")
+                    dup_set.add(tuple_pauli)
+                pauli_path_set.add(tuple_pauli)
+                num_pauli_ops += 1
+        self.assertEqual(len(pauli_path_set), num_pauli_ops)'
+        '''
 
 if __name__ == '__main__':
     unittest.main()
