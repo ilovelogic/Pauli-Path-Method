@@ -21,28 +21,37 @@ class CircuitSim:
 
         self.enumerate_weights([], self.max_weight-self.num_op_layers, self.num_op_layers)
         self.init_pauli_paths()
+        self.travs_to_list()
     
     def travs_to_list(self):
         self.pauli_path_list = []
         for pauli_path_trav in self.pauli_paths:
-            self.trav_to_list(pauli_path_trav)
+            self.pauli_path_list.append(self.trav_to_list(pauli_path_trav))
 
     def trav_to_list(self,trav:PauliPathTraversal):
-        for sibs in trav.layers[0].forward_sibs:
+        trav_list = []
+        for sibs in trav.layers[0].forward_sibs.values():
             for pauli_op in sibs:
-                self.pauli_op_hopping([],pauli_op)
+                self.pauli_op_hopping(trav_list, [], pauli_op)
+        return trav_list
 
-    def pauli_op_hopping(self,partial_pauli_path:List[List[str]], next_pauli_op:PauliOperator):
-        print()
-        partial_pauli_path.append(next_pauli_op.operator)
-        for pauli_op in next_pauli_op.next_ops:
+    def pauli_op_hopping(self,trav_list:List[List[List[str]]], partial_pauli_path:List[List[str]], pauli_op:PauliOperator):
+        partial_pauli_path.append(pauli_op.operator)
+
+        # Base case: Reached last Pauli operator layer of the circuit
+        if pauli_op.next_ops == None:
+            trav_list.append(partial_pauli_path)
+            return
+    
+        for i in range(len(pauli_op.next_ops)):
             partial_pauli_path_copy = copy.deepcopy(partial_pauli_path)
-            self.pauli_op_hopping(partial_pauli_path_copy, pauli_op)
+            self.pauli_op_hopping(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
 
     def init_pauli_paths(self):
         self.pauli_paths = []
         for weight_combo in self.weight_combos:
             self.pauli_paths.append(PauliPathTraversal(self.num_qubits, weight_combo, self.gate_pos))
+
 
     
     """
@@ -60,7 +69,7 @@ class CircuitSim:
         void: The function appends to weight_combos, which affects the list in the calling function
     """
     def enumerate_weights(self, weight_list:List[int], wiggle_room:int, num_op_layers_left:int):
-
+        
         # Base case: no more layers to add weight to
         if num_op_layers_left == 0:
             self.weight_combos.append(weight_list)
@@ -68,7 +77,7 @@ class CircuitSim:
 
         # Base case: no more wiggle room
         if wiggle_room == 0:
-            if weight_list[-1] == 2: # Otherwise we would not meet the legal Pauli path requirements
+            if weight_list[-1] <= 2: # Otherwise we would not meet the legal Pauli path requirements
                 for i in range(num_op_layers_left):
                     weight_list.append(1) # All remaining layers get weight 1, since there's no wiggle room
                 self.weight_combos.append(weight_list)
