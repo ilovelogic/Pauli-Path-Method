@@ -3,7 +3,7 @@ import copy
 from typing import DefaultDict, List
 from pauli_operator import PauliOperator
 
-class Layer:
+class PauliOpLayer:
 
     def __init__(self, gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None):
         """

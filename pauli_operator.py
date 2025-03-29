@@ -6,14 +6,18 @@ import copy
 
 class PauliOperator:
 
-    def __init__(self, operator:List[str], backward_ops:List[PauliOperator] = None, forward_ops:List[PauliOperator] = None):
+    def __init__(self, operator:List[str], prior_ops:List[PauliOperator] = None, next_ops:List[PauliOperator] = None):
         """
         Initialize.
         """
+
+        if not isinstance(operator, list):
+            raise TypeError("Expected a List[str] as the operator argument.")
                   
         self.operator = operator
-        self.backward_ops = backward_ops
-        self.forward_ops = forward_ops
+        self.prior_ops = prior_ops
+        self.next_ops = next_ops
+        self.r_pos = []
 
     """
     This function determines all possible operators at the Layer one depth away from this operator,
@@ -28,7 +32,7 @@ class PauliOperator:
         backward (int) : 1 if we are propagating backward, 0 if we are propagating forward
 
     Returns:
-        void : updates self.forward_ops or self.backward_ops (depending on the direction of propagation) 
+        void : updates self.next_ops or self.prior_ops (depending on the direction of propagation) 
         to be the list of all operators at the next layer of the circuit that this operator
         can propagate to.
     """
@@ -46,9 +50,9 @@ class PauliOperator:
         # No way to make a valid layer, given the weights
         if num_RRs < 0 or num_RRs > len(pos_to_fill):
             if (backward):
-                self.backward_ops = []
+                self.prior_ops = []
             else:
-                self.forward_ops = []
+                self.next_ops = []
             return
         
         self.list_alloc = self.list_allocs(len(pos_to_fill),next_gate_weight)
@@ -58,11 +62,11 @@ class PauliOperator:
             sibs.append(PauliOperator(copy.deepcopy(self.operator))) # Copies layer_str and uses to initialize PauliOperators
     
         if (backward):
-            self.backward_ops = sibs
-            self.find_next_operators(self.backward_ops, num_RRs, pos_to_fill, 0)
+            self.prior_ops = sibs
+            self.find_next_operators(self.prior_ops, num_RRs, pos_to_fill, 0)
         else:
-            self.forward_ops = sibs
-            self.find_next_operators(self.forward_ops, num_RRs, pos_to_fill, 0)
+            self.next_ops = sibs
+            self.find_next_operators(self.next_ops, num_RRs, pos_to_fill, 0)
 
     """
     This function determines the number of entries we need to allocate in our list 
@@ -146,7 +150,6 @@ class PauliOperator:
             return
         
     def r_to_xyz(self):
-        self.r_pos = []
         for i in range(len(self.operator)):
             if self.operator[i] == 'R':
                 self.r_pos.append(i)
@@ -167,3 +170,9 @@ class PauliOperator:
         self.fill_in_r_pos('X', r_pos_i+1,start)
         self.fill_in_r_pos('Y', r_pos_i+1,start+(3 ** (len(self.r_pos)-r_pos_i-2)))
         self.fill_in_r_pos('Z', r_pos_i+1,start+(2 * (3 ** (len(self.r_pos)-r_pos_i-2))))
+
+    # The first and last Pauli operator in a Pauli path can only be a tensor of 'I's and 'Z's
+    def r_to_z(self):
+        for i in range(len(self.operator)):
+            if self.operator[i] == 'R':
+                self.operator[i] = 'Z'
