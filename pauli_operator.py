@@ -17,7 +17,6 @@ class PauliOperator:
         self.operator = operator
         self.prior_ops = prior_ops
         self.next_ops = next_ops
-        self.r_pos = []
 
     """
     This function determines all possible operators at the Layer one depth away from this operator,
@@ -40,10 +39,21 @@ class PauliOperator:
         next_gate_weight = next_weight
 
         unordered_pos_to_fill = {pos for gate_pos in pos_to_fill for pos in gate_pos}
+        neighbor_operator = copy.deepcopy(self.operator)
         for i in range(len(self.operator)):
             if i not in unordered_pos_to_fill and self.operator[i] == 'R':
                 next_gate_weight -= 1 # Every non-gate qubit that is non-identity takes from our 
                 # overall Hamming weight available to gate qubits
+                if (backward): # if we are propagating backward, then
+                    neighbor_operator[i] = 'N' # any operator we propagate to in the prior layer
+                    # must have the same qubit at index i as the qubit at the same index in this layer
+                    # which is the next layer of its prior layer
+                    self.operator[i] = 'P'
+                else: # if we are propagating forward, then
+                    neighbor_operator[i] = 'P' # any operator we propagate to in the next layer
+                    # must have the same qubit at index i as the qubit at the same index in this layer
+                    # which is the prior layer of its next layer
+                    self.operator[i] = 'N'
 
         num_RRs = next_gate_weight - len(pos_to_fill) # Number of RRs we can use to fill in the layer
 
@@ -106,7 +116,7 @@ class PauliOperator:
         return list_alloc
 
     @staticmethod
-    def edit_operator(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int):
+    def edit_ops(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int):
         ind1, ind2 = indices
         str1, str2 = strs
         for i in range(r_start, r_end):
@@ -122,7 +132,7 @@ class PauliOperator:
         if (len(pos_to_fill) == num_RRs): # No more wiggle room, we must fill all remaining gate inputs with RR     
             cur_pos = pos_to_fill.pop(0)
             rr_start = r_start
-            self.edit_operator(sibs, cur_pos, ('R','R'), rr_start, rr_start+1) # Copy of layers with 'RR' added to all operators
+            self.edit_ops(sibs, cur_pos, ('R','R'), rr_start, rr_start+1) # Copy of layers with 'RR' added to all operators
             self.find_next_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) # One less RR to use
             # Next call will handle adding the next RR
             return
@@ -132,11 +142,11 @@ class PauliOperator:
 
             ir_start = r_start
             ir_end = r_start + self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
-            self.edit_operator(sibs, cur_pos, ('I','R'), ir_start, ir_end) # Copy of layers with 'IR' added to all operators
+            self.edit_ops(sibs, cur_pos, ('I','R'), ir_start, ir_end) # Copy of layers with 'IR' added to all operators
 
             ri_start = r_start + self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
             ri_end = r_start + 2*self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
-            self.edit_operator(sibs, cur_pos, ('R','I'), ri_start, ri_end) # Copy of layers with 'RI' added to all operators
+            self.edit_ops(sibs, cur_pos, ('R','I'), ri_start, ri_end) # Copy of layers with 'RI' added to all operators
 
             if (num_RRs != 0):
                 rr_start = r_start + 2*self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
@@ -148,31 +158,3 @@ class PauliOperator:
             self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ri_start) 
             
             return
-        
-    def r_to_xyz(self):
-        for i in range(len(self.operator)):
-            if self.operator[i] == 'R':
-                self.r_pos.append(i)
-        
-        self.xyz_paulis = []
-        for j in range(3 ** len(self.r_pos)):
-            self.xyz_paulis.append(copy.deepcopy(self.operator))
-        self.fill_in_r_pos('X',0,0)
-        self.fill_in_r_pos('Y',0,3 ** (len(self.r_pos)-1))
-        self.fill_in_r_pos('Z',0,2 * (3 ** (len(self.r_pos)-1)))
-
-    def fill_in_r_pos(self, pauli:str, r_pos_i:int, start:int):
-        if r_pos_i == len(self.r_pos):
-            return
-        for i in range(start, start + (3 ** (len(self.r_pos)-r_pos_i-1))):
-            
-            self.xyz_paulis[i][self.r_pos[r_pos_i]] = pauli
-        self.fill_in_r_pos('X', r_pos_i+1,start)
-        self.fill_in_r_pos('Y', r_pos_i+1,start+(3 ** (len(self.r_pos)-r_pos_i-2)))
-        self.fill_in_r_pos('Z', r_pos_i+1,start+(2 * (3 ** (len(self.r_pos)-r_pos_i-2))))
-
-    # The first and last Pauli operator in a Pauli path can only be a tensor of 'I's and 'Z's
-    def r_to_z(self):
-        for i in range(len(self.operator)):
-            if self.operator[i] == 'R':
-                self.operator[i] = 'Z'
