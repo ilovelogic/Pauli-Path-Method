@@ -66,13 +66,19 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - `r_pos`: A list of ints that stores the indices of all the 'R's in our `PauliOperator` object's operator
    - `xyz_paulis`: A list of string lists, where each string list is a distinct permutation of assigning either 'X', 'Y', or 'Z' to each of the 'R's in our `PauliOperator` object's operator
 
-**Methods**
-   - `weight_to_operators(self, next_weight:int, pos_to_fill:List[tuple], backward:int)`: If `backward` is 1,determines all possible `PauliOperator` objects that can directly precede this `PauliOperator` in a legal Pauli path and appends these `PauliOperator` objects to the `prior_ops` attribute of this class. Otherwise, determines every `PauliOperator` object that can come directly after this `PauliOperator` in a legal Pauli path and appends these objects to the `next_ops` attribute of this class.
-   - `list_allocs(num_p:int, num_w:int)`: A static method that takes the number of non-identity gate positions we have to fill (`num_p`) and the Hamming weight we have to spread across the gate positions (`num_w`). It returns a 2D int array where the (i,j) entry stores the number of ways we can fill i gates with non-identity I/O using a total Hamming weight of j.
-   - `edit_ops(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int)`: A static method that 
-   - `find_next_operators(sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int)`
-   - `r_to_xyz()`
-   - `fill_in_r_pos(pauli:str, r_pos_i:int, start:int)`
+**Methods:**
+
+- **`weight_to_operators(sib_ops: List[PauliOperator], next_weight: int, pos_to_fill: List[tuple], backward: int)`**  
+  If `backward` is 1, this method determines all possible `PauliOperator` objects that can directly precede the given `PauliOperator` in a legal Pauli path. These objects are appended to the `prior_ops` attribute of the class. Otherwise, it determines all possible `PauliOperator` objects that can directly follow the given one in a legal Pauli path and appends them to the `next_ops` attribute.
+
+- **`list_allocs(num_p: int, num_w: int)`**  
+  A static method that calculates the number of ways to distribute `num_w` (the total Hamming weight) across `num_p` non-identity gate positions. It returns a 2D integer array where each entry `(i, j)` represents the number of ways to fill `i` gates with a total Hamming weight of `j`.
+
+- **`find_next_operators(sibs: List[PauliOperator], num_RRs: int, pos_to_fill: List[tuple], r_start: int)`**  
+  A helper method of `weight_to_operators` which recursively fills the next non-identity I/O gate positions with either 'I' and 'R', 'R' and 'I', or 'R' and 'R', until we reach the bases case where `num_RRs` is 0 or the number of positions left to fill is equal to `num_RRs`.
+
+- **`edit_ops(sibs: List[PauliOperator], indices: tuple, strs: tuple, r_start: int, r_end: int)`**  
+  A static method that fills the first index of `indices` with the first string of `strs` and the second index with the second string for the `operator` attribute of all `PauliOperator` objects of `sibs` in the range [`r_start`,`r_end`).
 
 ---
 
@@ -119,6 +125,12 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - `min_backward(min_layers:List[PauliOperator],min_depth:int)`
    - `min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`
    - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`
+   
+- **`r_to_xyz()`**  
+  Converts internal representations of operations into their corresponding XYZ coordinate format.
+
+- **`fill_in_r_pos(pauli: str, r_pos: int, start: int)`**  
+  Fills in specific positions in an operation sequence based on the given Pauli string, position index (`r_pos`), and starting point
 
 ---
 
