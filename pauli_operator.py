@@ -1,6 +1,5 @@
 from __future__ import annotations
-import pdb # for debuggingv
-
+import pdb # for debugging
 from typing import List
 import copy
 
@@ -35,7 +34,7 @@ class PauliOperator:
         to be the list of all operators at the next layer of the circuit that this operator
         can propagate to.
     """
-    def weight_to_operators(self, next_weight:int, pos_to_fill:List[tuple], backward:int):
+    def weight_to_operators(self, sib_ops:List[PauliOperator], next_weight:int, pos_to_fill:List[tuple], backward:int):
         next_gate_weight = next_weight
 
         unordered_pos_to_fill = {pos for gate_pos in pos_to_fill for pos in gate_pos}
@@ -47,13 +46,15 @@ class PauliOperator:
                 if (backward): # if we are propagating backward, then
                     neighbor_operator[i] = 'N' # any operator we propagate to in the prior layer
                     # must have the same qubit at index i as the qubit at the same index in this layer
-                    # which is the next layer of its prior layer
-                    self.operator[i] = 'P'
+                    # which is the next (N) layer of its prior layer
+                    for sib_op in sib_ops:
+                        sib_op.operator[i] = 'P'
                 else: # if we are propagating forward, then
                     neighbor_operator[i] = 'P' # any operator we propagate to in the next layer
                     # must have the same qubit at index i as the qubit at the same index in this layer
-                    # which is the prior layer of its next layer
-                    self.operator[i] = 'N'
+                    # which is the prior (P) layer of its next layer
+                    for sib_op in sib_ops:
+                        sib_op.operator[i] = 'N'
 
         num_RRs = next_gate_weight - len(pos_to_fill) # Number of RRs we can use to fill in the layer
 
@@ -69,7 +70,7 @@ class PauliOperator:
 
         sibs = []
         for i in range(self.list_alloc[len(pos_to_fill)][next_gate_weight]): 
-            sibs.append(PauliOperator(copy.deepcopy(self.operator))) # Copies layer_str and uses to initialize PauliOperators
+            sibs.append(PauliOperator(copy.deepcopy(neighbor_operator))) # Copies layer_str and uses to initialize PauliOperators
     
         if (backward):
             self.prior_ops = sibs
@@ -115,14 +116,6 @@ class PauliOperator:
             
         return list_alloc
 
-    @staticmethod
-    def edit_ops(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int):
-        ind1, ind2 = indices
-        str1, str2 = strs
-        for i in range(r_start, r_end):
-            sibs[i].operator[ind1] = str1
-            sibs[i].operator[ind2] = str2
-
 
     def find_next_operators(self, sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int):
 
@@ -151,10 +144,18 @@ class PauliOperator:
             if (num_RRs != 0):
                 rr_start = r_start + 2*self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
                 rr_end = r_start+self.list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
-                self.edit_operator(sibs, cur_pos, ('R','R'), rr_start, rr_end) # Copy of layers with 'RR' added to all operators
+                self.edit_ops(sibs, cur_pos, ('R','R'), rr_start, rr_end) # Copy of layers with 'RR' added to all operators
                 self.find_next_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) 
 
             self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ir_start) 
             self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ri_start) 
             
             return
+
+    @staticmethod
+    def edit_ops(sibs:List[PauliOperator],indices:tuple, strs:tuple, r_start:int, r_end:int):
+        ind1, ind2 = indices
+        str1, str2 = strs
+        for i in range(r_start, r_end):
+            sibs[i].operator[ind1] = str1
+            sibs[i].operator[ind2] = str2
