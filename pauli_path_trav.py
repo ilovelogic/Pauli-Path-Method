@@ -6,7 +6,7 @@ from itertools import combinations
 from pauli_operator import PauliOperator
 from pauli_op_layer import PauliOpLayer
 
-class PauliPathTraversal:
+class PauliPathTrav:
 
     """
     Initiate all the lists of layers for a given weight configuration.
@@ -59,6 +59,23 @@ class PauliPathTraversal:
 
         return
     
+    """
+    This function finds the PauliOpLayer of the circuit with the lowest Hamming weight and
+    determines all possible PauliOperators at that layer. It also seperately stores the 
+    non-identity  gate positions between the min weight layer and its prior layer and 
+    the min layer and its next layer.
+
+    It uses the helper function unsorted_min_layer_ops to generate all possibile PauliOperators at the min layer.
+
+    Args:
+        self (PauliPathTrav) : The PauliPathTrav for which we need to find and initiate the min layer
+
+    Returns:
+        List[PauliOperator]: min_layer_ops, 
+        List[tuple]: pos_to_fill_b, 
+        List[tuple]: pos_to_fill_f, 
+        int: min_index
+    """
 
     def build_min_configs(self):
 
@@ -88,11 +105,10 @@ class PauliPathTraversal:
 
         return min_layer_ops, pos_to_fill_b, pos_to_fill_f, min_index
     
-    # Creates a list of all possible lists of indicies in increasing order 
-    # of length min_weight using values from 0 to num_qubits-1
-    # Ex. num_qubits = 3, min_weight = 2: [[0,1], [0,2], [1,2]]
     def unsorted_min_layer_ops(self, min_weight:int):
-        arrangements = list(combinations(range(self.num_qubits), min_weight)) 
+        arrangements = list(combinations(range(self.num_qubits), min_weight)) # Creates a list of all possible 
+        # lists of indicies in increasing order of length min_weight using values from 0 to num_qubits-1
+        # Ex. num_qubits = 3, min_weight = 2: [[0,1], [0,2], [1,2]]
         min_layer_ops_list = []
         for arrangement in arrangements: 
             temp = ['I'] * self.num_qubits # Generates list ['I','I',...] that has size num_qubits
@@ -157,7 +173,7 @@ class PauliPathTraversal:
         for sib_ops in all_sibs.values(): # Iterates over each sibling operators list at the former index 
             # All PauliOperators in a sibling operators have the same sibling operators they propagate to,
             # so we only need to get the next sibling operators once per each sibling operators in our list
-            sib_ops[0].weight_to_operators(self.weight_combo[index], copy.deepcopy(pos_to_fill[sib_ops[0]]), backward)
+            sib_ops[0].weight_to_operators(sib_ops, self.weight_combo[index], copy.deepcopy(pos_to_fill[sib_ops[0]]), backward)
         if (backward):
             for identifier, sib_ops in all_sibs.items():
                 for op in sib_ops:
@@ -178,3 +194,37 @@ class PauliPathTraversal:
                     new_sib_ops[identifier] = sib_ops[0].next_ops
 
         return new_sib_ops
+    
+    # Must traverse PauliPathTrav left to right. 
+    # If we encounter an 'R' or 'N', we can do any of 'X', 'Y', and 'Z'.
+    # If we encounter a 'P', we must use the Pauli at the same index in the prior layer 
+    def r_to_xyz(self, prior_op:PauliOperator, cur_op:PauliOperator):
+        r_pos_list = []
+        for i in range(len(cur_op)):
+            if cur_op[i] == 'R' or cur_op[i] == 'N':
+                r_pos_list.append(i)
+            elif cur_op[i] == 'P':
+                cur_op[i] = prior_op[i]
+        
+        xyz_paulis = []
+        for j in range(3 ** len(r_pos_list)):
+            self.xyz_paulis.append(copy.deepcopy(cur_op))
+        self.fill_in_r_pos(r_pos_list,'X',0,0)
+        self.fill_in_r_pos(r_pos_list,'Y',0,3 ** (len(r_pos_list)-1))
+        self.fill_in_r_pos(r_pos_list,'Z',0,2 * (3 ** (len(self.r_pos_list)-1)))
+
+    def fill_in_r_pos(self, r_pos_list:List[int], pauli:str, r_pos_i:int, start:int):
+        if r_pos_i == len(r_pos_list):
+            return
+        for i in range(start, start + (3 ** (len(r_pos_list)-r_pos_i-1))):
+            self.xyz_paulis[i][r_pos_list[r_pos_i]] = pauli
+        
+        self.fill_in_r_pos(r_pos_list,'X', r_pos_i+1,start)
+        self.fill_in_r_pos(r_pos_list,'Y', r_pos_i+1,start+(3 ** (len(r_pos_list)-r_pos_i-2)))
+        self.fill_in_r_pos(r_pos_list,'Z', r_pos_i+1,start+(2 * (3 ** (len(r_pos_list)-r_pos_i-2))))
+
+    # The first and last Pauli operator in a Pauli path can only be a tensor of 'I's and 'Z's
+    def r_to_z(self):
+        for i in range(len(self.operator)):
+            if self.operator[i] == 'R':
+                self.operator[i] = 'Z'
