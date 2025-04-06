@@ -54,10 +54,11 @@ class PauliOpLayer:
     """
 
     def check_qubits(self, unsorted_pauli_ops:List[PauliOperator]):
-        self.pos_to_fill = defaultdict(list) # Each layer's gate positions that require non-identity input
-        # stored as a list of lists where first index is for layer and second is for gate
+        self.pos_to_fill = defaultdict(list) # Hash map, where each key is a PauliOperator object 
+        # and the key's associated value is the list of all the gate positions with non-identity I/O 
+        # between the PauliOperator key and the layer to which we propagate.
 
-        self.carry_over_qubits = []
+        self.carry_over_qubits = [] # Represents the non-gate qubits of each PauliOperator object
 
         for i in range(len(unsorted_pauli_ops)): # For each valid configuration of our layer
             self.carry_over_qubits.append(copy.deepcopy(unsorted_pauli_ops[i].operator))
@@ -69,11 +70,10 @@ class PauliOpLayer:
                     self.carry_over_qubits[i][ind2] = 'I' # So when we compare the qubits that don't change,
                     # we don't also compare the ones that can change in a gate
 
-
     def find_sibs(self,unsorted_pauli_ops:List[PauliOperator]):
         sorted_pauli_ops = defaultdict(list) # Hash map of PauliOperators,
-        # where each key maps to a list of all PauliOperators 
-        # with a particular set of non-gate qubits and non-identity input gate positions
+        # where each key (tuple of an entry from pos_to_fill and carry_over_qubits) maps to a list of 
+        # all PauliOperators with a particular set of non-gate qubits and non-identity I/O gate positions
 
         for i in range(len(unsorted_pauli_ops)): # For each PauliOperator
             identifier = (tuple(self.pos_to_fill[unsorted_pauli_ops[i]]), tuple(self.carry_over_qubits[i]))
