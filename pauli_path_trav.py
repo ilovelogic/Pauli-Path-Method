@@ -198,33 +198,39 @@ class PauliPathTrav:
     # Must traverse PauliPathTrav left to right. 
     # If we encounter an 'R' or 'N', we can do any of 'X', 'Y', and 'Z'.
     # If we encounter a 'P', we must use the Pauli at the same index in the prior layer 
-    def r_to_xyz(self, prior_op:PauliOperator, cur_op:PauliOperator):
-        r_pos_list = []
+    def rnp_to_xyz(self, cur_op:PauliOperator, prior_op:PauliOperator):
+        rn_pos_list = []
         for i in range(len(cur_op)):
             if cur_op[i] == 'R' or cur_op[i] == 'N':
-                r_pos_list.append(i)
+                rn_pos_list.append(i)
             elif cur_op[i] == 'P':
                 cur_op[i] = prior_op[i]
         
         xyz_paulis = []
-        for j in range(3 ** len(r_pos_list)):
+        for j in range(3 ** len(rn_pos_list)):
             self.xyz_paulis.append(copy.deepcopy(cur_op))
-        self.fill_in_r_pos(r_pos_list,'X',0,0)
-        self.fill_in_r_pos(r_pos_list,'Y',0,3 ** (len(r_pos_list)-1))
-        self.fill_in_r_pos(r_pos_list,'Z',0,2 * (3 ** (len(self.r_pos_list)-1)))
+        self.fill_in_r_pos(rn_pos_list,'X',0,0)
+        self.fill_in_r_pos(rn_pos_list,'Y',0,3 ** (len(rn_pos_list)-1))
+        self.fill_in_r_pos(rn_pos_list,'Z',0,2 * (3 ** (len(rn_pos_list)-1)))
 
-    def fill_in_r_pos(self, r_pos_list:List[int], pauli:str, r_pos_i:int, start:int):
-        if r_pos_i == len(r_pos_list):
+    def fill_in_rn_pos(self, rn_pos_list:List[int], pauli:str, rn_index:int, start:int):
+        if rn_index == len(rn_pos_list):
             return
-        for i in range(start, start + (3 ** (len(r_pos_list)-r_pos_i-1))):
-            self.xyz_paulis[i][r_pos_list[r_pos_i]] = pauli
+        for i in range(start, start + (3 ** (len(rn_pos_list)-rn_index-1))):
+            self.xyz_paulis[i][rn_pos_list[rn_index]] = pauli
         
-        self.fill_in_r_pos(r_pos_list,'X', r_pos_i+1,start)
-        self.fill_in_r_pos(r_pos_list,'Y', r_pos_i+1,start+(3 ** (len(r_pos_list)-r_pos_i-2)))
-        self.fill_in_r_pos(r_pos_list,'Z', r_pos_i+1,start+(2 * (3 ** (len(r_pos_list)-r_pos_i-2))))
+        self.fill_in_r_pos(rn_pos_list,'X', rn_index+1,start)
+        self.fill_in_r_pos(rn_pos_list,'Y', rn_index+1,start+(3 ** (len(rn_pos_list)-rn_index-2)))
+        self.fill_in_r_pos(rn_pos_list,'Z', rn_index+1,start+(2 * (3 ** (len(rn_pos_list)-rn_index-2))))
 
     # The first and last Pauli operator in a Pauli path can only be a tensor of 'I's and 'Z's
-    def r_to_z(self):
-        for i in range(len(self.operator)):
-            if self.operator[i] == 'R':
-                self.operator[i] = 'Z'
+    def rn_to_z(self, cur_op:PauliOperator, prior_op:PauliOperator=None):
+        for i in range(len(cur_op.operator)):
+            if cur_op.operator[i] == 'R' or cur_op.operator[i] == 'N':
+                cur_op.operator[i] = 'Z'
+            if self.operator[i] == 'P' and prior_op != None: # only possible when we are at the last (not first) op
+                if prior_op[i] == 'Z':
+                    cur_op.operator[i] = 'Z'
+                else:
+                    return 0 # indicates the need to remove the path
+        return 1 # valid path possible
