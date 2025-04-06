@@ -35,7 +35,7 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
 ## Architecture Overview
 
 1. **Core Classes**:
-   - [PauliOperator](#pauli_operatorpy): Stores a Pauli operator, the list of all `PauliOperator` objects that can precede this operator in a legal Pauli path, and a list of those that can come after it. Can generate both of these lists. Each Pauli operator is represented as a list of strings, where each string is either 'I' or 'R'. 'I' is the identity Pauli matrix and 'R' signifies a non-identity Pauli matrix.
+   - [PauliOperator](#pauli_operatorpy): Stores a Pauli operator, the list of all `PauliOperator` objects that can precede this operator in a legal Pauli path, and a list of those that can come after it. Can generate both of these lists. Each Pauli operator is represented as a list of strs, where each str represents which Pauli matrices can be at that particular index in the tensor product comprising the Pauli operator.
    - [PauliOpLayer](#pauli_op_layerpy): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
    - [PauliPathTrav](#pauli_path_travpy): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
    - [CircuitSim](#circuit_simpy): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
@@ -50,21 +50,31 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
 
 ### pauli_operator.py
 
-**Overview**\
-<img src="images/PauliOperator_ops.png" width="450" />
+**List of Strs Representation**\
+Each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ Paulis $X$, $Y$, $Z$, and $I$. Accordingly, the `PauliOperator` class represents a Pauli operator by a list of strs (the `operator` attribute), where the ith str in the list characterizes the ith Pauli in the tensor product. Below are the different strs that can show up in the list along with what they specify. 
+   - "I": The associated Pauli matrix is the $2 \times 2$ identity matrix.
+   - "R": The Pauli matrix can be either $X$, $Y$, or $Z$ (any of the non-identity Paulis).
+   - "N": The Pauli matrix must be the same as the Pauli at the same index in the next Pauli operator in the path. We use "N" in the case where there is a non-identity Pauli whose associated qubit is not sent into any gates between this operator and the next, so it must not change between layers.
+   - "P": The Pauli matrix is specified by whatever the Pauli is at the same index in the prior Pauli operator in the path. This is for the case of a non-identity Pauli whose related qubit does not enter any gates between this Pauli operator and the prior one.\
+
+We use "R", "N", and "P" rather than directly including "X", "Y", and "Z" in order to avoid blowing up in memory. Since each "R" encapsulates the possibility of "X", "Y", or "Z", our number of Pauli paths to store is exponentially less than it would be if we opted 
+to store each individual combination of choosing either "X", "Y", or "Z" for all of "R"s in our list. \
+\
+<img src="images/PauliOperator_ops.png" width="450" />\
+**Immediate Neighbors**\
+It is also essential that we situate each Pauli operator in terms of its neighbors in a legal Pauli path. Thus, we store a reference (`prior_ops`) to the `PauliOperator` objects that can directly precede this `PauliOperator` in a legal Pauli path. Likewise, we maintain an attribute (`next_ops`) for the `PauliOperator` objects that can come directly after this `PauliOperator`.
 
 **Initialization**\
    `PauliOperator(operator:List[str], prior_ops:List[PauliOperator] = None, next_ops:List[PauliOperator] = None):`
    >Instantiates a PauliOperator object with its `operator` attribute initialized, and its `prior_ops` and `next_ops` attributes initialized if those parameters were included in the call.
 
 **Attributes**
-   - `operator`: A list of strings representing this `PauliOperator`. There is one string for each qubit in the circuit, and every string is either 'I' or 'R', depending on whether the qubit must be the identity or whether it can be either 'X', 'Y', or 'Z.'
+   - `operator`: A list of strs representing this `PauliOperator`, consisting of "I"s, "R"s, "N"s, and "P"s.
    - `prior_ops`: A list containing all `PauliOperator` objects that can directly precede this `PauliOperator` in a legal Pauli path.
    - `next_ops`: A list containing each of the `PauliOperator` objects that could come directly after this `PauliOperator` in a legal Pauli path.
    - `list_alloc`: A 2D array, where `list_alloc[i,j]` is the number of ways we
    can fill i gates with non-identity I/O using an overall Hamming weight of j
-   - `r_pos`: A list of ints that stores the indices of all the 'R's in our `PauliOperator` object's operator
-   - `xyz_paulis`: A list of string lists, where each string list is a distinct permutation of assigning either 'X', 'Y', or 'Z' to each of the 'R's in our `PauliOperator` object's operator
+   - `xyz_paulis`: A list of str lists, where each str list is a distinct permutation of assigning either 'X', 'Y', or 'Z' to each of the 'R's in our `PauliOperator` object's operator
 
 **Methods:**
 
@@ -78,14 +88,16 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
   A helper method of `weight_to_operators` which recursively fills the next non-identity I/O gate positions with either 'I' and 'R', 'R' and 'I', or 'R' and 'R', until we reach the bases case where `num_RRs` is 0 or the number of positions left to fill is equal to `num_RRs`.
 
 - **`edit_ops(sibs: List[PauliOperator], indices: tuple, strs: tuple, r_start: int, r_end: int)`**  
-  A static method that fills the first index of `indices` with the first string of `strs` and the second index with the second string for the `operator` attribute of all `PauliOperator` objects of `sibs` in the range [`r_start`,`r_end`).
+  A static method that fills the first index of `indices` with the first str of `strs` and the second index with the second str for the `operator` attribute of all `PauliOperator` objects of `sibs` in the range [`r_start`,`r_end`).
 
 ---
 
 ### pauli_op_layer.py
 
-**Overview**\
 <img src="images/Layer_sibs.png" width="400" />
+
+**Sorting for Propagation**\
+We store all the possibile Pauli paths in terms of layers. At each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in "sibling" lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer. We store each such "sibling" list in a DefaultDict (`backward_sibs`), where the "sibling" list is the value and the key is a tuple o the list of non-identity gate positions between any `PauliOperator` in the "sibling" list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this "sibling" list and any of the `PauliOperator` objects the prior propagation list. `forward_sibs` is a DefaultDict with the same set up except that it stores "sibling" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
 
 **Initialization**\
    `PauliOpLayer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
@@ -99,8 +111,14 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - `carry_over_qubits`: A list of lists of strs, where each list of strs is a copy of one the `PauliOperator` object's operator at this `PauliOpLayer` with the edit that its qubits at gate positions are all set to 'I'. This allows us to check equality of non-gate qubits for `PauliOperator` objects by simply comparing their lists in `carry_over_qubits`. 
 
 **Methods**
-   - `check_qubits(unsorted_pauli_ops:List[PauliOperator])`
-   - `find_sibs(unsorted_pauli_ops:List[PauliOperator])`
+   - **`check_qubits(unsorted_pauli_ops:List[PauliOperator])`**\
+   Uses the attribute `gate_pos` to determine which gate positions have non-identity I/O, for each `PauliOperator` in `unsorted_pauli_ops`, in order to fill out the attribute `pos_to_fill`. Also uses `gate_pos` to correctly edit `carry_over_qubits` so that each of its entries only characterizes non-gate qubits, for each `PauliOperator` in `unsorted_pauli_ops`. 
+
+   - **`find_sibs(unsorted_pauli_ops:List[PauliOperator])`**\
+   Relies on the information obtained from calling `check_qubits` to sort all the `PauliOperator` objects of this `PauliOpLayer` into lists according to which have the same set of non-gate qubits and non-identity I/O gate positions. Accomplishes that using a DefaultDict where the keys are tuples comprised of a `PauliOperator` object's associated entry of `pos_to_fill` and `carry_over_qubits`. 
+
+**Methods**
+   - 
 
 ---
 
@@ -126,11 +144,11 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - `min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`
    - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`
    
-- **`r_to_xyz()`**  
+- **rnp_to_xyz(cur_op:PauliOperator, prior_op:PauliOperator)**  
   Converts internal representations of operations into their corresponding XYZ coordinate format.
 
-- **`fill_in_r_pos(pauli: str, r_pos: int, start: int)`**  
-  Fills in specific positions in an operation sequence based on the given Pauli string, position index (`r_pos`), and starting point
+- **`fill_in_rn_pos(pauli: str, rn_index: int, start: int)`**  
+  Fills in specific positions in an operation sequence based on the given Pauli str, position index (`rn_index`), and starting point
 
 ---
 
