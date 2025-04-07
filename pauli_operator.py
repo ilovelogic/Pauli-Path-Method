@@ -13,6 +13,7 @@ class PauliOperator:
         if not isinstance(operator, list):
             raise TypeError("Expected a List[str] as the operator argument.")
                   
+        self.xyz_paulis = []
         self.operator = operator
         self.prior_ops = prior_ops
         self.next_ops = next_ops
@@ -25,6 +26,7 @@ class PauliOperator:
 
     Args:
         self (PauliOperator) : The PauliOperator from which we are propagating
+        sib_ops (List[PauliOperator]) : All the Pauli operators at self's layer which are "family" with self
         next_weight (int) : The total Hamming weight of the next Layer
         pos_to_fill (List[tuple]) : The non-identity gate positions between the Layers
         backward (int) : 1 if we are propagating backward, 0 if we are propagating forward
@@ -53,8 +55,12 @@ class PauliOperator:
                     neighbor_operator[i] = 'P' # any operator we propagate to in the next layer
                     # must have the same qubit at index i as the qubit at the same index in this layer
                     # which is the prior (P) layer of its next layer
-                    for sib_op in sib_ops:
-                        sib_op.operator[i] = 'N'
+                    if sib_op[0].operator[i] != 'N':
+                        for sib_op in sib_ops:
+                            sib_op.operator[i] = 'N'
+                    else:
+                        for sib_op in sib_ops:
+                            sib_op.operator[i] = 'P'
 
         num_RRs = next_gate_weight - len(pos_to_fill) # Number of RRs we can use to fill in the layer
 
