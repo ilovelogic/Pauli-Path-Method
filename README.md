@@ -39,6 +39,7 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - [PauliOpLayer](#pauli_op_layerpy): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
    - [PauliPathTrav](#pauli_path_travpy): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
    - [CircuitSim](#circuit_simpy): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
+   - [SiblingOps](#sibling_opspy): Builds a list (`next_ops`) of all `SiblingOps` objects that can come after this SiblingOps` to form valid Pauli path traversals.
 2. **Testing**:
    - [TestCircuits](#test_circuitspy): A suite of tests to validate functionality, both in general use cases and edge cases. Restricted to circuits with 0 to 25 qubits.
 
@@ -97,7 +98,7 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
 <img src="images/Layer_sibs.png" width="400" />
 
 **Sorting for Propagation**\
-We store all the possibile Pauli paths in terms of layers. At each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in "sibling" lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer. We store each such "sibling" list in a DefaultDict (`backward_sibs`), where the "sibling" list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the "sibling" list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this "sibling" list and any of the `PauliOperator` objects the prior propagation list. `forward_sibs` is a DefaultDict with the same set up except that it stores "sibling" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
+We store all the possibile Pauli paths in terms of layers. At each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in "family" lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer. We store each such "family" list in a DefaultDict (`backward_sibs`), where the "family" list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the "family" list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this "family" list and any of the `PauliOperator` objects the prior propagation list. `forward_sibs` is a DefaultDict with the same set up except that it stores "family" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
 
 **Initialization**\
    `PauliOpLayer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
@@ -106,8 +107,8 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
    - `backward`: An int that is 1 if we need to propagate backward from this `PauliOpLayer` and 0 otherwise.
    - `gate_pos`: A list of int tuples, where each int tuple stores the two I/O indices of a gate between this PauliOpLayer and either the prior PauliOpLayer (if backward) or the next `PauliOpLayer` (otherwise).
    - `pos_to_fill`: A DefaultDict whose keys are the `PauliOperator` objects at this `PauliOpLayer` and whose values are lists of int tuples containing the non-identity I/O gate positions between the `PauliOperator` key and the `PauliOpLayer` to which we're propagating.
-   - `forward_sibs`: A DefaultDict that sorts all the `PauliOperator` objects at this `PauliOpLayer` according to their having matching gate positions with non-identity I/O and the same non-gate qubits when propagating forward. The non-identity I/O gate positions list and the list of non-gate qubit strs are both converted into tuples and used as the key for the DefaultDict. The list of "sibling" PauliOperator objects is the value for the DefaultDict.
-   - `bacward_sibs`: A DefaultDict with the same setup as `forward_sibs` except that it is sorted according to matching the attributes when propagating backward. Both `forward_sibs` and `backward_sibs` enjoy the property that each of their "sibling" lists contain a grouping of `PauliOperator` objects that all propagate to the same list of `PauliOperator` objects at a neighboring circuit Layer.
+   - `forward_sibs`: A DefaultDict that sorts all the `PauliOperator` objects at this `PauliOpLayer` according to their having matching gate positions with non-identity I/O and the same non-gate qubits when propagating forward. The non-identity I/O gate positions list and the list of non-gate qubit strs are both converted into tuples and used as the key for the DefaultDict. The list of "family" PauliOperator objects is the value for the DefaultDict.
+   - `bacward_sibs`: A DefaultDict with the same setup as `forward_sibs` except that it is sorted according to matching the attributes when propagating backward. Both `forward_sibs` and `backward_sibs` enjoy the property that each of their "family" lists contain a grouping of `PauliOperator` objects that all propagate to the same list of `PauliOperator` objects at a neighboring circuit Layer.
    - `carry_over_qubits`: A list of lists of strs, where each list of strs is a copy of one the `PauliOperator` object's operator at this `PauliOpLayer` with the edit that its qubits at gate positions are all set to "I". This allows us to check equality of non-gate qubits for `PauliOperator` objects by simply comparing their lists in `carry_over_qubits`. 
 
 **Methods**
@@ -141,11 +142,6 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
    - `min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`
    - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`
    
-- **rnp_to_xyz(cur_op:PauliOperator, prior_op:PauliOperator)**  
-  Converts internal representations of operations into their corresponding XYZ coordinate format.
-
-- **`fill_in_rn_pos(pauli: str, rn_index: int, start: int)`**  
-  Fills in specific positions in an operation sequence based on the given Pauli str, position index (`rn_index`), and starting point
 
 ---
 
@@ -169,6 +165,29 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
 **Methods**
    - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
    - `enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)`: Recursively fills the `weight_combo` attribute of the `CircuitSim` with each distinct list that specifies the Hamming weights of a legal Pauli path, taking into account the restrictions of the circuit architecture. For each list, the ith int in the list assigns the Hamming weight of the ith Pauli operator of the Pauli path.
+
+   ---
+
+### sibling_ops.py
+
+**Overview**
+
+The `SiblingOps` class represents...
+
+**Initialization**\
+   `SiblingOps(pauli_ops:List[PauliOperator], next_op:PauliOperator)`
+
+**Attributes**
+   - `prior_ops`: 
+   - `pauli_ops`:
+   - `next_ops`: 
+
+**Methods**
+   - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
+   - `rn_to_z(cur_op:PauliOperator, prior_op:PauliOperator=None)`: 
+   - `rnp_to_zyz(next_op:PauliOperator)`:
+   - `fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`:
+   - `carries_to_the_end(cur_op:PauliOperator, i:int)`:
 
 ---
 
