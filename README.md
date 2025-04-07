@@ -55,7 +55,7 @@ Each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ 
    - "I": The associated Pauli matrix is the $2 \times 2$ identity matrix.
    - "R": The Pauli matrix can be either $X$, $Y$, or $Z$ (any of the non-identity Paulis).
    - "N": The Pauli matrix must be the same as the Pauli at the same index in the next Pauli operator in the path. We use "N" in the case where there is a non-identity Pauli whose associated qubit is not sent into any gates between this operator and the next, so it must not change between layers.
-   - "P": The Pauli matrix is specified by whatever the Pauli is at the same index in the prior Pauli operator in the path. This is for the case of a non-identity Pauli whose related qubit does not enter any gates between this Pauli operator and the prior one.\
+   - "P": The Pauli matrix is specified by whatever the Pauli is at the same index in the prior Pauli operator in the path. This is for the case of a non-identity Pauli whose related qubit does not enter any gates between this Pauli operator and the prior one.
 
 We use "R", "N", and "P" rather than directly including "X", "Y", and "Z" in order to avoid blowing up in memory. Since each "R" encapsulates the possibility of "X", "Y", or "Z", our number of Pauli paths to store is exponentially less than it would be if we opted 
 to store each individual combination of choosing either "X", "Y", or "Z" for all of "R"s in our list. \
@@ -74,7 +74,7 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
    - `next_ops`: A list containing each of the `PauliOperator` objects that could come directly after this `PauliOperator` in a legal Pauli path.
    - `list_alloc`: A 2D array, where `list_alloc[i,j]` is the number of ways we
    can fill i gates with non-identity I/O using an overall Hamming weight of j
-   - `xyz_paulis`: A list of str lists, where each str list is a distinct permutation of assigning either 'X', 'Y', or 'Z' to each of the 'R's in our `PauliOperator` object's operator
+   - `xyz_paulis`: A list of str lists, where each str list is a distinct permutation of assigning either "X", "Y", or "Z" to each of the "R"s in our `PauliOperator` object's operator
 
 **Methods:**
 
@@ -85,7 +85,7 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
   A static method that calculates the number of ways to distribute `num_w` (the total Hamming weight) across `num_p` non-identity gate positions. It returns a 2D integer array where each entry `(i, j)` represents the number of ways to fill `i` gates with a total Hamming weight of `j`.
 
 - **`find_next_operators(sibs: List[PauliOperator], num_RRs: int, pos_to_fill: List[tuple], r_start: int)`**  
-  A helper method of `weight_to_operators` which recursively fills the next non-identity I/O gate positions with either 'I' and 'R', 'R' and 'I', or 'R' and 'R', until we reach the bases case where `num_RRs` is 0 or the number of positions left to fill is equal to `num_RRs`.
+  A helper method of `weight_to_operators` which recursively fills the next non-identity I/O gate positions with either "I" and "R", "R" and "I", or "R" and "R", until we reach the bases case where `num_RRs` is 0 or the number of positions left to fill is equal to `num_RRs`.
 
 - **`edit_ops(sibs: List[PauliOperator], indices: tuple, strs: tuple, r_start: int, r_end: int)`**  
   A static method that fills the first index of `indices` with the first str of `strs` and the second index with the second str for the `operator` attribute of all `PauliOperator` objects of `sibs` in the range [`r_start`,`r_end`).
@@ -97,7 +97,7 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
 <img src="images/Layer_sibs.png" width="400" />
 
 **Sorting for Propagation**\
-We store all the possibile Pauli paths in terms of layers. At each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in "sibling" lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer. We store each such "sibling" list in a DefaultDict (`backward_sibs`), where the "sibling" list is the value and the key is a tuple o the list of non-identity gate positions between any `PauliOperator` in the "sibling" list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this "sibling" list and any of the `PauliOperator` objects the prior propagation list. `forward_sibs` is a DefaultDict with the same set up except that it stores "sibling" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
+We store all the possibile Pauli paths in terms of layers. At each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in "sibling" lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer. We store each such "sibling" list in a DefaultDict (`backward_sibs`), where the "sibling" list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the "sibling" list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this "sibling" list and any of the `PauliOperator` objects the prior propagation list. `forward_sibs` is a DefaultDict with the same set up except that it stores "sibling" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
 
 **Initialization**\
    `PauliOpLayer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
@@ -108,7 +108,7 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
    - `pos_to_fill`: A DefaultDict whose keys are the `PauliOperator` objects at this `PauliOpLayer` and whose values are lists of int tuples containing the non-identity I/O gate positions between the `PauliOperator` key and the `PauliOpLayer` to which we're propagating.
    - `forward_sibs`: A DefaultDict that sorts all the `PauliOperator` objects at this `PauliOpLayer` according to their having matching gate positions with non-identity I/O and the same non-gate qubits when propagating forward. The non-identity I/O gate positions list and the list of non-gate qubit strs are both converted into tuples and used as the key for the DefaultDict. The list of "sibling" PauliOperator objects is the value for the DefaultDict.
    - `bacward_sibs`: A DefaultDict with the same setup as `forward_sibs` except that it is sorted according to matching the attributes when propagating backward. Both `forward_sibs` and `backward_sibs` enjoy the property that each of their "sibling" lists contain a grouping of `PauliOperator` objects that all propagate to the same list of `PauliOperator` objects at a neighboring circuit Layer.
-   - `carry_over_qubits`: A list of lists of strs, where each list of strs is a copy of one the `PauliOperator` object's operator at this `PauliOpLayer` with the edit that its qubits at gate positions are all set to 'I'. This allows us to check equality of non-gate qubits for `PauliOperator` objects by simply comparing their lists in `carry_over_qubits`. 
+   - `carry_over_qubits`: A list of lists of strs, where each list of strs is a copy of one the `PauliOperator` object's operator at this `PauliOpLayer` with the edit that its qubits at gate positions are all set to "I". This allows us to check equality of non-gate qubits for `PauliOperator` objects by simply comparing their lists in `carry_over_qubits`. 
 
 **Methods**
    - **`check_qubits(unsorted_pauli_ops:List[PauliOperator])`**\
@@ -116,9 +116,6 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
    - **`find_sibs(unsorted_pauli_ops:List[PauliOperator])`**\
    Relies on the information obtained from calling `check_qubits` to sort all the `PauliOperator` objects of this `PauliOpLayer` into lists according to which have the same set of non-gate qubits and non-identity I/O gate positions. Accomplishes that using a DefaultDict where the keys are tuples comprised of a `PauliOperator` object's associated entry of `pos_to_fill` and `carry_over_qubits`. 
-
-**Methods**
-   - 
 
 ---
 
