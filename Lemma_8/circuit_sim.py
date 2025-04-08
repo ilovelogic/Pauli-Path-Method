@@ -135,3 +135,6 @@ class CircuitSim:
         for i in range(len(pauli_op.next_ops)):
             partial_pauli_path_copy = copy.deepcopy(partial_pauli_path)
             self.pauli_op_hopping(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
+
+    def build_xyz_tree(self):
+        for list in self.pauli_path_list[0]:
