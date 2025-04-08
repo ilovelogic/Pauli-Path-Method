@@ -145,9 +145,35 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
 ---
 
+### sibling_ops.py
+
+**Overview**
+
+<img src="images/SiblingOperators.png" width="1000" />\
+The `SiblingOps` class represents...
+
+**Initialization**\
+   `SiblingOps(pauli_ops:List[PauliOperator], next_op:PauliOperator)`
+
+**Attributes**
+   - `prior_ops`: 
+   - `pauli_ops`:
+   - `next_ops`: 
+
+**Methods**
+   - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
+   - `rn_to_z(cur_op:PauliOperator, prior_op:PauliOperator=None)`: 
+   - `rnp_to_zyz(next_op:PauliOperator)`:
+   - `fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`:
+   - `carries_to_the_end(cur_op:PauliOperator, i:int)`:
+
+---
+
 ### circuit_sim.py
 
 **Overview**
+
+<img src="images/xyz_tree.png" width="1000" />
 
 The `CircuitSim` class represents a classical simulation of a noisy random circuit. Its constructor initiailizes a list of all possible `PauliPathTrav` objects, given the circuit architecture and an upperbound on Hamming weight.
 
@@ -167,28 +193,5 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    - `enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)`: Recursively fills the `weight_combo` attribute of the `CircuitSim` with each distinct list that specifies the Hamming weights of a legal Pauli path, taking into account the restrictions of the circuit architecture. For each list, the ith int in the list assigns the Hamming weight of the ith Pauli operator of the Pauli path.
 
    ---
-
-### sibling_ops.py
-
-**Overview**
-
-The `SiblingOps` class represents...
-
-**Initialization**\
-   `SiblingOps(pauli_ops:List[PauliOperator], next_op:PauliOperator)`
-
-**Attributes**
-   - `prior_ops`: 
-   - `pauli_ops`:
-   - `next_ops`: 
-
-**Methods**
-   - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
-   - `rn_to_z(cur_op:PauliOperator, prior_op:PauliOperator=None)`: 
-   - `rnp_to_zyz(next_op:PauliOperator)`:
-   - `fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`:
-   - `carries_to_the_end(cur_op:PauliOperator, i:int)`:
-
----
 
 ## test_circuit.py
