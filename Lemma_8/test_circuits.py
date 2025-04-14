@@ -9,13 +9,13 @@ from circuit_sim import CircuitSim
 class TestCircuits(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.circuit = CircuitSim(4, 10, [[(0, 1),(2,3)],[(1,2)]]) # brickwork 1D
+        self.circuit = CircuitSim(4, 7, [[(0, 1),(2,3)],[(1,2)],[(0, 1),(2,3)]]) # brickwork 1D
 
     def test_initialization(self):
         self.assertEqual(self.circuit.num_qubits, 4)
-        self.assertEqual(self.circuit.num_op_layers, 3)
-        self.assertEqual(self.circuit.max_weight, 10)
-        self.assertEqual(self.circuit.gate_pos, [[(0, 1),(2,3)],[(1,2)]])
+        self.assertEqual(self.circuit.num_op_layers, 4)
+        self.assertEqual(self.circuit.max_weight, 7)
+        self.assertEqual(self.circuit.gate_pos, [[(0, 1),(2,3)],[(1,2)],[(0, 1),(2,3)]])
 
     def test_enumerate_weights(self):
         self.assertIsInstance(self.circuit.weight_combos, list)
@@ -45,17 +45,29 @@ class TestCircuits(unittest.TestCase):
         self.assertIsInstance(self.circuit.pauli_path_travs, list)
         self.assertTrue(all(isinstance(path, PauliPathTrav) for path in self.circuit.pauli_path_travs))
 
+    def test_rnp_to_xyz(self):
+            for pauli_path in self.circuit.xyz_pauli_paths:
+                print(len(pauli_path))
+                for pauli_op in pauli_path:
+                    if type(pauli_op) == list:
+                        print("It's a list! LOL")
+                        print(pauli_op[0].operator)
+                    else:
+                        print(pauli_op.operator)
+            self.assertEqual(1,1)
+
     def test_travs_to_list(self):
         pauli_path_set = set() # Set we will use to check for duplicate Pauli paths
         num_pauli_ops = 0 # Counter so we can compare the number of Pauli paths
         # stored in our list of lists of Pauli paths to the number of Pauli paths in the set
-        for i in range (len(self.circuit.pauli_path_list)):
+        for i in range (len(self.circuit.rnp_pauli_paths)):
             this_weight_combo = self.circuit.weight_combos[i] # The weight combo assigned to every Pauli path in this list
-            for pauli_path in self.circuit.pauli_path_list[i]:
+            for pauli_path in self.circuit.rnp_pauli_paths[i]:
                 tuple_pauli = tuple(tuple(pauli_path_op.operator) for pauli_path_op in pauli_path) # Sets can store tuples, not lists
                 pauli_path_set.add(tuple_pauli) # Only adds the Pauli path if it is not already in the set
                 num_pauli_ops += 1
                 # Checks if each Pauli operator in our Pauli path has the weight specified by its weight combo
+
                 for i in range (len(pauli_path)):
                     pauli_op_weight = 0
                     for pauli in pauli_path[i].operator:
@@ -63,25 +75,6 @@ class TestCircuits(unittest.TestCase):
                             pauli_op_weight += 1
         self.assertEqual(len(pauli_path_set), num_pauli_ops) # If there are no duplicates, every element in 
         # the list of lists would have been added to the set, making these two values equal
-
-        def test_r_to_xyz(self):
-            pauli_path_set = set() # Set we will use to check for duplicate Pauli paths
-            num_pauli_ops = 0 # Counter so we can compare the number of Pauli paths
-            # stored in our list of lists of Pauli paths to the number of Pauli paths in the set
-            for i in range (len(self.circuit.pauli_path_list)):
-                this_weight_combo = self.circuit.weight_combos[i] # The weight combo assigned to every Pauli path in this list
-                for pauli_path in self.circuit.pauli_path_list[i]:
-                    tuple_pauli = tuple(tuple(pauli_path_op.operator) for pauli_path_op in pauli_path) # Sets can store tuples, not lists
-                    pauli_path_set.add(tuple_pauli) # Only adds the Pauli path if it is not already in the set
-                    num_pauli_ops += 1
-                    # Checks if each Pauli operator in our Pauli path has the weight specified by its weight combo
-                    for i in range (len(pauli_path)):
-                        pauli_op_weight = 0
-                        for pauli in pauli_path[i].operator:
-                            if pauli == 'R' or pauli == 'P':
-                                pauli_op_weight += 1
-            self.assertEqual(len(pauli_path_set), num_pauli_ops) # If there are no duplicates, every element in 
-            # the list of lists would have been added to the set, making these two values equal
     
 
 if __name__ == '__main__':
