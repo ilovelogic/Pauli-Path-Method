@@ -4,6 +4,7 @@ import math
 from typing import List
 from pauli_operator import PauliOperator
 from pauli_path_trav import PauliPathTrav
+from sibling_ops import SiblingOps
 
 class CircuitSim:
     """
@@ -28,6 +29,9 @@ class CircuitSim:
 
         self.init_pauli_paths() # Adds the PauliPathTrav that matches each weight combo to self.pauli_path_travs
         self.travs_to_list()
+
+        self.build_xyz_tree()
+        self.tree_to_lists()
 
     @staticmethod
     def valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]]):
@@ -113,9 +117,9 @@ class CircuitSim:
             self.pauli_path_travs.append(PauliPathTrav(self.num_qubits, weight_combo, self.gate_pos))
     
     def travs_to_list(self):
-        self.pauli_path_list = []
+        self.rnp_pauli_paths = []
         for pauli_path_trav in self.pauli_path_travs:
-            self.pauli_path_list.append(self.trav_to_list(pauli_path_trav))
+            self.rnp_pauli_paths.append(self.trav_to_list(pauli_path_trav))
 
     def trav_to_list(self,trav:PauliPathTrav):
         trav_list = []
@@ -124,7 +128,7 @@ class CircuitSim:
                 self.pauli_op_hopping(trav_list, [], pauli_op)
         return trav_list
 
-    def pauli_op_hopping(self,trav_list:List[List[List[str]]], partial_pauli_path:List[List[str]], pauli_op:PauliOperator):
+    def pauli_op_hopping(self,trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator):
         partial_pauli_path.append(pauli_op)
 
         # Base case: Reached last Pauli operator layer of the circuit
@@ -137,4 +141,43 @@ class CircuitSim:
             self.pauli_op_hopping(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
 
     def build_xyz_tree(self):
-        for list in self.pauli_path_list[0]:
+        self.sib_op_heads = []
+        for list_of_paths in self.rnp_pauli_paths:
+            for path in list_of_paths:
+                first_op_list = self.rn_to_z(path[0]) # returns a list with single element, 'I' 'Z' version of path[00]
+
+                sib_op = SiblingOps(first_op_list, 1, path)
+                self.sib_op_heads.append(sib_op)
+
+    def tree_to_lists(self):
+        self.xyz_pauli_paths = []
+        for sib_op_head in self.sib_op_heads:
+            sib_op_paths = [[]]
+            self.branch(sib_op_head,sib_op_paths)
+
+    def branch(self, cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]]):
+        #pdb.set_trace()
+        if (cur_sib.next_sibs == None):
+            for pauli_path in pauli_paths_in_womb:
+                pauli_path.append(cur_sib.pauli_ops[0]) # only the next pauli operator is the one with all 'I's and 'Z's
+                self.xyz_pauli_paths.append(pauli_path) # adds all the completed pauli paths
+        else:
+            for pauli_op in cur_sib.pauli_ops:
+                for next_sib in cur_sib.next_sibs:
+                    branched_pauli_paths = copy.deepcopy(pauli_paths_in_womb)
+                    for pauli_path in branched_pauli_paths:
+                        pauli_path.append(pauli_op)
+                    self.branch(next_sib,branched_pauli_paths)
+            
+
+    @staticmethod
+    # The first Pauli operator in a Pauli path can only be a tensor of 'I's and 'Z's
+    def rn_to_z(first_op:PauliOperator):
+        first_op_list = [copy.deepcopy(first_op)]
+
+        for i in range(len(first_op_list[0].operator)):
+            if first_op_list[0].operator[i] == 'R' or first_op_list[0].operator[i] == 'N':
+                first_op_list[0].operator[i] = 'Z'
+            if first_op_list[0].operator[i] == 'P':
+                return [] # we shouldn't encounter a 'P' in the first layer
+        return first_op_list # valid operator possible
