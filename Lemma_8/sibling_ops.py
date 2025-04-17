@@ -87,7 +87,7 @@ class SiblingOps:
             elif next_op.operator[i] == 'N':
                 return 0 # there should be no 'N' in our last layer
             elif next_op.operator[i] == 'P':
-                if next_op.operator[i] == 'Z':
-                    next_op.operator[i] = 'Z'
+                next_op.operator[i] = 'Z' # we set up our propagation to gurantee the prior of the last layer 
+                # would have all Z's in non-gate qubit positions with Hamming weight
             self.next_sibs = [SiblingOps([next_op],len(pauli_path),pauli_path)] 
         return 1 # valid operator possible
