@@ -9,13 +9,13 @@ from circuit_sim import CircuitSim
 class TestCircuits(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.circuit = CircuitSim(4, 7, [[(0, 1),(2,3)],[(1,2)],[(0, 1),(2,3)]]) # brickwork 1D
+        self.circuit = CircuitSim(4, 10, [[(0, 1),(2,3)],[(1,2)]]) # brickwork 1D
 
     def test_initialization(self):
         self.assertEqual(self.circuit.num_qubits, 4)
-        self.assertEqual(self.circuit.num_op_layers, 4)
-        self.assertEqual(self.circuit.max_weight, 7)
-        self.assertEqual(self.circuit.gate_pos, [[(0, 1),(2,3)],[(1,2)],[(0, 1),(2,3)]])
+        self.assertEqual(self.circuit.num_op_layers, 3)
+        self.assertEqual(self.circuit.max_weight, 10)
+        self.assertEqual(self.circuit.gate_pos, [[(0, 1),(2,3)],[(1,2)]])
 
     def test_enumerate_weights(self):
         self.assertIsInstance(self.circuit.weight_combos, list)
@@ -46,14 +46,13 @@ class TestCircuits(unittest.TestCase):
         self.assertTrue(all(isinstance(path, PauliPathTrav) for path in self.circuit.pauli_path_travs))
 
     def test_rnp_to_xyz(self):
+            print("[")
             for pauli_path in self.circuit.xyz_pauli_paths:
-                print(len(pauli_path))
+                print("[")
                 for pauli_op in pauli_path:
-                    if type(pauli_op) == list:
-                        print("It's a list! LOL")
-                        print(pauli_op[0].operator)
-                    else:
-                        print(pauli_op.operator)
+                    print(pauli_op.operator)
+                print("]")
+            print("]")
             self.assertEqual(1,1)
 
     def test_travs_to_list(self):
