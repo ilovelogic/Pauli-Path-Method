@@ -149,23 +149,22 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
 **Overview**
 
-<img src="images/SiblingOperators.png" width="1000" />\
+<img src="images/sibling_ops.png" width="1000" />\
 The `SiblingOps` class represents...
 
 **Initialization**\
-   `SiblingOps(pauli_ops:List[PauliOperator], next_op:PauliOperator)`
+   `SiblingOps(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
 
 **Attributes**
-   - `prior_ops`: 
-   - `pauli_ops`:
-   - `next_ops`: 
+   - `pauli_ops`: The list of `PauliOperator` objects for a particular index in the Pauli path that have the same selection from "X", "Y", and "Z" for their non-gate non-identity qubits.
+   - `next_sibs`: A list of `SiblingOps` objects, where the `pauli_ops` attribute of each of these `SiblingOps` contains all the `PauliOperator` objects that could come directly after any of the `PauliOperator` objects in a valid Pauli path.
 
 **Methods**
-   - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
-   - `rn_to_z(cur_op:PauliOperator, prior_op:PauliOperator=None)`: 
-   - `rnp_to_zyz(next_op:PauliOperator)`:
+   - `rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`: 
+   - `fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`: 
    - `fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`:
    - `carries_to_the_end(cur_op:PauliOperator, i:int)`:
+   - `rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`:
 
 ---
 

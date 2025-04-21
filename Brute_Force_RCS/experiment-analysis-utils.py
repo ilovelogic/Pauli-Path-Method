@@ -11,7 +11,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from evaluation_utils import tvd_truedist_empdist, total_variation_distance, xeb_truedist_empdist_ideal, xeb_truedist_empdist_noisy
-def compute_avg_xeb_varyingqubits(shots: int, min_qubits: int, max_qubits: int, noiseRate: float, gigaShots: int, isLogn: bool, subLabel: str) -> None:
+
+import os
+import json
+
+def compute_avg_xeb_varyingqubits(
+    shots: int, 
+    min_qubits: int, 
+    max_qubits: int, 
+    noiseRate: float, 
+    gigaShots: int, 
+    isLogn: bool, 
+    subLabel: str, 
+    output_dir: str
+) -> None:
     """
     Computes and saves average XEB values for a range of qubit counts.
 
@@ -23,15 +36,27 @@ def compute_avg_xeb_varyingqubits(shots: int, min_qubits: int, max_qubits: int, 
         gigaShots (int): Number of unique sets of random unitaries to sample over.
         isLogn (bool): If True, uses log(n) depth; otherwise, uses n depth.
         subLabel (str): Subfolder for organizing output files (include '/' if needed).
+        output_dir (str): Directory where the output file should be saved.
     """
-    # Sets up filename and path based on parameters
+    # Generate filename
     depth_type = "logndepth" if isLogn else "ndepth"
     filename = f"XEB_{depth_type}_shots{shots}_noiseRate{int(noiseRate * 100):02d}_gigaShots{gigaShots}.json"
-    output_path = f"data/Noisy/XEB/{subLabel}{filename}"
+
+    # Ensure subLabel ends with a '/'
+    if subLabel and not subLabel.endswith('/'):
+        subLabel += '/'
+
+    # Construct full output path
+    full_path = os.path.join(output_dir, f"data/Noisy/XEB/{subLabel}")
+    
+    # Ensure the directory exists
+    os.makedirs(full_path, exist_ok=True)
+    
+    file_path = os.path.join(full_path, filename)
 
     # Initialize an empty dictionary if the file doesn't exist
-    if os.path.exists(output_path):
-        with open(output_path, "r") as f:
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
             data = json.load(f)
     else:
         data = {}
@@ -40,7 +65,7 @@ def compute_avg_xeb_varyingqubits(shots: int, min_qubits: int, max_qubits: int, 
     for qubit_count in range(min_qubits, max_qubits + 1):
         XEBs = []
         for i in range(gigaShots):
-            # Adjusts depth based on whether depth is logN
+            # Adjust depth based on whether depth is logN
             depth = None if isLogn else qubit_count
             # Compute XEB of true distribution and noisy empirical distribution
             XEB = xeb_truedist_empdist_noisy(num_qubits=qubit_count, noise_rate=noiseRate, shots=shots, depth=depth)
@@ -49,8 +74,11 @@ def compute_avg_xeb_varyingqubits(shots: int, min_qubits: int, max_qubits: int, 
         data[str(qubit_count)] = XEBs
 
         # Save data into file
-        with open(output_path, "w") as f:
+        with open(file_path, "w") as f:
             json.dump(data, f, indent=4)
+
+
+
 
 
 def plot_avg_xeb_varyingqubits(shots: int, min_qubits: int, max_qubits: int, noiseRate: float, gigaShots: int, isLogn: bool, subLabel: str) -> None:
@@ -201,7 +229,7 @@ def compute_avg_tvd(shots: int, min_qubits: int, max_qubits: int, noiseRate: flo
 
   # Set the depth_type based on the value of isLogn
     depth_type = "logn" if isLogn else "n"
-    
+
     # Sets up filename and path based on parameters
     filename = f"TVD_{depth_type}_numqubits{min_qubits}-{max_qubits}_noiseRate{int(noiseRate * 100):02d}.json"
     output_path = f"data/{NoiseFolder}/TVD/{subLabel}{filename}"
