@@ -1,74 +1,8 @@
-
-# pip install qiskit
-'''
-Quantum Circuit:
-        ┌────────────┐┌────────────┐┌────────────┐ ░ ┌─┐   
-   q_0: ┤0           ├┤0           ├┤0           ├─░─┤M├───
-        │  Pauli(XZ) ││  Pauli(YY) ││  Pauli(ZX) │ ░ └╥┘┌─┐
-   q_1: ┤1           ├┤1           ├┤1           ├─░──╫─┤M├
-        └────────────┘└────────────┘└────────────┘ ░  ║ └╥┘
-meas: 2/══════════════════════════════════════════════╩══╩═
-                                                      0  1 
-Measurement Results: {'00': 1024}
-'''
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import Operator
-import numpy as np
-
-def convert_qiskit_circuit_to_unitary(qc):
-    """
-    Convert a Qiskit QuantumCircuit into a unitary matrix.
-
-    Parameters:
-        qc (QuantumCircuit): Qiskit quantum circuit.
-
-    Returns:
-        np.ndarray: The unitary matrix representation of the circuit.
-    """
-    return Operator(qc).data  # Extract unitary matrix
-
-# Example Usage:
-# qc = QuantumCircuit(2)
-# qc.h(0)
-# qc.cx(0, 1)
-
-from qiskit import QuantumCircuit
-
-# Create a quantum circuit with 4 qubits
-qc = QuantumCircuit(4)
-
-# Layer 1
-qc.cx(0, 1)
-qc.cx(2, 3)
-
-# Layer 2
-qc.cx(1, 2)
-qc.cx(3, 0)
-
-# Layer 3
-qc.cx(0, 2)
-qc.cx(1, 3)
-
-# Display the circuit
-print(qc)
-
-
-unitary_matrix = np.array(convert_qiskit_circuit_to_unitary(qc))
-# print(qc)
-#print("Unitary Matrix:\n", unitary_matrix)
-'''
-               ┌───┐          
-q_0: ──■───────┤ X ├──■───────
-     ┌─┴─┐     └─┬─┘  │       
-q_1: ┤ X ├──■────┼────┼────■──
-     └───┘┌─┴─┐  │  ┌─┴─┐  │  
-q_2: ──■──┤ X ├──┼──┤ X ├──┼──
-     ┌─┴─┐└───┘  │  └───┘┌─┴─┐
-q_3: ┤ X ├───────■───────┤ X ├
-     └───┘               └───┘
-'''
 import numpy as np
 from qiskit.quantum_info import Pauli, Statevector
+from qiskit import QuantumCircuit
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
 
 def normalize_pauli(pauli_string):
     """
@@ -79,7 +13,8 @@ def normalize_pauli(pauli_string):
     normalization_factor = 1 / np.sqrt(2**n)
     pauli_matrix = Pauli(pauli_string).to_matrix()
     
-    return normalization_factor * pauli_matrix
+    return normalization_factor * pauli_matrix 
+
 
 def extract_qubit_pauli(pauli_string, qubits):
     """
@@ -234,6 +169,7 @@ def calculate_output_overlap(x, sd):
             
     return norm_factor * sign
 
+
 def compute_fourier_coefficient(C, s, x):
     """
     Compute f(C, s, x) for a given circuit C and Pauli path s.
@@ -272,3 +208,19 @@ def compute_fourier_coefficient(C, s, x):
     output_overlap = calculate_output_overlap(x, s[-1])
     
     return input_overlap * transition_amplitude * output_overlap
+
+# Preprocessing functions for taking in anne and jesus input 
+def preprocess_circuit_gates(raw_gate_data):
+    from collections import defaultdict
+    layers = defaultdict(list)
+    for gate_matrix, qubits, layer in raw_gate_data:
+        layers[layer].append((gate_matrix, qubits))
+    return [layers[i] for i in sorted(layers)]
+
+def preprocess_pauli_path(raw_path):
+    return [''.join(layer) for layer in raw_path]
+
+def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state):
+    circuit_layers = preprocess_circuit_gates(raw_gate_data)
+    pauli_path_str = preprocess_pauli_path(raw_pauli_path)
+    return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
