@@ -125,6 +125,36 @@ def create_2d_brickwork_circuit(rows: int, cols: int, depth: int):
 
     return qc
 
+
+def extract_gates_info(qc):
+    """
+    Extracts the position, matrix representation, and layer of each gate in a quantum circuit.
+    
+    Parameters:
+    qc (QuantumCircuit): The quantum circuit to analyze.
+    
+    Returns:
+    list of tuples: Each tuple contains (gate matrix, qubits applied to, layer number).
+    """
+    gate_info = []
+
+    for instruction in qc.data:
+        gate = instruction.operation
+        qubits = instruction.qubits
+        qubit_indices = [qc.find_bit(q).index for q in qubits]
+        gate_matrix = Operator(gate).data
+
+        # Parse layer number from label if possible
+        label = gate.label
+        if label and label.startswith("random_unitary_layer_"):
+            layer = int(label.split("_")[-1])
+        else:
+            layer = None
+
+        gate_info.append((gate_matrix, tuple(qubit_indices), layer))
+
+    return gate_info
+
 def run_ideal_simulation(qc: QuantumCircuit, shots=100):
     """
     Runs a quantum circuit using an ideal (noise-free) simulator and gathers
@@ -211,6 +241,30 @@ def run_noisy_simulation(circuit: QuantumCircuit, noise_model: NoiseModel, shots
 
     return counts
 
+def complete_distribution(partial_dist: dict, num_qubits: int) -> dict:
+    """
+    Completes a partial probability distribution by filling in missing basis states with zero probability.
+
+    Args:
+        partial_dist (dict): A dictionary mapping binary basis states (as strings) to probabilities.
+        num_qubits (int): The number of qubits in the system.
+
+    Returns:
+        dict: A complete distribution over all 2^n basis states, with missing states set to 0.0 probability.
+    """
+     
+    num_states = 2 ** num_qubits
+    bitstring_format = f'0{num_qubits}b'
+    
+    # Initialize full distribution with zero probability
+    full_dist = {format(i, bitstring_format): np.float64(0.0) for i in range(num_states)}
+    
+    # Update with given probabilities
+    for state, prob in partial_dist.items():
+        full_dist[state] = np.float64(prob)
+    
+    return full_dist
+
 def count_to_distribution(counts: dict[str, int], num_qubits, shots=100):
     """
     Converts raw counts into a probability distribution over all possible basis states.
@@ -248,7 +302,8 @@ def count_to_distribution(counts: dict[str, int], num_qubits, shots=100):
 
 def generate_emp_distribution(qc: QuantumCircuit, shots: int, noise=None, depth=None):
     """
-    Generates the empirical probability distribution of a given quantum circuit under specified noise for shot amount of samples.
+    Generates the empirical probability distribution of a given quantum circuit 
+    after simulating it under specified noise for shot amount of samples.
 
     Args:
         qc (QuantumCircuit): The circuit to simulate.
