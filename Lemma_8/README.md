@@ -149,15 +149,15 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
 **Overview**
 
-<img src="images/SiblingOperators.png" width="1000" />\
+<img src="images/sibling_ops.png" width="1000" />\
 The `SiblingOps` class represents...
 
 **Initialization**\
    `SiblingOps(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
 
 **Attributes**
-   - `pauli_ops`:
-   - `next_sibs`: 
+   - `pauli_ops`: The list of `PauliOperator` objects for a particular index in the Pauli path that have the same selection from "X", "Y", and "Z" for their non-gate non-identity qubits.
+   - `next_sibs`: A list of `SiblingOps` objects, where the `pauli_ops` attribute of each of these `SiblingOps` contains all the `PauliOperator` objects that could come directly after any of the `PauliOperator` objects in a valid Pauli path.
 
 **Methods**
    - `rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`: 
