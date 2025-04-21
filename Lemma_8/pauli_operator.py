@@ -7,7 +7,8 @@ class PauliOperator:
 
     def __init__(self, operator:List[str], prior_ops:List[PauliOperator] = None, next_ops:List[PauliOperator] = None):
         """
-        Initialize.
+        Initializes the PauliOperator's operator object and initializes prior_ops and next_ops attributes if they are
+        sent in as arguments.
         """
 
         if not isinstance(operator, list):
@@ -55,7 +56,7 @@ class PauliOperator:
                     neighbor_operator[i] = 'P' # any operator we propagate to in the next layer
                     # must have the same qubit at index i as the qubit at the same index in this layer
                     # which is the prior (P) layer of its next layer
-                    if sib_op[0].operator[i] != 'N':
+                    if sib_ops[0].operator[i] != 'N':
                         for sib_op in sib_ops:
                             sib_op.operator[i] = 'N'
                     else:
