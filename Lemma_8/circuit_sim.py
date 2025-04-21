@@ -116,6 +116,7 @@ class CircuitSim:
         for weight_combo in self.weight_combos:
             self.pauli_path_travs.append(PauliPathTrav(self.num_qubits, weight_combo, self.gate_pos))
     
+    # Translates PauliPathTrav objects into a list of paths, still in 'R', 'N', 'P', and 'I'
     def travs_to_list(self):
         self.rnp_pauli_paths = []
         for pauli_path_trav in self.pauli_path_travs:
@@ -140,6 +141,8 @@ class CircuitSim:
             partial_pauli_path_copy = copy.deepcopy(partial_pauli_path)
             self.pauli_op_hopping(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
 
+    # Translates each Pauli path list in 'R', 'N', 'P', and 'I' to construct a tree 
+    # structure, with its branching representing valid selections of 'X', 'Y', and 'Z'
     def build_xyz_tree(self):
         self.sib_op_heads = []
         for list_of_paths in self.rnp_pauli_paths:
@@ -149,6 +152,7 @@ class CircuitSim:
                 sib_op = SiblingOps(first_op_list, 1, path)
                 self.sib_op_heads.append(sib_op)
 
+    # Turns each tree into seperate lists representing Pauli paths
     def tree_to_lists(self):
         self.xyz_pauli_paths = []
         for sib_op_head in self.sib_op_heads:
@@ -156,7 +160,6 @@ class CircuitSim:
             self.branch(sib_op_head,sib_op_paths)
 
     def branch(self, cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]]):
-        #pdb.set_trace()
         if (cur_sib.next_sibs == None):
             for pauli_path in pauli_paths_in_womb:
                 pauli_path.append(cur_sib.pauli_ops[0]) # only the next pauli operator is the one with all 'I's and 'Z's
