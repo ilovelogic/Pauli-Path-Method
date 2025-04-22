@@ -1,3 +1,4 @@
+# pip install "qiskit-aer>=0.11.0"
 from collections import defaultdict
 from typing import List, DefaultDict
 from pauli_operator import PauliOperator
@@ -18,8 +19,8 @@ class ProbDist:
         the second item is the gate matrix, and the third item is a tuple of the gate positions
         '''
         self.pauli_ops_to_strs(circuit.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
-        self.C = gates
-        self.probs = DefaultDict(int) # made hash function
+        self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
+        self.probs = DefaultDict(float) # made hash function
         n = circuit.num_qubits
         for i in range(1 << n):
             x= format(i, f'0{n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
@@ -30,47 +31,29 @@ class ProbDist:
         self.calc_linearXEB()
 
     # ------------------------------------------------------------------------------
-    # evaluations of brute force and pauli
+    # TVD of pauli prob dist and true dist
 
     def calc_TVD(self):
-        #TVD of brute force distribution and pauli probability distribution
-        ideal_bruteforce_prob_dist = generate_emp_distribution(self.bruteForceQC, shots=10000, noise=None, depth=self.depth)
+      #TVD of true distribution and pauli probability distribution
+    
+      trueDist = calculate_true_distribution(self.bruteForceQC)
+      # trueDist assumes that we can access the qiskit representation of whatever 1D
+      # circuit we generated.
+      # Im assuming the self class can contain the 1d circuit
 
-        tvd = calc_TVD(ideal_bruteforce_prob_dist, self.prob_dist)
-        return tvd
+      full_prob_dist = complete_distribution(self.prob_dist)
+      # full prob dist just ensures that every possible basis state is present in the
+      # probability outcome to work with my TVD function.
+      ideal_TVD = total_variation_distance(trueDist, full_prob_dist)
+      return ideal_TVD
 
     def calc_linearXEB(self):
-    #XEB of brute force distribution and pauli probability distribution
+      #XEB of true distribution and pauli probability distribution
 
-        ideal_bruteforce_prob_dist = generate_emp_distribution(self.bruteForceQC, shots=10000, noise=None, depth=self.depth)
-
-        xeb = compute_xeb(ideal_bruteforce_prob_dist, self.prob_dist)
-        return xeb
-
-    # ------------------------------------------------------------------------------
-    # # TVD of pauli prob dist and brute force prob dist
-
-    # def calc_TVD(self):
-    #   #TVD of true distribution and pauli probability distribution
-    
-    #   trueDist = calculate_true_distribution(self.bruteForceQC)
-    #   # trueDist assumes that we can access the qiskit representation of whatever 1D
-    #   # circuit we generated.
-    #   # Im assuming the self class can contain the 1d circuit
-
-    #   full_prob_dist = complete_distribution(self.prob_dist)
-    #   # full prob dist just ensures that every possible basis state is present in the
-    #   # probability outcome to work with my TVD function.
-    #   ideal_TVD = total_variation_distance(trueDist, full_prob_dist)
-    #   return ideal_TVD
-
-    # def calc_linearXEB(self):
-    #   #XEB of true distribution and pauli probability distribution
-
-    #   trueDist = calculate_true_distribution(self.bruteForceQC)
-    #   full_prob_dist = complete_distribution(self.prob_dist)
-    #   xeb = compute_xeb(trueDist, full_prob_dist)
-    #   return xeb
+      trueDist = calculate_true_distribution(self.bruteForceQC)
+      full_prob_dist = complete_distribution(self.prob_dist)
+      xeb = compute_xeb(trueDist, full_prob_dist)
+      return xeb
 
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
         self.s_list = [[] for _ in range(len(xyz_pauli_paths))]
