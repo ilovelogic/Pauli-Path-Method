@@ -6,7 +6,7 @@ from circuit_sim import CircuitSim
 import numpy as np
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
-from Pauli_Amplitude.pauli_amplitude import compute_fourier_coefficient
+from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 
 class ProbDist:
     """
@@ -26,7 +26,7 @@ class ProbDist:
             x= format(i, f'0{n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
             self.probs[x] = 0
             for s in self.s_list:
-                self.probs[x] += compute_fourier_coefficient(self.C, s, x)
+                self.probs[x] += compute_fourier_from_raw_inputs(self.C, s, x)
         self.calc_TVD()
         self.calc_linearXEB()
 

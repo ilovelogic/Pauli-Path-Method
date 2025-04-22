@@ -39,15 +39,14 @@ def random_circuit(num_qubits:int, depth=None):
         if d % 2 == 0:  # Even layers 
             for i in range(0, num_qubits - 1, 2):
                 random_gate = random_unitary(4).to_instruction()
-                random_gate.label='random_unitary'
+                random_gate.label="random_unitary_layer_" + str(d)
                 qc.append(random_gate, [i, i + 1])
         else:  # Odd layers
             for i in range(1, num_qubits - 1, 2):
                 random_gate = random_unitary(4).to_instruction()
-                random_gate.label='random_unitary'
+                random_gate.label="random_unitary_layer_" + str(d)
                 qc.append(random_gate, [i, i + 1])
 
-    qc.measure_all()
     return qc
 
 def create_2d_brickwork_circuit(rows: int, cols: int, depth: int):
@@ -142,7 +141,14 @@ def extract_gates_info(qc):
         gate = instruction.operation
         qubits = instruction.qubits
         qubit_indices = [qc.find_bit(q).index for q in qubits]
-        gate_matrix = Operator(gate).data
+        #gate_matrix = Operator(gate).data
+
+        if gate.name != "measure":
+            gate_matrix = Operator(gate).data
+            print("Matrix:\n", gate_matrix)
+        else:
+            print("No matrix for this operation.")
+
 
         # Parse layer number from label if possible
         label = gate.label
@@ -152,7 +158,6 @@ def extract_gates_info(qc):
             layer = None
 
         gate_info.append((gate_matrix, tuple(qubit_indices), layer))
-
     return gate_info
 
 def run_ideal_simulation(qc: QuantumCircuit, shots=100):

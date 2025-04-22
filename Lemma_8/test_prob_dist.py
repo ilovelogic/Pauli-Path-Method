@@ -11,10 +11,14 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.numQubits = 4
-        self.depth = 2
+        self.depth = 4
+        
+        self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
+
         circuit = CircuitSim(self.numQubits, self.numQubits, [[(0,1), (2,3)], [(1,2)]]) # 1D, keeps all paths
         self.bruteForceQC = circuit_utils.random_circuit(self.numQubits, self.depth) # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
+        print(gates)
         self.prob_dist = ProbDist(circuit, gates)
 
     def test_stat_measures(self):
