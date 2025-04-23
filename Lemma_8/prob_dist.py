@@ -35,7 +35,7 @@ class ProbDist:
 
     def calc_TVD(self):
       #TVD of true distribution and pauli probability distribution
-    
+      
       trueDist = calculate_true_distribution(self.bruteForceQC)
       # trueDist assumes that we can access the qiskit representation of whatever 1D
       # circuit we generated.
