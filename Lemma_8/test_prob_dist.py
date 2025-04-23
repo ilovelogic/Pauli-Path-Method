@@ -19,7 +19,7 @@ class TestProbDist(unittest.TestCase):
         self.bruteForceQC = circuit_utils.random_circuit(self.numQubits, self.depth) # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
         print(gates)
-        self.prob_dist = ProbDist(circuit, gates)
+        self.prob_dist = ProbDist(circuit, gates, self.bruteForceQC)
 
     def test_stat_measures(self):
         self.assertEqual(1,self.prob_dist.tvd)
