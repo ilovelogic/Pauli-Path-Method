@@ -10,14 +10,23 @@ class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
     def setUpClass(self):
-        self.numQubits = 4
-        self.depth = 4
+        self.numQubits = 6
+        self.depth = 6
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
-        circuit = CircuitSim(self.numQubits, self.numQubits, [[(0,1), (2,3)], [(1,2)]]) # 1D, keeps all paths
         self.bruteForceQC = circuit_utils.random_circuit(self.numQubits, self.depth) # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
+        gate_pos = []
+        for i in range(len(gates)):
+            layer_num = gates[i][2]
+            if layer_num+1 > len(gate_pos):
+                gate_pos.append([])
+            gate_pos[layer_num].append(gates[i][1])
+        print(gate_pos)
+
+        circuit = CircuitSim(self.numQubits, self.numQubits, gate_pos) # 1D, keeps all paths
+        
         print(gates)
         self.prob_dist = ProbDist(circuit, gates, self.bruteForceQC)
 
