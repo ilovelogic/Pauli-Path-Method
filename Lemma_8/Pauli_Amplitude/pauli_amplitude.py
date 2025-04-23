@@ -185,7 +185,7 @@ def compute_fourier_coefficient(C, s, x):
         float: Fourier coefficient f(C, s, x).
     """
     n = len(s[0])  # Number of qubits
-    d = len(C)     # Depth of the circuit
+    d = len(s)-1     # Depth of the circuit
     
     # Check if path is legal (s0 and sd contain only I and Z)
     if not all(op in ['I', 'Z'] for op in s[0]) or not all(op in ['I', 'Z'] for op in s[-1]):
