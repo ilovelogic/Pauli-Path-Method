@@ -32,6 +32,8 @@ class SiblingOps:
         filled_n_list = []
 
         for i in range(3 ** len(n_pos_list)):
+            filled_n_list.append(copy.deepcopy(pauli_path[next_index]))
+ 
             filled_n_list.append(copy.deepcopy(self.pauli_path[next_index]))
 
         self.fill_in_pos(filled_n_list,n_pos_list,'X',0,0)
@@ -69,9 +71,12 @@ class SiblingOps:
 
 
     def fill_in_pos(self,filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int):
-        if index == len(pos_list):
+        if index == len(pos_list): # index is the position of the index in the pos_list
+            # at which we want to edit the pauli in filled_pos's operators in the range beginning with start
             return
         for i in range(start, start + (3 ** (len(pos_list)-index-1))):
+            if (i > len(filled_pos)-1):
+                pdb.set_trace()
             filled_pos[i].operator[pos_list[index]] = pauli
         
         self.fill_in_pos(filled_pos,pos_list,'X', index+1,start)
