@@ -14,6 +14,9 @@ class CircuitSim:
     and Hamming weight upper bound.
     """
     def __init__(self, num_qubits:int, l:int, gate_pos:List[List[tuple]]):
+
+        pdb.set_trace()
+
         if not self.valid_gate_pos(num_qubits,gate_pos):
             raise ValueError
         
@@ -21,6 +24,9 @@ class CircuitSim:
         self.num_op_layers = len(gate_pos)+1
         self.gate_pos = gate_pos
         self.max_weight = l # upper bound on a Pauli path's Hamming weight
+
+        if self.max_weight < self.num_op_layers: # we cannot make a valid Pauli path
+            raise ValueError
 
         self.weight_combos = []
         # Fills out self.weight_combos with all weight configurations of legal Pauli paths
@@ -37,7 +43,7 @@ class CircuitSim:
     def valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]]):
         for gate_pos_layer in gate_pos:
             gate_pos_layer_set = set()
-            for pos in gate_pos_layer_set:
+            for pos in gate_pos_layer:
                 # Check that the positions reference qubits in the circuit
                 if pos[0] < 0 or pos[0] > num_qubits-1:
                     return False
@@ -155,9 +161,11 @@ class CircuitSim:
     # Turns each tree into seperate lists representing Pauli paths
     def tree_to_lists(self):
         self.xyz_pauli_paths = []
+        
         for sib_op_head in self.sib_op_heads:
             sib_op_paths = [[]]
             self.branch(sib_op_head,sib_op_paths)
+    
 
     def branch(self, cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]]):
         if (cur_sib.next_sibs == None):
