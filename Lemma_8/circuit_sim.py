@@ -15,8 +15,6 @@ class CircuitSim:
     """
     def __init__(self, num_qubits:int, l:int, gate_pos:List[List[tuple]]):
 
-        pdb.set_trace()
-
         if not self.valid_gate_pos(num_qubits,gate_pos):
             raise ValueError
         
@@ -81,11 +79,12 @@ class CircuitSim:
 
         # Base case: no more wiggle room
         if wiggle_room == 0:
-            if weight_list[-1] <= 2: # Otherwise we would not meet the legal Pauli path requirements,
+            if len(weight_list) == 0 or weight_list[-1] <= 2: # Otherwise we would not meet the legal Pauli path requirements,
                 # since we would decrease the Hamming weight by more than half between two layers
                 for i in range(num_op_layers_left):
                     weight_list.append(1) # All remaining layers get weight 1, since there's no wiggle room
                 self.weight_combos.append(weight_list)
+
             return
 
         # Recursive case: still have wiggle room and Pauli operator layers to add weight to

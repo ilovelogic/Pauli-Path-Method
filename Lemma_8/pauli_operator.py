@@ -23,7 +23,7 @@ class PauliOperator:
     This function determines all possible operators at the Layer one depth away from this operator,
     that this operator can propagate to.
 
-    It takes five arguments and uses helper function find_next_operators to build the propagation list.
+    It takes five arguments and uses helper function find_neighb_operators to build the propagation list.
 
     Args:
         self (PauliOperator) : The PauliOperator from which we are propagating
@@ -67,6 +67,7 @@ class PauliOperator:
 
         # No way to make a valid layer, given the weights
         if num_RRs < 0 or num_RRs > len(pos_to_fill):
+            
             if (backward):
                 self.prior_ops = []
             else:
@@ -81,10 +82,10 @@ class PauliOperator:
     
         if (backward):
             self.prior_ops = sibs
-            self.find_next_operators(self.prior_ops, num_RRs, pos_to_fill, 0)
+            self.find_neighb_operators(self.prior_ops, num_RRs, pos_to_fill, 0)
         else:
             self.next_ops = sibs
-            self.find_next_operators(self.next_ops, num_RRs, pos_to_fill, 0)
+            self.find_neighb_operators(self.next_ops, num_RRs, pos_to_fill, 0)
 
     """
     This function determines the number of entries we need to allocate in our list 
@@ -124,7 +125,7 @@ class PauliOperator:
         return list_alloc
 
 
-    def find_next_operators(self, sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int):
+    def find_neighb_operators(self, sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int):
 
         if (len(pos_to_fill) == 0):
             return
@@ -133,7 +134,7 @@ class PauliOperator:
             cur_pos = pos_to_fill.pop(0)
             rr_start = r_start
             self.edit_ops(sibs, cur_pos, ('R','R'), rr_start, rr_start+1) # Copy of layers with 'RR' added to all operators
-            self.find_next_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) # One less RR to use
+            self.find_neighb_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) # One less RR to use
             # Next call will handle adding the next RR
             return
 
@@ -152,10 +153,10 @@ class PauliOperator:
                 rr_start = r_start + 2*self.list_alloc[len(pos_to_fill)][len(pos_to_fill)+num_RRs]
                 rr_end = r_start+self.list_alloc[len(pos_to_fill)+1][len(pos_to_fill)+num_RRs+1]
                 self.edit_ops(sibs, cur_pos, ('R','R'), rr_start, rr_end) # Copy of layers with 'RR' added to all operators
-                self.find_next_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) 
+                self.find_neighb_operators(sibs, num_RRs-1, list(pos_to_fill), rr_start) 
 
-            self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ir_start) 
-            self.find_next_operators(sibs, num_RRs, list(pos_to_fill), ri_start) 
+            self.find_neighb_operators(sibs, num_RRs, list(pos_to_fill), ir_start) 
+            self.find_neighb_operators(sibs, num_RRs, list(pos_to_fill), ri_start) 
             
             return
 
