@@ -4,6 +4,7 @@ from typing import List, DefaultDict
 from pauli_operator import PauliOperator
 from circuit_sim import CircuitSim
 import numpy as np
+import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
@@ -13,22 +14,31 @@ class ProbDist:
     """
     
     """
-    def __init__(self, circuit:CircuitSim, gates:List, QC:circuit):
+    def __init__(self, circuit_sim:CircuitSim,gates:List, QC:circuit):
+
         '''
         circuit (CircuitSim): A fully initiated CircuitSim object based on our circuit architecture
         gates (List[(int,np.ndarray,tuple)): the first item in the tuple is the layer it is in (0 indexing),
         the second item is the gate matrix, and the third item is a tuple of the gate positions
         '''
-        self.pauli_ops_to_strs(circuit.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        for path in self.s_list:
+           print(path)
+          
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # made hash function
-        self.n = circuit.num_qubits
+        self.n = circuit_sim.num_qubits
         self.bruteForceQC = QC
+        total_prob = 0
         for i in range(1 << self.n):
-            x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
-            self.probs[x] = 0
-            for s in self.s_list:
-                self.probs[x] += compute_fourier_from_raw_inputs(self.C, s, x)
+          x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
+          self.probs[x] = 0
+          for s in self.s_list:
+            self.probs[x] += compute_fourier_from_raw_inputs(self.C, s, x)**2
+          print(f'p({x}) = {self.probs[x]}')
+          total_prob += self.probs[x]
+        print(f'Total probability sum = {total_prob}')
+                
         self.calc_TVD()
         self.calc_linearXEB()
 
@@ -46,17 +56,18 @@ class ProbDist:
       full_prob_dist = complete_distribution(self.probs,self.n)
       # full prob dist just ensures that every possible basis state is present in the
       # probability outcome to work with my TVD function.
-      self.tvd = total_variation_distance(trueDist, full_prob_dist)
+      self.tvd = total_variation_distance(trueDist, full_prob_dist) # replace with outs
 
 
     def calc_linearXEB(self):
       #XEB of true distribution and pauli probability distribution
 
       trueDist = calculate_true_distribution(self.bruteForceQC)
-      full_prob_dist = complete_distribution(self.probs, self.n)
-      self.xeb = compute_xeb(trueDist, trueDist, self.n)
+      full_prob_dist = complete_distribution(self.probs,self.n)
+      self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
+
         self.s_list = [[] for _ in range(len(xyz_pauli_paths))]
         for i in range(len(xyz_pauli_paths)):
             for pauli_op in xyz_pauli_paths[i]:
