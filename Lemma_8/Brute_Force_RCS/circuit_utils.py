@@ -145,9 +145,6 @@ def extract_gates_info(qc):
 
         if gate.name != "measure":
             gate_matrix = Operator(gate).data
-            print("Matrix:\n", gate_matrix)
-        else:
-            print("No matrix for this operation.")
 
 
         # Parse layer number from label if possible
