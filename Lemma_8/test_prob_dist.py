@@ -13,11 +13,8 @@ class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
     def setUpClass(self):
-        self.numQubits = 4
-        self.depth = 3 # log(n) depth
-
         self.numQubits = 3
-        self.depth = 2
+        self.depth = 3
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
@@ -32,7 +29,6 @@ class TestProbDist(unittest.TestCase):
             gate_pos[layer_num].append(gates[i][1])
 
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
-        circuit = CircuitSim(self.numQubits, self.numQubits*self.depth, gate_pos) # 1D, keeps all paths
         
         self.prob_dist = ProbDist(circuit, gates, self.bruteForceQC)
 
