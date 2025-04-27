@@ -13,10 +13,10 @@ class SiblingOps:
         self.pauli_ops = pauli_ops
         self.pauli_path = pauli_path
 
-        if next_index == len(pauli_path):
+        if next_index == len(self.pauli_path):
             self.next_sibs = None
-        elif pauli_path[next_index].next_ops == None: # next_op is in the last layer of the Pauli path
-            self.rp_to_z(pauli_path[next_index]) # must only use 'I's and 'Z's
+        elif self.pauli_path[next_index].next_ops == None: # next_op is in the last layer of the Pauli path
+            self.rp_to_z(self.pauli_path[next_index]) # must only use 'I's and 'Z's
         else:
             self.rnp_to_xyz(next_index)
 
@@ -32,8 +32,6 @@ class SiblingOps:
         filled_n_list = []
 
         for i in range(3 ** len(n_pos_list)):
-            filled_n_list.append(copy.deepcopy(pauli_path[next_index]))
- 
             filled_n_list.append(copy.deepcopy(self.pauli_path[next_index]))
 
         self.fill_in_pos(filled_n_list,n_pos_list,'X',0,0)
