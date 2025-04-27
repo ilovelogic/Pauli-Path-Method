@@ -15,41 +15,18 @@ from qiskit_aer.noise import NoiseModel, depolarizing_error
 from Brute_Force_RCS.circuit_utils import random_circuit, create_noise_model, generate_emp_distribution
 
 
-def calculate_true_distribution(qc: QuantumCircuit):
-    """
-    Calculates the true output distribution of a quantum circuit.
-
-    Note:
-        Any measurements must be applied before calling this function, as
-        they will be removed internally to extract the pure statevector.
-
-    Args:
-        qc (QuantumCircuit): A quantum circuit (with or without measurements).
-
-    Returns:
-        dict: A full probability distribution over basis states (including zero-probability outcomes).
-    """
-
-    # Remove final measurements to extract the pure statevector
+# Returns the true distribution of a circuit's outcome basis states. (Including 0 probability outcomes)
+# Note: Any measurement must be performed before the call to this func because the measurement operation is removed.
+def calculate_true_distribution(qc):
     qc.remove_final_measurements()
-    
-    # Simulate the quantum circuit to get the statevector
     statevector = Statevector(qc)
-    probabilities = statevector.probabilities()
-
-    # Generate all basis states in lexicographic order (e.g., '000', '001', ...)
+    probabilities = statevector.probabilities()  # Already normalized
+    
     num_qubits = qc.num_qubits
-    basis_states = []
-    for i in range(2 ** num_qubits):
-        bitstring = format(i, f'0{num_qubits}b')
-        basis_states.append(bitstring)
-
-    # Map each basis state to its corresponding probability
-    true_distribution = {
-        basis_states[i]: probabilities[i] for i in range(len(probabilities))
-    }
-
-    return true_distribution
+    basis_states = [format(i, f'0{num_qubits}b') for i in range(2 ** num_qubits)]
+    
+    # Direct mapping without renormalization
+    return {state: probabilities[i] for i, state in enumerate(basis_states)}
 
 # Debugging function to make sure prob distributions sum up to around 1.
 # should be called with probability distributions.
@@ -161,33 +138,40 @@ def tvd_truedist_empdist(num_qubits: int, noise_rate: float, shots: int, depth=N
 
 
 
-def compute_xeb(empirical_distribution: dict[str, float], true_distribution: dict[str, float], num_qubits: int):
+def compute_xeb(distribution1: dict[str, float], distribution2: dict[str, float], num_qubits: int):
     """
     Computes the Cross-Entropy Benchmarking (XEB) score.
 
     The XEB score is given by:
-        XEB = 2^n * SUM p(C, x) * q(C, x) - 1
+        XEB = 2^n * SUM p(x) * q(x) - 1
     where:
         - n is the number of qubits
-        - p(C, x) is the true ideal distribution (from the statevector)
-        - q(C, x) is the noisy empirical distribution (from the simulation)
+        - p(x) is the probability from the first distribution
+        - q(x) is the probability from the second distribution
+        - x is a computational basis state.
 
     Args:
-        empirical_distribution (dict): Empirical probabilities from the noisy simulation.
-        true_distribution (dict): True probabilities from the ideal simulation.
+        distribution1 (dict): Probabilities from the first distribution.
+        distribution2 (dict): Probabilities from the second distribution.
         num_qubits (int): Number of qubits in the circuit.
 
     Returns:
         float: The XEB score between the two distributions.
     """
+    
+    # Generate all possible computational basis states
+    basis_states = [format(i, f'0{num_qubits}b') for i in range(2 ** num_qubits)]
 
-    # Ensure both distributions have the same basis states
-    if set(empirical_distribution.keys()) != set(true_distribution.keys()):
-        raise ValueError("Distributions must have the same basis states.")
+    # Initialize sum for XEB calculation
+    xeb_sum = 0
 
-    # Calculate the XEB sum: sum(p(C, x) * q(C, x)) over all basis states
-    xeb_sum = sum(true_distribution[state] * empirical_distribution.get(state, 0)
-                  for state in true_distribution.keys())
+    # Loop through all computational basis states
+    for state in basis_states:
+        p1 = distribution1.get(state, 0)  # probability from distribution1 (default 0 if not found)
+        p2 = distribution2.get(state, 0)  # probability from distribution2 (default 0 if not found)
+        
+        # Compute and add to the sum
+        xeb_sum += p1 * p2
 
     # Scale by 2^num_qubits and subtract 1 to get the final XEB score
     xeb_score = (2 ** num_qubits) * xeb_sum - 1
