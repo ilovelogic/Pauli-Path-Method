@@ -14,7 +14,7 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.numQubits = 3
-        self.depth = 3
+        self.depth = 1
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 

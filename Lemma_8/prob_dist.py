@@ -34,7 +34,7 @@ class ProbDist:
           x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
           self.probs[x] = 0
           for s in self.s_list:
-            self.probs[x] += compute_fourier_from_raw_inputs(self.C, s, x)**2
+            self.probs[x] += compute_fourier_from_raw_inputs(self.C, s, x)
           print(f'p({x}) = {self.probs[x]}')
           total_prob += self.probs[x]
         print(f'Total probability sum = {total_prob}')
