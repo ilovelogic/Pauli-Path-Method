@@ -42,11 +42,13 @@ class ProbDist:
       for i in range(1 << self.n):
         x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
         self.probs[x] = 0
+
         for s in self.s_list:
           ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
           # each non-identity Pauli is affected by the depolarizing noise
           # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
-          self.probs[x] += ((1-noise_rate)**ham_weight)*compute_fourier_from_raw_inputs(self.C, s, x) 
+          self.probs[x] += ((1-noise_rate)**ham_weight)*compute_fourier_from_raw_inputs(self.C, s, x)
+
         print(f'p({x}) = {self.probs[x]}')
         total_prob += self.probs[x]
       print(f'Total probability sum = {total_prob}') # sum should be 1

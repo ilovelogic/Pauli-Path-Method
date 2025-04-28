@@ -3,6 +3,7 @@ from qiskit.quantum_info import Pauli, Statevector
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
+from Pauli_Amplitude.fcs import FCalculator
 
 def normalize_pauli(pauli_string):
     """
@@ -223,4 +224,6 @@ def preprocess_pauli_path(raw_path):
 def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state):
     circuit_layers = preprocess_circuit_gates(raw_gate_data)
     pauli_path_str = preprocess_pauli_path(raw_pauli_path)
+    #f_calc = FCalculator(circuit_layers, pauli_path_str, output_state)
+    #return f_calc.calculate_f()
     return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
