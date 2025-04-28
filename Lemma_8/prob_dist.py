@@ -14,34 +14,52 @@ class ProbDist:
     """
     
     """
-    def __init__(self, circuit_sim:CircuitSim,gates:List, QC:circuit):
+    def __init__(self, circuit_sim:CircuitSim,gates:List, QC:circuit, noise_rate:float=0):
 
         '''
         circuit (CircuitSim): A fully initiated CircuitSim object based on our circuit architecture
         gates (List[(int,np.ndarray,tuple)): the first item in the tuple is the layer it is in (0 indexing),
         the second item is the gate matrix, and the third item is a tuple of the gate positions
+        QC (circuit): quantum circuit generated using Qiskit
+        noise_rate: single-qubit depolarizing noise (γ in the research paper)
         '''
         self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
-        for path in self.s_list:
-           print(path)
-          
+
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
-        self.probs = DefaultDict(float) # made hash function
+        self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         self.n = circuit_sim.num_qubits
         self.bruteForceQC = QC
-        total_prob = 0
-        for i in range(1 << self.n):
-          x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
-          self.probs[x] = 0
-          for s in self.s_list:
-            self.probs[x] += compute_fourier_from_raw_inputs(self.C, s, x)
-          print(f'p({x}) = {self.probs[x]}')
-          total_prob += self.probs[x]
-        print(f'Total probability sum = {total_prob}')
-                
+
+        self.calc_noisy_prob_dist(noise_rate)
+
         self.calc_TVD()
         self.calc_linearXEB()
 
+
+    # Algorithm 1 from the rcs paper
+    def calc_noisy_prob_dist(self, noise_rate:float):
+      total_prob = 0
+      for i in range(1 << self.n):
+        x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
+        self.probs[x] = 0
+        for s in self.s_list:
+          ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
+          # each non-identity Pauli is affected by the depolarizing noise
+          # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
+          self.probs[x] += ((1-noise_rate)**ham_weight)*compute_fourier_from_raw_inputs(self.C, s, x) 
+        print(f'p({x}) = {self.probs[x]}')
+        total_prob += self.probs[x]
+      print(f'Total probability sum = {total_prob}') # sum should be 1
+
+    # Determines number of non-identity Paulis in a given legal Pauli path
+    def get_hamming_weight(self,path:List[List[str]]):
+      hamming_weight = 0
+      for pauli_op in path:
+         for pauli in pauli_op:
+            if pauli != 'I':
+               hamming_weight += 1
+      return hamming_weight
+    
     # ------------------------------------------------------------------------------
     # TVD of pauli prob dist and true dist
 
@@ -67,7 +85,6 @@ class ProbDist:
       self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
-
         self.s_list = [[] for _ in range(len(xyz_pauli_paths))]
         for i in range(len(xyz_pauli_paths)):
             for pauli_op in xyz_pauli_paths[i]:
