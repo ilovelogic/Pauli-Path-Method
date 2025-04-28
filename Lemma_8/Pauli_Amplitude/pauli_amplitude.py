@@ -52,8 +52,10 @@ def calculate_gate_transition_amplitude(sd, sd_minus_1, gate, qubit_indices):
     sd_minus_1_matrix = Pauli(sd_minus_1_sub).to_matrix() / np.sqrt(2**len(sd_minus_1_sub))
     
     # Compute transition amplitude
-    transformed_sd_minus_1 = gate @ sd_minus_1_matrix @ gate.conj().T
-    return np.trace(sd_matrix @ transformed_sd_minus_1).real
+    gate_unchanged = gate
+    gate_conj = gate.conj().transpose()
+    transformed_sd_minus_1 = gate_unchanged @ sd_minus_1_matrix @ gate_conj
+    return np.trace(sd_matrix @ transformed_sd_minus_1) #.real
 
 def calculate_non_gate_transition_amplitude(sd, sd_minus_1, qubit_indices):
     """
@@ -79,7 +81,7 @@ def calculate_non_gate_transition_amplitude(sd, sd_minus_1, qubit_indices):
     sd_minus_1_matrix = Pauli(sd_minus_1_sub).to_matrix() / np.sqrt(2**len(sd_minus_1_sub))
     
     # For non-gate qubits, the transition is just Tr(sd_sub · sd_minus_1_sub)
-    return np.trace(sd_matrix @ sd_minus_1_matrix).real
+    return np.trace(sd_matrix @ sd_minus_1_matrix) #.real
 
 def calculate_layer_transition_amplitude(sd, sd_minus_1, layer_gates, n_qubits):
     """

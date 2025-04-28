@@ -263,7 +263,7 @@ def complete_distribution(partial_dist: dict, num_qubits: int) -> dict:
     
     # Update with given probabilities
     for state, prob in partial_dist.items():
-        full_dist[state] = np.float64(prob)
+        full_dist[state] = np.float64(prob) # may be not needed? check later
     
     return full_dist
 

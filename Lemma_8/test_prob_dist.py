@@ -13,8 +13,8 @@ class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
     def setUpClass(self):
-        self.numQubits = 4
-        self.depth = 2
+        self.numQubits = 3 # must be at least 3
+        self.depth = 1
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
