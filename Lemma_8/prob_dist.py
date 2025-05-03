@@ -9,6 +9,7 @@ from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
+from itertools import product
 
 class ProbDist:
     """
@@ -87,9 +88,12 @@ class ProbDist:
       self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
+        self.s_list = [[list(p), list(p)] for p in product('IZ', repeat=len(xyz_pauli_paths[0][0].operator))]
+        return
         self.s_list = [[] for _ in range(len(xyz_pauli_paths)+1)]
         for i in range(len(xyz_pauli_paths)):
             for pauli_op in xyz_pauli_paths[i]:
                 self.s_list[i].append(pauli_op.operator)
+
+        # accounting for the fact that we excluded the all I's case from our path generation
         self.s_list[len(xyz_pauli_paths)] = [["I" for _ in range(len(xyz_pauli_paths[0][0].operator))] for _ in range(len(xyz_pauli_paths[0]))]
-        print(self.s_list[len(xyz_pauli_paths)])
