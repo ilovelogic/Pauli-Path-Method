@@ -143,7 +143,7 @@ def calculate_input_overlap(s0):
     norm_factor = 1.0 / np.sqrt(2**n)
     
     # Return normalized overlap with sign based on Z count
-    return norm_factor * ((-1)**z_count)
+    return norm_factor #* ((-1)**z_count)
 
 def calculate_output_overlap(x, sd):
     """
