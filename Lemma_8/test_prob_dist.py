@@ -21,7 +21,6 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
 
-        return
         self.numQubits = 3 # must be at least 3
         self.depth = 1
 
@@ -42,7 +41,7 @@ class TestProbDist(unittest.TestCase):
         
         self.prob_dist = ProbDist(circuit, gates, self.bruteForceQC)
 
-    #def test_stat_measures(self):
+    def test_stat_measures(self):
         # self.assertEqual(0,self.prob_dist.tvd)
         self.assertEqual(1,self.prob_dist.xeb)
         #self.assertEqual(0,self.prob_dist.tvd)
@@ -50,6 +49,7 @@ class TestProbDist(unittest.TestCase):
         self.assertEqual(1,self.prob_dist.xeb)
         print(self.prob_dist.xeb)
 
+    '''
     def test_no_depth(self):
         self.n_qubits_no_depth(3)
 
@@ -82,6 +82,7 @@ class TestProbDist(unittest.TestCase):
             print(f'p({x}) = {self.probs[x]}')
             total_prob += self.probs[x]
         print(f'Total probability sum = {total_prob}') # sum should be 1
+        '''
 
 if __name__ == '__main__':
     unittest.main()

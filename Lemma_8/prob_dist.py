@@ -87,7 +87,9 @@ class ProbDist:
       self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
-        self.s_list = [[] for _ in range(len(xyz_pauli_paths))]
+        self.s_list = [[] for _ in range(len(xyz_pauli_paths)+1)]
         for i in range(len(xyz_pauli_paths)):
             for pauli_op in xyz_pauli_paths[i]:
                 self.s_list[i].append(pauli_op.operator)
+        self.s_list[len(xyz_pauli_paths)] = [["I" for _ in range(len(xyz_pauli_paths[0][0].operator))] for _ in range(len(xyz_pauli_paths[0]))]
+        print(self.s_list[len(xyz_pauli_paths)])
