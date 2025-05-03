@@ -23,7 +23,9 @@ def calculate_true_distribution(qc):
     probabilities = statevector.probabilities()  # Already normalized
     
     num_qubits = qc.num_qubits
-    basis_states = [format(i, f'0{num_qubits}b') for i in range(2 ** num_qubits)]
+    #basis_states = [format(i, f'0{num_qubits}b') for i in range(2 ** num_qubits)]
+    basis_states = [format(i, f'0{num_qubits}b')[::-1] for i in range(2 ** num_qubits)] # reverse for little-endian
+    
     
     # Direct mapping without renormalization
     return {state: probabilities[i] for i, state in enumerate(basis_states)}
