@@ -7,6 +7,7 @@ from Brute_Force_RCS import circuit_utils
 from prob_dist import ProbDist
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
+from itertools import product
 
 import pdb
 
@@ -50,7 +51,7 @@ class TestProbDist(unittest.TestCase):
         print(self.prob_dist.xeb)
 
     def test_no_depth(self):
-        self.n_qubits_no_depth(1)
+        self.n_qubits_no_depth(3)
 
     def n_qubits_no_depth(self, n:int):
         self.numQubits = n # must be at least 3
@@ -61,15 +62,10 @@ class TestProbDist(unittest.TestCase):
             self.QC.id(i)
 
         self.bruteForceQC = self.QC
-
         gates = circuit_utils.extract_gates_info(self.QC)
-
         noise_rate = 0
 
-        # change to be every possible enumeration for length n lists
-        
-        s_list = [['Z','Z']]
-        #s_list = [[['Z','Z'],['Z','Z']], [['I','Z'],['I','Z']], [['Z','I'],['Z','I']]]
+        s_list = [[list(p), list(p)] for p in product('IZ', repeat=n)]
 
         total_prob = 0
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
@@ -81,6 +77,7 @@ class TestProbDist(unittest.TestCase):
                 ham_weight = 1 # total number of non-identity Paulis in s
                 # each non-identity Pauli is affected by the depolarizing noise
                 # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
+                #pdb.set_trace()
                 self.probs[x] += ((1-noise_rate)**ham_weight)*compute_fourier_from_raw_inputs(gates, s, x)
             print(f'p({x}) = {self.probs[x]}')
             total_prob += self.probs[x]

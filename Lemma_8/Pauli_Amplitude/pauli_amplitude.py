@@ -74,6 +74,7 @@ def calculate_non_gate_transition_amplitude(sd, sd_minus_1, qubit_indices):
         
     # Extract relevant sub-Paulis
     sd_sub = extract_qubit_pauli(sd, qubit_indices)
+
     sd_minus_1_sub = extract_qubit_pauli(sd_minus_1, qubit_indices)
     
     # Convert to normalized matrices
