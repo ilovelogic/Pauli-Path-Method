@@ -9,7 +9,8 @@ from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
-from itertools import product
+import itertools
+
 
 class ProbDist:
     """
@@ -24,17 +25,20 @@ class ProbDist:
         QC (circuit): quantum circuit generated using Qiskit
         noise_rate: single-qubit depolarizing noise (γ in the research paper)
         '''
-        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
 
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         self.n = circuit_sim.num_qubits
         self.bruteForceQC = QC
 
+        self.s_list = self.brute_force_paths()
         self.calc_noisy_prob_dist(noise_rate)
     
         self.calc_TVD()
         self.calc_linearXEB()
+
+        
 
 
     # Algorithm 1 from the rcs paper
@@ -42,13 +46,18 @@ class ProbDist:
       total_prob = 0
       for i in range(1 << self.n):
         x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
+        
         self.probs[x] = 0
 
         for s in self.s_list:
           ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
           # each non-identity Pauli is affected by the depolarizing noise
           # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
-          self.probs[x] += ((1-noise_rate)**ham_weight)*compute_fourier_from_raw_inputs(self.C, s, x)
+          fourier_copeff = compute_fourier_from_raw_inputs(self.C, s, x)
+          self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_copeff
+          #if (abs(fourier_copeff) > 1/(10**10)):
+             #print(f'Given outcome {x} and path {s}, amplitude = {fourier_copeff}')
+
 
         print(f'p({x}) = {self.probs[x]}')
         total_prob += self.probs[x]
@@ -88,6 +97,25 @@ class ProbDist:
       full_prob_dist = complete_distribution(self.probs,self.n)
       self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
+
+    def brute_force_paths(self):
+
+      elements = ['X', 'Y', 'Z', 'I']
+      inner_list_length = 3
+      outer_list_length = 3
+
+      # generates all possible inner lists of length 3 (for 3 qubits)
+      all_inner_lists = list(itertools.product(elements, repeat=inner_list_length))
+
+      # builds all possible lists of 3 inner lists (for the 3 Pauli operators in a path)
+      all_outer_lists = list(itertools.product(all_inner_lists, repeat=outer_list_length))
+
+      # converts tuples to lists since that is the format Erika's code uses
+      all_outer_lists_as_lists = [ [list(inner) for inner in outer] for outer in all_outer_lists]
+
+      return all_outer_lists_as_lists
+
+
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
         
         self.s_list = [[] for _ in range(len(xyz_pauli_paths)+1)]
@@ -97,3 +125,6 @@ class ProbDist:
 
         # accounting for the fact that we excluded the all I's case from our path generation
         self.s_list[len(xyz_pauli_paths)] = [["I" for _ in range(len(xyz_pauli_paths[0][0].operator))] for _ in range(len(xyz_pauli_paths[0]))]
+
+        #for lil_list in self.s_list:
+           #print(lil_list)

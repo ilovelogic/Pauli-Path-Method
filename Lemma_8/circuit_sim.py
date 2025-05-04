@@ -192,4 +192,5 @@ class CircuitSim:
                 first_op_list[0].operator[i] = 'Z'
             if first_op_list[0].operator[i] == 'P':
                 return [] # we shouldn't encounter a 'P' in the first layer
+            
         return first_op_list # valid operator possible

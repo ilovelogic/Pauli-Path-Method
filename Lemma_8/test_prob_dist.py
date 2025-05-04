@@ -24,15 +24,21 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         
-        self.numQubits = 4 # must be at least 3
+        self.numQubits = 3 # must be at least 3
         self.depth = 2
 
-        #self.C = QuantumCircuit(self.numQubits)
+        self.C = QuantumCircuit(self.numQubits)
  
-        #for i in range(self.numQubits-1):
-            #self.C.rxx(math.pi / 2,i,i+1)
+        self.C.rxx(math.pi / 2,0,1)
+        self.C.rxx(math.pi / 2,1,2)
+        #self.C.cx(0,1)
+        #self.C.cx(1,2)
+        print(self.C)
 
-        self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
+        #for i in range(1,self.numQubits-1,1):
+            #self.C.cx(i,i+1)
+
+        #self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
         self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)

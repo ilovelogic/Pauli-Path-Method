@@ -61,7 +61,7 @@ class SiblingOps:
                 if (carries == 1): # if the qubit remains a non-gate qubit to the last layer
                     self.pauli_path[next_index].operator[i] = 'Z' # to ensure that the last layer is all 'I's and 'Z's
                 elif(carries == 2):
-                    print(self.pauli_path[next_index].next_ops)
+                    pdb.set_trace() # ERROR
                 else:
                     n_pos_list.append(i)
             elif self.pauli_path[next_index].operator[i] == 'P': # the qubit is forced to be the same as the prior qubit
@@ -73,8 +73,6 @@ class SiblingOps:
             # at which we want to edit the pauli in filled_pos's operators in the range beginning with start
             return
         for i in range(start, start + (3 ** (len(pos_list)-index-1))):
-            if (i > len(filled_pos)-1):
-                pdb.set_trace()
             filled_pos[i].operator[pos_list[index]] = pauli
         
         self.fill_in_pos(filled_pos,pos_list,'X', index+1,start)
@@ -85,7 +83,6 @@ class SiblingOps:
         if self.pauli_path[pauli_path_index].next_ops == None: # reached last layer
             return 1 # the non-gate qubit remain a non-gate qubit to the last layer
         elif (self.pauli_path[pauli_path_index].next_ops == []): # NEED TO CHECK IF THIS CAUSES ANY ISSUES
-            print(self.pauli_path[pauli_path_index].next_ops)
             return 2
         elif self.pauli_path[pauli_path_index].next_ops[0].operator[i] == 'P':
             return self.carries_to_the_end(pauli_path_index+1, i)

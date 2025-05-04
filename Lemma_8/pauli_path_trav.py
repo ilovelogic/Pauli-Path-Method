@@ -37,7 +37,7 @@ class PauliPathTrav:
             else:
                 self.layers[min_index-1] = PauliOpLayer()
                 self.layers[min_index-1].forward_sibs = min_prior_sibs
-        
+
         if (min_index < self.num_op_layers-1):
             min_next_sibs_f = self.propagate_next(self.layers[min_index].forward_sibs, pos_to_fill_f, 0, min_index+1)
             if (min_index+1 < self.num_op_layers-1):
@@ -53,6 +53,7 @@ class PauliPathTrav:
             next_sibs_b = self.propagate_next(self.layers[i+1].backward_sibs, self.layers[i+1].pos_to_fill, 1, i)
             self.layers[i] = PauliOpLayer(gate_pos[i-1], 1, next_sibs_b)
 
+        
         # Propagating forward
         for i in range(min_index+2, self.num_op_layers): # Goes from min_index + 2 to self.num_op_layers-1
             next_sibs_f = self.propagate_next(self.layers[i-1].forward_sibs, self.layers[i-1].pos_to_fill, 0, i)
@@ -186,6 +187,7 @@ class PauliPathTrav:
                     prior_op.next_ops = sib_ops # in the reverse direction
                 if (sib_ops[0].prior_ops != []): # Checks if propagation was successful
                     new_sib_ops[identifier] = sib_ops[0].prior_ops
+
         else:
             for identifier, sib_ops in all_sibs.items():
                 for op in sib_ops:

@@ -105,6 +105,7 @@ class PauliOperator:
     @staticmethod
     def list_allocs(num_p:int, num_w:int):
         if (num_p > num_w):
+            print("HELLLO")
             return [] # No way to have num_p gates with non-identity I/O unless
             # we have at least num_p Hamming weight to spread across the gates
 
