@@ -149,7 +149,7 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
 **Overview**
 
-<img src="images/sibling_ops.png" width="1000" />\
+<img src="images/sibling_ops.png" width="700" />\
 The `SiblingOps` class represents...
 
 **Initialization**\
@@ -172,7 +172,6 @@ The `SiblingOps` class represents...
 
 **Overview**
 
-<img src="images/xyz_tree.png" width="1000" />
 
 The `CircuitSim` class represents a classical simulation of a noisy random circuit. Its constructor initiailizes a list of all possible `PauliPathTrav` objects, given the circuit architecture and an upperbound on Hamming weight.
 
