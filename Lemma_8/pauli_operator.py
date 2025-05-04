@@ -43,7 +43,7 @@ class PauliOperator:
         unordered_pos_to_fill = {pos for gate_pos in pos_to_fill for pos in gate_pos}
         neighbor_operator = copy.deepcopy(self.operator)
         for i in range(len(self.operator)):
-            if i not in unordered_pos_to_fill and self.operator[i] == 'R':
+            if i not in unordered_pos_to_fill and (self.operator[i] == 'R' or self.operator[i] == 'N' or self.operator[i] == 'P'):
                 next_gate_weight -= 1 # Every non-gate qubit that is non-identity takes from our 
                 # overall Hamming weight available to gate qubits
                 if (backward): # if we are propagating backward, then
