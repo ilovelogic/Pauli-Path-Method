@@ -63,7 +63,7 @@ class PauliOpLayer:
         for i in range(len(unsorted_pauli_ops)): # For each valid configuration of our layer
             self.carry_over_qubits.append(copy.deepcopy(unsorted_pauli_ops[i].operator))
             for ind1, ind2 in self.gate_pos: # For each gate between this layer and its neighboring layer
-                if (unsorted_pauli_ops[i].operator[ind1] == 'R' or unsorted_pauli_ops[i].operator[ind2] == 'R'): # non-identity output
+                if (unsorted_pauli_ops[i].operator[ind1] != 'I' or unsorted_pauli_ops[i].operator[ind2] != 'I'): # non-identity output
                     self.pos_to_fill[unsorted_pauli_ops[i]].append((ind1,ind2)) # Adds gate to the list of positions 
                     # for layer i that require non-identity input
                     self.carry_over_qubits[i][ind1] = 'I'
