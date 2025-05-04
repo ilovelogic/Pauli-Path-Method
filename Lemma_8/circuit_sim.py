@@ -120,6 +120,8 @@ class CircuitSim:
         self.pauli_path_travs = []
         for weight_combo in self.weight_combos:
             self.pauli_path_travs.append(PauliPathTrav(self.num_qubits, weight_combo, self.gate_pos))
+            
+
     
     # Translates PauliPathTrav objects into a list of paths, still in 'R', 'N', 'P', and 'I'
     def travs_to_list(self):

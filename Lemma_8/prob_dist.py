@@ -32,7 +32,7 @@ class ProbDist:
         self.bruteForceQC = QC
 
         self.calc_noisy_prob_dist(noise_rate)
-
+    
         self.calc_TVD()
         self.calc_linearXEB()
 
@@ -84,12 +84,12 @@ class ProbDist:
       #XEB of true distribution and pauli probability distribution
 
       trueDist = calculate_true_distribution(self.bruteForceQC)
+      print(trueDist)
       full_prob_dist = complete_distribution(self.probs,self.n)
       self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
     def pauli_ops_to_strs(self, xyz_pauli_paths:List[List[List[str]]]):
-        self.s_list = [[list(p), list(p)] for p in product('IZ', repeat=len(xyz_pauli_paths[0][0].operator))]
-        return
+        
         self.s_list = [[] for _ in range(len(xyz_pauli_paths)+1)]
         for i in range(len(xyz_pauli_paths)):
             for pauli_op in xyz_pauli_paths[i]:

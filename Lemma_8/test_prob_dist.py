@@ -10,6 +10,7 @@ from qiskit import circuit
 from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
+import math
 
 import pdb
 
@@ -22,9 +23,14 @@ class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
     def setUpClass(self):
+        
+        self.numQubits = 4 # must be at least 3
+        self.depth = 2
 
-        self.numQubits = 3 # must be at least 3
-        self.depth = 1
+        #self.C = QuantumCircuit(self.numQubits)
+ 
+        #for i in range(self.numQubits-1):
+            #self.C.rxx(math.pi / 2,i,i+1)
 
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
@@ -37,15 +43,13 @@ class TestProbDist(unittest.TestCase):
             if layer_num+1 > len(gate_pos):
                 gate_pos.append([])
             gate_pos[layer_num].append(gates[i][1])
-        print(gate_pos)
 
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         
         self.prob_dist = ProbDist(circuit, gates, self.bruteForceQC)
 
     def test_stat_measures(self):
-        
-        #self.assertEqual(1,self.prob_dist.xeb)
+        self.assertEqual(1,self.prob_dist.xeb)
         self.assertEqual(0,self.prob_dist.tvd)
 
 
@@ -62,6 +66,8 @@ class TestProbDist(unittest.TestCase):
         self.QC = QuantumCircuit(n)
         for i in range(n):
             self.QC.h(i)
+
+        print(self.QC)
 
         self.bruteForceQC = self.QC
         gates = circuit_utils.extract_gates_info(self.QC)
@@ -86,6 +92,7 @@ class TestProbDist(unittest.TestCase):
         print(f'Total probability sum = {total_prob}') # sum should be 1
 
         trueDist = calculate_true_distribution(self.bruteForceQC)
+        print(trueDist)
 
         full_prob_dist = complete_distribution(probs,self.numQubits)
 

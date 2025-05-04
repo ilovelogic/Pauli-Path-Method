@@ -49,6 +49,7 @@ class PauliPathTrav:
         # Propagating backward
         for i in range(min_index-2, -1, -1): # Goes from min_index -1 to 0
             # Determines all the sibs that the prior layer can propagate backwards to 
+            
             next_sibs_b = self.propagate_next(self.layers[i+1].backward_sibs, self.layers[i+1].pos_to_fill, 1, i)
             self.layers[i] = PauliOpLayer(gate_pos[i-1], 1, next_sibs_b)
 
@@ -173,7 +174,8 @@ class PauliPathTrav:
         for sib_ops in all_sibs.values(): # Iterates over each sibling operators list at the former index 
             # All PauliOperators in a sibling operators have the same sibling operators they propagate to,
             # so we only need to get the next sibling operators once per each sibling operators in our list
-            sib_ops[0].weight_to_operators(sib_ops, self.weight_combo[index], copy.deepcopy(pos_to_fill[sib_ops[0]]), backward)
+                sib_ops[0].weight_to_operators(sib_ops, self.weight_combo[index], copy.deepcopy(pos_to_fill[sib_ops[0]]), backward)
+            
         if (backward):
             for identifier, sib_ops in all_sibs.items():
                 for op in sib_ops:

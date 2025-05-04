@@ -137,6 +137,7 @@ def extract_gates_info(qc):
     """
     gate_info = []
 
+    layer_c = 0
     for instruction in qc.data:
         gate = instruction.operation
         qubits = instruction.qubits
@@ -146,13 +147,13 @@ def extract_gates_info(qc):
         if gate.name != "measure":
             gate_matrix = Operator(gate).data
 
-
         # Parse layer number from label if possible
         label = gate.label
         if label and label.startswith("random_unitary_layer_"):
             layer = int(label.split("_")[-1])
         else:
-            layer = None
+            layer = layer_c
+            layer_c += 1
 
         gate_info.append((gate_matrix, tuple(qubit_indices), layer))
     return gate_info
