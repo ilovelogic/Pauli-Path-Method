@@ -150,7 +150,7 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 **Overview**
 
 <img src="images/sibling_ops.png" width="700" />\
-The `SiblingOps` class represents...
+The `SiblingOps` class uses a recursive structure to generate Pauli paths.
 
 **Initialization**\
    `SiblingOps(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
