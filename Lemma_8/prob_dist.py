@@ -25,8 +25,9 @@ class ProbDist:
         QC (circuit): quantum circuit generated using Qiskit
         noise_rate: single-qubit depolarizing noise (γ in the research paper)
         '''
+
         #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
-    
+
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         self.n = circuit_sim.num_qubits
@@ -57,8 +58,8 @@ class ProbDist:
           # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
           fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
           self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
-          #if (abs(fourier_copeff) > 1/(10**10)):
-             #print(f'Given outcome {x} and path {s}, amplitude = {fourier_copeff}')
+          #if (abs(fourier_coeff) > 1/(10**10)):
+             #print(f'Given outcome {x} and path {s}, amplitude = {fourier_coeff}')
         
         #printing the output state from erika's code and total prob
         print(f'p({x}) = {self.probs[x]}')

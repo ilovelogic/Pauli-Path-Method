@@ -16,24 +16,23 @@ import pdb
 
 from qiskit import QuantumCircuit 
 
-#python -m pdb your_script.py
-#break exception IndexError
 
 class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
     def setUpClass(self):
         
-        self.numQubits = 3 # must be at least 3
+        self.numQubits = 4 # must be at least 3
         self.depth = 2
 
         self.C = QuantumCircuit(self.numQubits)
  
         self.C.rxx(math.pi / 2,0,1)
+        self.C.rxx(math.pi / 2,1,2)
         #self.C.rxx(math.pi / 2,1,2)
         #self.C.cx(0,1)
-        self.C.cx(1,2)
-        print(self.C)
+        self.C.cx(2,3)
+        #print(self.C)
 
         #for i in range(1,self.numQubits-1,1):
             #self.C.cx(i,i+1)
@@ -43,13 +42,15 @@ class TestProbDist(unittest.TestCase):
 
         self.bruteForceQC = self.C.reverse_bits() # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
-
+        print(gates)
         gate_pos = []
+
         for i in range(len(gates)):
             layer_num = gates[i][2]
             if layer_num+1 > len(gate_pos):
                 gate_pos.append([])
-            gate_pos[layer_num].append(gates[i][1])
+            a, b = gates[i][1]
+            gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
 
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         
@@ -92,7 +93,7 @@ class TestProbDist(unittest.TestCase):
                 ham_weight = 1 # total number of non-identity Paulis in s
                 # each non-identity Pauli is affected by the depolarizing noise
                 # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
-                #pdb.set_trace()
+
                 probs[x] += ((1-noise_rate)**ham_weight)*compute_fourier_from_raw_inputs(gates, s, x)
             print(f'p({x}) = {probs[x]}')
             total_prob += probs[x]

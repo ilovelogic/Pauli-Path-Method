@@ -61,7 +61,7 @@ class SiblingOps:
                 if (carries == 1): # if the qubit remains a non-gate qubit to the last layer
                     self.pauli_path[next_index].operator[i] = 'Z' # to ensure that the last layer is all 'I's and 'Z's
                 elif(carries == 2):
-                    pdb.set_trace() # ERROR
+                    raise ValueError
                 else:
                     n_pos_list.append(i)
             elif self.pauli_path[next_index].operator[i] == 'P': # the qubit is forced to be the same as the prior qubit

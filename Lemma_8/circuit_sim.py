@@ -16,6 +16,7 @@ class CircuitSim:
     def __init__(self, num_qubits:int, l:int, gate_pos:List[List[tuple]]):
 
         if not self.valid_gate_pos(num_qubits,gate_pos):
+            print(gate_pos)
             raise ValueError
         
         self.num_qubits = num_qubits
