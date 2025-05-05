@@ -26,13 +26,14 @@ class ProbDist:
         noise_rate: single-qubit depolarizing noise (γ in the research paper)
         '''
         #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
-
+    
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         self.n = circuit_sim.num_qubits
         self.bruteForceQC = QC
 
         self.s_list = self.brute_force_paths()
+        
         self.calc_noisy_prob_dist(noise_rate)
     
         self.calc_TVD()
@@ -50,15 +51,16 @@ class ProbDist:
         self.probs[x] = 0
 
         for s in self.s_list:
+          #print(s)
           ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
           # each non-identity Pauli is affected by the depolarizing noise
           # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
-          fourier_copeff = compute_fourier_from_raw_inputs(self.C, s, x)
-          self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_copeff
+          fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
+          self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
           #if (abs(fourier_copeff) > 1/(10**10)):
              #print(f'Given outcome {x} and path {s}, amplitude = {fourier_copeff}')
-
-
+        
+        #printing the output state from erika's code and total prob
         print(f'p({x}) = {self.probs[x]}')
         total_prob += self.probs[x]
       print(f'Total probability sum = {total_prob}') # sum should be 1
@@ -120,8 +122,12 @@ class ProbDist:
         
         self.s_list = [[] for _ in range(len(xyz_pauli_paths)+1)]
         for i in range(len(xyz_pauli_paths)):
-            for pauli_op in xyz_pauli_paths[i]:
-                self.s_list[i].append(pauli_op.operator)
+          #print(f"\n=== Layer {i} Pauli Paths ===")
+          for pauli_op in xyz_pauli_paths[i]:
+              #pauli_str = ''.join(pauli_op.operator)
+              self.s_list[i].append(pauli_op.operator)
+              #print(f"Path {j}: {pauli_str}")
+
 
         # accounting for the fact that we excluded the all I's case from our path generation
         self.s_list[len(xyz_pauli_paths)] = [["I" for _ in range(len(xyz_pauli_paths[0][0].operator))] for _ in range(len(xyz_pauli_paths[0]))]

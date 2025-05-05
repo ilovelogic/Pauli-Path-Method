@@ -5,6 +5,15 @@ from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
 from Pauli_Amplitude.fcs import FCalculator
 
+def reverse_qubit_indices(pauli_path):
+    """Reverse qubit indices in a Pauli path to match Qiskit's little-endian convention."""
+    return [op[::-1] for op in pauli_path]
+
+def reverse_output_state(x):
+    """Reverse output state string to match Qiskit's qubit ordering."""
+    return x[::-1]
+
+
 def normalize_pauli(pauli_string):
     """
     Normalize a Pauli string to match the normalized Pauli basis.
@@ -188,6 +197,10 @@ def compute_fourier_coefficient(C, s, x):
     Returns:
         float: Fourier coefficient f(C, s, x).
     """
+
+    # Reverse qubit indices for Qiskit compatibility
+    s_reversed = reverse_qubit_indices(s)
+    x_reversed = reverse_output_state(x)
     n = len(s[0])  # Number of qubits
     d = len(s)-1     # Depth of the circuit
     
@@ -196,7 +209,8 @@ def compute_fourier_coefficient(C, s, x):
         return 0.0
     
     # Input overlap
-    input_overlap = calculate_input_overlap(s[0])
+    input_overlap = calculate_input_overlap(s_reversed[0])
+    #input_overlap = calculate_input_overlap(s[0])
     if input_overlap == 0:
         return 0.0
     
@@ -204,29 +218,65 @@ def compute_fourier_coefficient(C, s, x):
     transition_amplitude = 1.0
     for i in range(d):
         layer_amplitude = calculate_layer_transition_amplitude(s[i+1], s[i], C[i], n)
+        layer_amplitude = calculate_layer_transition_amplitude(
+            s_reversed[i+1], 
+            s_reversed[i],
+            C[i],
+            n
+        )
         transition_amplitude *= layer_amplitude
         if transition_amplitude == 0:
             return 0.0
     
     # Output overlap
-    output_overlap = calculate_output_overlap(x, s[-1])
+    output_overlap = calculate_output_overlap(x_reversed, s_reversed[-1])
+    #output_overlap = calculate_output_overlap(x, s[-1])
     
     return input_overlap * transition_amplitude * output_overlap
 
 # Preprocessing functions for taking in anne and jesus input 
-def preprocess_circuit_gates(raw_gate_data):
+def preprocess_circuit_gates(raw_gate_data, n):
     from collections import defaultdict
     layers = defaultdict(list)
     for gate_matrix, qubits, layer in raw_gate_data:
-        layers[layer].append((gate_matrix, qubits))
+        reversed_qubits = [n - 1 - q for q in qubits]  # Reverse gate indices
+        if len(qubits) == 2:
+            # For CNOT gates specifically
+            if np.allclose(gate_matrix, np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])):
+                # This transforms the matrix using basis state effects, not tensor reshaping
+                new_matrix = np.zeros((4,4))
+                # Preserve |00⟩ → |00⟩ and |10⟩ → |10⟩
+                new_matrix[0,0] = 1
+                new_matrix[2,2] = 1
+                # Swap |01⟩ → |11⟩ and |11⟩ → |01⟩
+                new_matrix[1,3] = 1
+                new_matrix[3,1] = 1
+                gate_matrix = new_matrix
+            else:
+                # For non-CNOT gates like RXX
+                gate_matrix = np.reshape(gate_matrix, (2, 2, 2, 2))
+                gate_matrix = np.transpose(gate_matrix, (1, 0, 3, 2))
+                gate_matrix = gate_matrix.reshape(4, 4)
+        
+        # if len(qubits) == 2:
+        #    # Reshape 4x4 matrix → 2x2x2x2 tensor, swap control/target axes
+        #    gate_matrix = np.reshape(gate_matrix, (2, 2, 2, 2))
+        #    gate_matrix = np.swapaxes(gate_matrix, 0, 1)  # Swap control and target
+        #    gate_matrix = gate_matrix.reshape(4, 4)  # Back to 4x4 
+        layers[layer].append((gate_matrix, reversed_qubits))
     return [layers[i] for i in sorted(layers)]
 
 def preprocess_pauli_path(raw_path):
     return [''.join(layer) for layer in raw_path]
 
-def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state):
-    circuit_layers = preprocess_circuit_gates(raw_gate_data)
+def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state, n):
+    circuit_layers = preprocess_circuit_gates(raw_gate_data, n)  # Pass `n` here
     pauli_path_str = preprocess_pauli_path(raw_pauli_path)
+    reversed_pauli_path = reverse_qubit_indices(pauli_path_str)
+    reversed_output = reverse_output_state(output_state)
+    #return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
+    return compute_fourier_coefficient(circuit_layers, reversed_pauli_path, reversed_output)
+   
     #f_calc = FCalculator(circuit_layers, pauli_path_str, output_state)
     #return f_calc.calculate_f()
     return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)

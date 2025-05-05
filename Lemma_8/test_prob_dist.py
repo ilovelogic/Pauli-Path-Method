@@ -30,9 +30,9 @@ class TestProbDist(unittest.TestCase):
         self.C = QuantumCircuit(self.numQubits)
  
         self.C.rxx(math.pi / 2,0,1)
-        self.C.rxx(math.pi / 2,1,2)
+        #self.C.rxx(math.pi / 2,1,2)
         #self.C.cx(0,1)
-        #self.C.cx(1,2)
+        self.C.cx(1,2)
         print(self.C)
 
         #for i in range(1,self.numQubits-1,1):
@@ -40,7 +40,8 @@ class TestProbDist(unittest.TestCase):
 
         #self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
-        self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
+
+        self.bruteForceQC = self.C.reverse_bits() # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
 
         gate_pos = []
