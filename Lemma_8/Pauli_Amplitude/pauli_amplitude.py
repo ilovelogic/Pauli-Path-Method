@@ -237,10 +237,18 @@ def compute_fourier_coefficient(C, s, x):
 # Preprocessing functions for taking in anne and jesus input 
 def preprocess_circuit_gates(raw_gate_data, n):
     from collections import defaultdict
+    # Reverse map: logical qubit i → tensor axis (bit) num_qubits - 1 - i
+    #reversed_qubit_map = {q: n - 1 - q for q in range(n)
     layers = defaultdict(list)
+    #for each 2qubit gate in a given layer
     for gate_matrix, qubits, layer in raw_gate_data:
+        #mapped_qubits = [reversed_qubit_map[q] for q in qubits]
+
         reversed_qubits = [n - 1 - q for q in qubits]  # Reverse gate indices
+        #print(f"Original qubits: {qubits}, Reversed: {reversed_qubits}")
         if len(qubits) == 2:
+            #q0, q1 = reversed_qubits
+            sorted_qubits = sorted(reversed_qubits)
             # For CNOT gates specifically
             if np.allclose(gate_matrix, np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])):
                 # This transforms the matrix using basis state effects, not tensor reshaping
@@ -255,14 +263,9 @@ def preprocess_circuit_gates(raw_gate_data, n):
             else:
                 # For non-CNOT gates like RXX
                 gate_matrix = np.reshape(gate_matrix, (2, 2, 2, 2))
-                gate_matrix = np.transpose(gate_matrix, (1, 0, 3, 2))
+                if reversed_qubits != sorted_qubits:
+                    gate_matrix = gate_matrix.transpose((1, 0, 3, 2))
                 gate_matrix = gate_matrix.reshape(4, 4)
-        
-        # if len(qubits) == 2:
-        #    # Reshape 4x4 matrix → 2x2x2x2 tensor, swap control/target axes
-        #    gate_matrix = np.reshape(gate_matrix, (2, 2, 2, 2))
-        #    gate_matrix = np.swapaxes(gate_matrix, 0, 1)  # Swap control and target
-        #    gate_matrix = gate_matrix.reshape(4, 4)  # Back to 4x4 
         layers[layer].append((gate_matrix, reversed_qubits))
     return [layers[i] for i in sorted(layers)]
 
