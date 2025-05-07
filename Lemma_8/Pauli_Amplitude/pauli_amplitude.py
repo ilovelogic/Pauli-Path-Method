@@ -37,6 +37,10 @@ def extract_qubit_pauli(pauli_string, qubits):
     Returns:
         str: Sub-Pauli operator for specified qubits.
     """
+    print(f"extract_qubit_pauli: pauli_string='{pauli_string}', qubits={qubits}")
+    for q in qubits:
+        if q >= len(pauli_string):
+            print(f" Index {q} out of range for string of length {len(pauli_string)}")
     return ''.join([pauli_string[q] for q in qubits])
 
 def calculate_gate_transition_amplitude(sd, sd_minus_1, gate, qubit_indices):

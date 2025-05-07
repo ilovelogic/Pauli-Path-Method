@@ -22,16 +22,16 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         
-        self.numQubits = 3 # must be at least 3
+        self.numQubits = 4 # must be at least 3
         self.depth = 2
 
         self.C = QuantumCircuit(self.numQubits)
  
-        self.C.rxx(math.pi / 2,1,2)
+        #self.C.rxx(math.pi / 2,1,2)
         #self.C.rxx(math.pi / 2,1,2)
         #self.C.rxx(math.pi / 2,1,2)
         self.C.cx(0,1)
-        #self.C.cx(2,3)
+        self.C.cx(1,2)
         #print(self.C)
 
         #for i in range(1,self.numQubits-1,1):
@@ -45,6 +45,7 @@ class TestProbDist(unittest.TestCase):
         print(gates)
         gate_pos = []
 
+        #endian order indexing
         for i in range(len(gates)):
             layer_num = gates[i][2]
             if layer_num+1 > len(gate_pos):
