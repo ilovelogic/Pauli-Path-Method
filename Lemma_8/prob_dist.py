@@ -36,7 +36,7 @@ class ProbDist:
         #not going to the right probability states for this one 
         self.bruteForceQC = QC
 
-        self.s_list = self.brute_force_paths()
+        #self.s_list = self.brute_force_paths()
         
         self.calc_noisy_prob_dist(noise_rate)
     
@@ -62,6 +62,8 @@ class ProbDist:
           fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
           self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
           #print out the pauli paths 
+          if (abs(fourier_coeff) > 1/(10**10)):
+             print(f'Given outcome {x} and path {s}, amplitude = {fourier_coeff}')
           if (abs(fourier_coeff) > 1/(10**10)):
              print(f'Given outcome {x} and path {s}, amplitude = {fourier_coeff}')
         

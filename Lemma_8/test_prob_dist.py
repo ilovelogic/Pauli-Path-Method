@@ -50,8 +50,9 @@ class TestProbDist(unittest.TestCase):
             layer_num = gates[i][2]
             if layer_num+1 > len(gate_pos):
                 gate_pos.append([])
-            a, b = gates[i][1]
-            gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
+            #a, b = gates[i][1]
+            #gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
+            gate_pos[layer_num].append(gates[i][1])
 
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         
