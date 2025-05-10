@@ -221,7 +221,7 @@ def compute_fourier_coefficient(C, s, x):
     # Transition amplitudes
     transition_amplitude = 1.0
     for i in range(d):
-        layer_amplitude = calculate_layer_transition_amplitude(s[i+1], s[i], C[i], n)
+        #layer_amplitude = calculate_layer_transition_amplitude(s[i+1], s[i], C[i], n)
         layer_amplitude = calculate_layer_transition_amplitude(
             s_reversed[i+1], 
             s_reversed[i],

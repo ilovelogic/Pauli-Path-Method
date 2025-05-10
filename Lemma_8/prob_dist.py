@@ -36,7 +36,7 @@ class ProbDist:
         #not going to the right probability states for this one 
         self.bruteForceQC = QC
 
-        #self.s_list = self.brute_force_paths()
+        self.s_list = self.brute_force_paths()
         
         self.calc_noisy_prob_dist(noise_rate)
     
@@ -110,8 +110,11 @@ class ProbDist:
     def brute_force_paths(self):
 
       elements = ['X', 'Y', 'Z', 'I']
-      inner_list_length = 3
-      outer_list_length = 3
+      #inner_list_length = self.n  # ← number of qubits
+      #outer_list_length = len(set(g[2] for g in self.C)) + 1  # ← number of layers + 1 for s₀ to s_d
+
+      inner_list_length = 4
+      outer_list_length = 4
 
       # generates all possible inner lists of length 3 (for 3 qubits)
       all_inner_lists = list(itertools.product(elements, repeat=inner_list_length))
