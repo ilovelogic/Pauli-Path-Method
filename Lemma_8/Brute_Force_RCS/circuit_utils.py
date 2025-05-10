@@ -24,6 +24,7 @@ def random_circuit(num_qubits:int, depth=None):
     Returns:
       qc: A Qiskit quantum circuit object with 1D brickwork architecture and a measurement.
     """
+    
     qc = QuantumCircuit(num_qubits)
     
     if num_qubits < 3:
@@ -37,12 +38,12 @@ def random_circuit(num_qubits:int, depth=None):
     # Constructing interwieved layers of two qubit random unitaries
     for d in range(depth):
         if d % 2 == 0:  # Even layers 
-            for i in range(0, num_qubits - 1, 2):
+            for i in range(num_qubits - 2, -1, -2):
                 random_gate = random_unitary(4).to_instruction()
                 random_gate.label="random_unitary_layer_" + str(d)
                 qc.append(random_gate, [i, i + 1])
         else:  # Odd layers
-            for i in range(1, num_qubits - 1, 2):
+            for i in range(num_qubits - 3, -1, -2):
                 random_gate = random_unitary(4).to_instruction()
                 random_gate.label="random_unitary_layer_" + str(d)
                 qc.append(random_gate, [i, i + 1])
