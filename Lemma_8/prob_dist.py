@@ -16,7 +16,7 @@ class ProbDist:
     """
     
     """
-    def __init__(self, circuit_sim:CircuitSim,gates:List, QC:circuit, noise_rate:float=0):
+    def __init__(self, circuit_sim:CircuitSim,gates:List, num_qubs:int, depth:int, QC:circuit, noise_rate:float=0):
 
         '''
         circuit (CircuitSim): A fully initiated CircuitSim object based on our circuit architecture
@@ -25,10 +25,11 @@ class ProbDist:
         QC (circuit): quantum circuit generated using Qiskit
         noise_rate: single-qubit depolarizing noise (γ in the research paper)
         '''
-
+        self.num_qubs = num_qubs
+        self.depth = depth
 
         #test on this one, right now the values aren't looking right 
-        #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
 
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
@@ -62,10 +63,8 @@ class ProbDist:
           fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
           self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
           #print out the pauli paths 
-          if (abs(fourier_coeff) > 1/(10**10)):
-             print(f'Given outcome {x} and path {s}, amplitude = {fourier_coeff}')
-          if (abs(fourier_coeff) > 1/(10**10)):
-             print(f'Given outcome {x} and path {s}, amplitude = {fourier_coeff}')
+          #if (abs(fourier_coeff) > 1/(10**10)):
+             #print(f'{x} and {s}, amplitude = {fourier_coeff}')
         
         #printing the output state from erika's code and total prob
         print(f'p({x}) = {self.probs[x]}')
@@ -110,11 +109,8 @@ class ProbDist:
     def brute_force_paths(self):
 
       elements = ['X', 'Y', 'Z', 'I']
-      #inner_list_length = self.n  # ← number of qubits
-      #outer_list_length = len(set(g[2] for g in self.C)) + 1  # ← number of layers + 1 for s₀ to s_d
-
-      inner_list_length = 4
-      outer_list_length = 4
+      inner_list_length = self.num_qubs
+      outer_list_length = self.depth+1
 
       # generates all possible inner lists of length 3 (for 3 qubits)
       all_inner_lists = list(itertools.product(elements, repeat=inner_list_length))
