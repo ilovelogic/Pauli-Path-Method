@@ -11,6 +11,7 @@ from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
 import math
+import numpy as np
 
 import pdb
 
@@ -25,21 +26,25 @@ class TestProbDist(unittest.TestCase):
         self.numQubits = 4 # must be at least 3
         self.depth = 2
 
-        self.C = QuantumCircuit(self.numQubits)
- 
-        #self.C.rxx(math.pi / 2,1,2)
-        #self.C.rxx(math.pi / 2,1,2)
-        #self.C.rxx(math.pi / 2,1,2)
-        self.C.cx(0,1)
-        self.C.cx(1,2)
-        #print(self.C)
+        #self.C = QuantumCircuit(self.numQubits)
+        # making two-qubit  H⊗I matrix
+        #H = (1/np.sqrt(2)) * np.array([[1, 1], [1, -1]])  # Hadamard
+        #I = np.eye(2)                                     # Identity
+        #H_tensor_I = np.kron(H, I)  # Applies H to qubit 0, I to qubit 1
 
+        # applies it to qubits 0 and 1
+        #self.C.unitary(H_tensor_I, [2, 1], label='H⊗I')
+        #self.C.unitary(H_tensor_I, [1, 0], label='H⊗I')
+ 
+        #self.C.cx(1,2)
+        #self.C.rxx(math.pi / 2,1,2)
+    
+        #print(self.C)
         #for i in range(1,self.numQubits-1,1):
             #self.C.cx(i,i+1)
-
-        #self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
-
-
+        
+        self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
+        print(self.C)
         self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
         print(gates)
@@ -50,13 +55,13 @@ class TestProbDist(unittest.TestCase):
             layer_num = gates[i][2]
             if layer_num+1 > len(gate_pos):
                 gate_pos.append([])
-            #a, b = gates[i][1]
-            #gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
-            gate_pos[layer_num].append(gates[i][1])
+            a, b = gates[i][1]
+            gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
+            #gate_pos[layer_num].append(gates[i][1])
 
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         
-        self.prob_dist = ProbDist(circuit, gates, self.bruteForceQC)
+        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
 
     def test_stat_measures(self):
         self.assertEqual(1,self.prob_dist.xeb)
