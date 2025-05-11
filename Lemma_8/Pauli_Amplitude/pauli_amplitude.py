@@ -284,7 +284,7 @@ def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state,
     return compute_fourier_coefficient(circuit_layers, reversed_pauli_path, reversed_output)
 
 ##new input i'm taking in from anne: list of heads, self.sib_op_heads
-def compute_fourier_from_tree(C, sib_op_heads, x, n):
+def compute_noisy_fourier_from_tree(C, sib_op_heads, x, n, gamma):
     """
     Compute the total Fourier coefficient f(C, s, x) by traversing the SiblingOps tree.
     
@@ -299,10 +299,10 @@ def compute_fourier_from_tree(C, sib_op_heads, x, n):
     """
     total = [0.0]
     for root in sib_op_heads:
-        traverse_sibling_tree(root, [], C, x, total, n)
+        traverse_tree_with_noise(root, [], C, x, total, n, gamma)
     return total[0]
 
-def traverse_sibling_tree(sib_op, path_so_far, C, x, total, n):
+def traverse_tree_with_noise(sib_op, path_so_far, C, x, total, n, gamma):
     """
     Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
     
@@ -320,12 +320,15 @@ def traverse_sibling_tree(sib_op, path_so_far, C, x, total, n):
         if sib_op.next_sibs is None:
             # Leaf reached → append sd
             final_path = next_path
+            
             if is_valid_terminal(final_path):
+                ham_weight = sum(p != 'I' for layer in next_path for p in layer)
+                factor = (1 - gamma) ** ham_weight
                 f_s = compute_fourier_coefficient(C, final_path, x)
-                total[0] += f_s
+                total[0] += f_s * factor
         else:
             for next_sib in sib_op.next_sibs:
-                traverse_sibling_tree(next_sib, next_path, C, x, total, n)
+                traverse_tree_with_noise(next_sib, next_path, C, x, total, n, gamma)
 
 def is_valid_terminal(path):
     """

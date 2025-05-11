@@ -7,7 +7,7 @@ import numpy as np
 import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
-from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
+from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs, compute_noisy_fourier_from_tree, preprocess_circuit_gates
 from qiskit import circuit
 import itertools
 
@@ -31,7 +31,8 @@ class ProbDist:
         #test on this one, right now the values aren't looking right 
         #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
 
-        self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
+        #self.C = gates
+        self.C = preprocess_circuit_gates(gates, self.num_qubs) # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         self.n = circuit_sim.num_qubits
         # Tree roots for Pauli path traversal
@@ -65,7 +66,7 @@ class ProbDist:
           # each non-identity Pauli is affected by the depolarizing noise
           # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
 
-          ##NOTE: here's where fourier function is passed in 
+          ##here's where fourier function is passed in 
           fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
           self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
           #print out the pauli paths 
@@ -74,6 +75,7 @@ class ProbDist:
         '''
         self.probs[x] = compute_noisy_fourier_from_tree(self.C, self.sib_op_heads, x, self.n, noise_rate)
         #printing the output state from erika's code and total prob
+        print('hello')
         print(f'p({x}) = {self.probs[x]}')
         total_prob += self.probs[x]
       print(f'Total probability sum = {total_prob}') # sum should be 1

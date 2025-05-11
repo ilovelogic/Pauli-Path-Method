@@ -23,8 +23,8 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         
-        self.numQubits = 20 # must be at least 3
-        self.depth = 5
+        self.numQubits = 3 # must be at least 3
+        self.depth = 2
 
         #self.C = QuantumCircuit(self.numQubits)
         # making two-qubit  H⊗I matrix
@@ -62,8 +62,9 @@ class TestProbDist(unittest.TestCase):
         #circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
         print("YAY")
-        return
+        
         self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+        return
 
     def test_stat_measures(self):
         return
