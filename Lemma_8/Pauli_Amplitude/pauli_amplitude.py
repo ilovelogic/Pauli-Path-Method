@@ -3,7 +3,6 @@ from qiskit.quantum_info import Pauli, Statevector
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
-from Pauli_Amplitude.fcs import FCalculator
 
 def reverse_qubit_indices(pauli_path):
     """Reverse qubit indices in a Pauli path to match Qiskit's little-endian convention."""
@@ -283,7 +282,3 @@ def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state,
     reversed_output = reverse_output_state(output_state)
     #return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
     return compute_fourier_coefficient(circuit_layers, reversed_pauli_path, reversed_output)
-   
-    #f_calc = FCalculator(circuit_layers, pauli_path_str, output_state)
-    #return f_calc.calculate_f()
-    return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
