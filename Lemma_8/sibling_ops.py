@@ -1,9 +1,7 @@
 from __future__ import annotations
-import pdb
 import copy
 from typing import List
 from pauli_operator import PauliOperator
-from pauli_path_trav import PauliPathTrav
 
 class SiblingOps:
     """
