@@ -36,6 +36,7 @@ class CircuitSim:
         self.travs_to_list()
 
         self.build_xyz_tree()
+        return
         self.tree_to_lists()
 
     @staticmethod
