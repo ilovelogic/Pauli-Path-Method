@@ -29,11 +29,13 @@ class ProbDist:
         self.depth = depth
 
         #test on this one, right now the values aren't looking right 
-        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
 
         self.C = gates # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         self.n = circuit_sim.num_qubits
+        # Tree roots for Pauli path traversal
+        self.sib_op_heads = circuit_sim.sib_op_heads
         #not going to the right probability states for this one 
         self.bruteForceQC = QC
 
@@ -55,17 +57,22 @@ class ProbDist:
         
         self.probs[x] = 0
 
+        '''
+
         for s in self.s_list:
           #print(s)
           ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
           # each non-identity Pauli is affected by the depolarizing noise
           # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
+
+          ##NOTE: here's where fourier function is passed in 
           fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
           self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
           #print out the pauli paths 
           #if (abs(fourier_coeff) > 1/(10**10)):
              #print(f'{x} and {s}, amplitude = {fourier_coeff}')
-        
+        '''
+        self.probs[x] = compute_noisy_fourier_from_tree(self.C, self.sib_op_heads, x, self.n, noise_rate)
         #printing the output state from erika's code and total prob
         print(f'p({x}) = {self.probs[x]}')
         total_prob += self.probs[x]

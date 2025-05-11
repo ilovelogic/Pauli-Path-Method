@@ -282,3 +282,53 @@ def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state,
     reversed_output = reverse_output_state(output_state)
     #return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
     return compute_fourier_coefficient(circuit_layers, reversed_pauli_path, reversed_output)
+
+##new input i'm taking in from anne: list of heads, self.sib_op_heads
+def compute_fourier_from_tree(C, sib_op_heads, x, n):
+    """
+    Compute the total Fourier coefficient f(C, s, x) by traversing the SiblingOps tree.
+    
+    Parameters:
+        C (list): Preprocessed circuit as layers of (unitary, [qubits]) tuples.
+        sib_op_heads (List[SiblingOps]): Root nodes of Pauli path trees.
+        x (str): Output bitstring (e.g., "0000").
+        n (int): Number of qubits.
+        
+    Returns:
+        float: Sum of Fourier coefficients over all legal Pauli paths.
+    """
+    total = [0.0]
+    for root in sib_op_heads:
+        traverse_sibling_tree(root, [], C, x, total, n)
+    return total[0]
+
+def traverse_sibling_tree(sib_op, path_so_far, C, x, total, n):
+    """
+    Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
+    
+    Parameters:
+        sib_op (SiblingOps): Current node.
+        path_so_far (List[str]): List of Pauli strings (s0 to sd-1 so far).
+        C (list): Circuit layers.
+        x (str): Output bitstring.
+        total (List[float]): Single-element list used to accumulate total.
+        n (int): Number of qubits.
+    """
+    for op in sib_op.pauli_ops:
+        next_path = path_so_far + [''.join(op.operator)]
+        
+        if sib_op.next_sibs is None:
+            # Leaf reached → append sd
+            final_path = next_path
+            if is_valid_terminal(final_path):
+                f_s = compute_fourier_coefficient(C, final_path, x)
+                total[0] += f_s
+        else:
+            for next_sib in sib_op.next_sibs:
+                traverse_sibling_tree(next_sib, next_path, C, x, total, n)
+
+def is_valid_terminal(path):
+    """
+    Ensure s0 and sd contain only 'I' and 'Z'.
+    """
+    return all(op in 'IZ' for op in path[0]) and all(op in 'IZ' for op in path[-1])
