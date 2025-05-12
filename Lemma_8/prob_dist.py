@@ -8,6 +8,7 @@ import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs, compute_noisy_fourier_from_tree, preprocess_circuit_gates
+from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
 import itertools
 
@@ -25,22 +26,21 @@ class ProbDist:
         QC (circuit): quantum circuit generated using Qiskit
         noise_rate: single-qubit depolarizing noise (γ in the research paper)
         '''
-        self.num_qubs = num_qubs
         self.depth = depth
+        self.n = num_qubs
 
         #test on this one, right now the values aren't looking right 
         #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
 
         #self.C = gates
-        self.C = preprocess_circuit_gates(gates, self.num_qubs) # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
+        self.C = preprocess_circuit_gates(gates, self.n) # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
-        self.n = circuit_sim.num_qubits
-        # Tree roots for Pauli path traversal
-        self.sib_op_heads = circuit_sim.sib_op_heads
-        #not going to the right probability states for this one 
-        self.bruteForceQC = QC
+        
 
-        self.s_list = self.brute_force_paths()
+        # tree roots for Pauli path traversal
+        self.sib_op_heads = circuit_sim.sib_op_heads
+
+        self.bruteForceQC = QC
         
         self.calc_noisy_prob_dist(noise_rate)
     
@@ -55,11 +55,9 @@ class ProbDist:
       total_prob = 0
       for i in range(1 << self.n):
         x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
-        
-        self.probs[x] = 0
 
         '''
-
+        self.probs[x] = 0
         for s in self.s_list:
           #print(s)
           ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
@@ -73,9 +71,9 @@ class ProbDist:
           #if (abs(fourier_coeff) > 1/(10**10)):
              #print(f'{x} and {s}, amplitude = {fourier_coeff}')
         '''
-        self.probs[x] = compute_noisy_fourier_from_tree(self.C, self.sib_op_heads, x, self.n, noise_rate)
+        self.probs[x] = compute_noisy_fourier(self.C, self.sib_op_heads, x, self.n, noise_rate)
         #printing the output state from erika's code and total prob
-        print('hello')
+
         print(f'p({x}) = {self.probs[x]}')
         total_prob += self.probs[x]
       print(f'Total probability sum = {total_prob}') # sum should be 1
@@ -118,7 +116,7 @@ class ProbDist:
     def brute_force_paths(self):
 
       elements = ['X', 'Y', 'Z', 'I']
-      inner_list_length = self.num_qubs
+      inner_list_length = self.n
       outer_list_length = self.depth+1
 
       # generates all possible inner lists of length 3 (for 3 qubits)
