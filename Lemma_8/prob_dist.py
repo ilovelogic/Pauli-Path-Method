@@ -5,8 +5,8 @@ from pauli_operator import PauliOperator
 from circuit_sim import CircuitSim
 import numpy as np
 import pdb
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, reverse_keys
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
 import itertools
@@ -43,6 +43,7 @@ class ProbDist:
     
         self.calc_TVD()
         self.calc_linearXEB()
+        self.calc_fidelity()
 
         
 
@@ -87,24 +88,26 @@ class ProbDist:
       #TVD of true distribution and pauli probability distribution
 
       trueDist = calculate_true_distribution(self.bruteForceQC)
-      # trueDist assumes that we can access the qiskit representation of whatever 1D
-      # circuit we generated.
-      # Im assuming the self class can contain the 1d circuit
+      trueDist = reverse_keys(trueDist)
 
-      full_prob_dist = complete_distribution(self.probs,self.n)
-      # full prob dist just ensures that every possible basis state is present in the
-      # probability outcome to work with my TVD function.
-      self.tvd = total_variation_distance(trueDist, full_prob_dist) # replace with outs
+      self.tvd = total_variation_distance(trueDist, self.probs)
 
 
     def calc_linearXEB(self):
       #XEB of true distribution and pauli probability distribution
 
       trueDist = calculate_true_distribution(self.bruteForceQC)
-      print(trueDist)
-      full_prob_dist = complete_distribution(self.probs,self.n)
-      self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
+      trueDist = reverse_keys(trueDist)
 
+      self.xeb = compute_xeb(trueDist, self.probs, self.n)
+
+    def calc_fidelity(self):
+      #calc fidelity of true distribution and pauli probability distribution
+
+      trueDist = calculate_true_distribution(self.bruteForceQC)
+      trueDist = reverse_keys(trueDist)
+
+      self.fidelity =  classical_fidelity(trueDist, self.probs)
 
     def brute_force_paths(self):
 

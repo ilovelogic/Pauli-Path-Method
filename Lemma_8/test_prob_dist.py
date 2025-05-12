@@ -8,8 +8,8 @@ from prob_dist import ProbDist
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
 from itertools import product
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, save_circuit, load_circuits, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution, reverse_keys
 import math
 import numpy as np
 
@@ -23,8 +23,10 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         
-        self.numQubits = 20 # must be at least 3
-        self.depth = 5
+        self.numQubits = 3 # must be at least 3
+        self.depth = 2
+        self.noise = 0
+        self.samples = 10000
 
         #self.C = QuantumCircuit(self.numQubits)
         # making two-qubit  H⊗I matrix
@@ -44,8 +46,14 @@ class TestProbDist(unittest.TestCase):
             #self.C.cx(i,i+1)
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
+        save_circuit("ideal1.qpy", self.C, directory="circuits")
+
 
         self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
+
+        # store this random circuit 
+
+
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
 
         gate_pos = []
@@ -61,16 +69,37 @@ class TestProbDist(unittest.TestCase):
 
         #circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
-        print("YAY")
-        return
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC, self.noise)
+        self.true_dist = calculate_true_distribution(self.bruteForceQC)
 
     def test_stat_measures(self):
-        return
-        self.assertEqual(1,self.prob_dist.xeb)
-        self.assertEqual(0,self.prob_dist.tvd)
+        # self.assertEqual(1,self.prob_dist.xeb)
+        # self.assertEqual(0,self.prob_dist.tvd)
+        # self.assertEqual(1,self.prob_dist.fidelity)
+
+        # print("xeb:")
+        # print(self.prob_dist.xeb)
+        
+        print("Pauli Results---------")
+        print("tvd: ")
+        print(self.prob_dist.tvd) # should tend towards 0
+
+        print("fidelity: ")
+        print(self.prob_dist.fidelity) # should tend towards 1
 
 
+        print("Brute Force Results---------")
+        bruteforce_dist = reverse_keys(generate_emp_distribution(self.bruteForceQC, self.samples, self.noise))
+        print("brute force dist")
+        print(bruteforce_dist)
+
+        print("true dist")
+        print(self.true_dist)
+        print("tvd: ")
+        print (total_variation_distance(bruteforce_dist, self.true_dist))
+
+        print("fidelity: ")
+        print(classical_fidelity(bruteforce_dist, self.true_dist))
 
     def test_no_depth(self):
         return

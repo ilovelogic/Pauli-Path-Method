@@ -171,10 +171,13 @@ def run_ideal_simulation(qc: QuantumCircuit, shots=100):
     Returns:
         counts_ideal: A dictionary with measurement outcomes as keys and counts as values.
     """
+
+    qc.measure_all()
     sampler = Sampler()
     job = sampler.run([qc], shots=shots)
     result_ideal = job.result()
     counts_ideal = result_ideal[0].data.meas.get_counts()
+    qc.remove_final_measurements()
 
     return counts_ideal
 
@@ -206,21 +209,7 @@ def create_noise_model(depolarizing_param: float):
 
     return noise_model
 
-# Gathers how many times a basis state is observed over 'shots' amount of times for a particular circuit
-def run_noisy_simulation(circuit, noise_model, shots=100):
-    sim_noise = AerSimulator(noise_model=noise_model)
-    
-    # Transpile the circuit for the noisy simulator
-    tcirc_noise = transpile(circuit, sim_noise)
-    
-    # Run on the noisy simulator
-    result = sim_noise.run(tcirc_noise, shots=shots).result()
-    counts = result.get_counts(circuit)
-    
-    # Counts are helpful to return so we can visualize
-    return counts
-
-def run_noisy_simulation(circuit: QuantumCircuit, noise_model: NoiseModel, shots=100):
+def run_noisy_simulation(qc: QuantumCircuit, noise_model: NoiseModel, shots=100):
     """
     Executes a quantum circuit on a simulator with the specified noise model for
     'shots' amount of times.
@@ -234,14 +223,17 @@ def run_noisy_simulation(circuit: QuantumCircuit, noise_model: NoiseModel, shots
         counts: A dictionary with noisy measurement outcomes and their counts.
         measurement outcomes as keys and counts as values.
     """
+    qc.measure_all()
     sim_noise = AerSimulator(noise_model=noise_model)
 
+
     # Transpile the circuit for execution on the noisy simulator
-    tcirc_noise = transpile(circuit, sim_noise)
+    tcirc_noise = transpile(qc, sim_noise)
 
     # Run the simulation
     result = sim_noise.run(tcirc_noise, shots=shots).result()
-    counts = result.get_counts(circuit)
+    counts = result.get_counts(qc)
+    qc.remove_final_measurements()
 
     return counts
 
@@ -304,7 +296,7 @@ def count_to_distribution(counts: dict[str, int], num_qubits, shots=100):
 
     return distribution
 
-def generate_emp_distribution(qc: QuantumCircuit, shots: int, noise=None, depth=None):
+def generate_emp_distribution(qc: QuantumCircuit, shots: int, noise=None):
     """
     Generates the empirical probability distribution of a given quantum circuit 
     after simulating it under specified noise for shot amount of samples.
@@ -332,3 +324,16 @@ def generate_emp_distribution(qc: QuantumCircuit, shots: int, noise=None, depth=
 
     return distribution
 
+
+def reverse_keys(qiskit_basis_dist: dict[str, float]) -> dict[str, float]:
+    """
+    Reverses the bitstring keys in a probability distribution dictionary.
+
+    Args:
+        qiskit_basis_dist (dict): A probability distribution with bitstring keys (e.g., '011') 
+                                  and float values.
+
+    Returns:
+        dict: A new dictionary with the same values but reversed bitstring keys.
+    """
+    return {key[::-1]: float(value) for key, value in qiskit_basis_dist.items()}

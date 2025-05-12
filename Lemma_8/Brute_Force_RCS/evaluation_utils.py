@@ -1,5 +1,6 @@
 
 import math
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ def calculate_true_distribution(qc):
     
     
     # Direct mapping without renormalization
-    return {state: probabilities[i] for i, state in enumerate(basis_states)}
+    return {state: float(probabilities[i].real) for i, state in enumerate(basis_states)}
 
 # Debugging function to make sure prob distributions sum up to around 1.
 # should be called with probability distributions.
@@ -239,3 +240,42 @@ def xeb_truedist_empdist_ideal(num_qubits: int, noise_rate: float, shots: int, d
     # Compute the XEB score between the true and empirical distributions
     XEB = compute_xeb(noisy_dist, true_dist, num_qubits)
     return XEB
+
+
+def classical_fidelity(distribution1: dict[str, float], distribution2: dict[str, float]) -> float:
+    """
+    Computes the classical fidelity between two probability distributions.
+
+    Args:
+        distribution1 (dict): First probability distribution (must include all basis states).
+        distribution2 (dict): Second probability distribution (must include all basis states).
+
+    Returns:
+        float: The classical fidelity between the two distributions, ranging from 0 to 1.
+
+    Raises:
+        ValueError: If the distributions do not share the same basis states.
+    """
+    # Ensure the two distributions have the same basis states
+    keys1 = set(distribution1.keys())
+    keys2 = set(distribution2.keys())
+    if keys1 != keys2:
+        raise ValueError("Distributions must have the same basis states.")
+
+    # Calculate classical fidelity
+    fidelity = sum((distribution1[key] ** 0.5) * (distribution2[key] ** 0.5) for key in keys1)
+    return fidelity ** 2
+
+
+def save_circuit(filename, circuit, directory=""):
+    base_path = os.path.dirname(__file__)
+    full_dir = os.path.join(base_path, directory)
+    os.makedirs(full_dir, exist_ok=True)
+    path = os.path.join(full_dir, filename)
+    with open(path, "wb") as file:
+        qpy.dump(circuit, file)
+
+def load_circuits(filename, directory=""):
+    path = os.path.join(directory, filename)
+    with open(path, "rb") as file:
+        return qpy.load(file)
