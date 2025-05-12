@@ -7,7 +7,7 @@ import numpy as np
 import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
-from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs, compute_noisy_fourier_from_tree, preprocess_circuit_gates
+from Pauli_Amplitude.pauli_amplitude import compute_fourier_coefficient, compute_fourier_from_raw_inputs, compute_noisy_fourier_from_tree, is_valid_terminal, preprocess_circuit_gates
 from qiskit import circuit
 import itertools
 
@@ -49,36 +49,45 @@ class ProbDist:
 
         
 
+  
 
     # Algorithm 1 from the rcs paper
     def calc_noisy_prob_dist(self, noise_rate:float):
-      total_prob = 0
+      total_prob = 0.0
+      # Collect all legal Pauli paths
+      all_paths = []
+      for root in self.sib_op_heads:
+          self.traverse_tree_collect_paths(root, [], all_paths)
+      
+        # Loop over all output bitstrings
       for i in range(1 << self.n):
-        x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
-        
-        self.probs[x] = 0
+          x = format(i, f'0{self.n}b')
+          self.probs[x] = 0.0
 
-        '''
+          for path in all_paths:
+              f_s = compute_fourier_coefficient(self.C, path, x)
+              hamming_weight = sum(p != 'I' for layer in path for p in layer)
+              noise_factor = (1 - noise_rate) ** (2 * hamming_weight)
+              contribution = abs(f_s) ** 2 * noise_factor
+              print(f"x = {x}, path = {path}, f_s = {f_s}, contrib = {abs(f_s)**2 * noise_factor}")
+              self.probs[x] += contribution
+              total_prob = self.probs[x]
 
-        for s in self.s_list:
-          #print(s)
-          ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
-          # each non-identity Pauli is affected by the depolarizing noise
-          # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
+          #print(f"p({x}) = {self.probs[x]}")
 
-          ##here's where fourier function is passed in 
-          fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
-          self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
-          #print out the pauli paths 
-          #if (abs(fourier_coeff) > 1/(10**10)):
-             #print(f'{x} and {s}, amplitude = {fourier_coeff}')
-        '''
-        self.probs[x] = compute_noisy_fourier_from_tree(self.C, self.sib_op_heads, x, self.n, noise_rate)
-        #printing the output state from erika's code and total prob
-        print('hello')
-        print(f'p({x}) = {self.probs[x]}')
-        total_prob += self.probs[x]
-      print(f'Total probability sum = {total_prob}') # sum should be 1
+      
+      print(f"Total probability sum = {total_prob}")
+
+
+    def traverse_tree_collect_paths(self, sib_op, path_so_far, all_paths):
+      for op in sib_op.pauli_ops:
+        next_path = path_so_far + [''.join(op.operator)]
+        if sib_op.next_sibs is None:
+            if is_valid_terminal(next_path):
+                all_paths.append(next_path)
+        else:
+            for next_sib in sib_op.next_sibs:
+                self.traverse_tree_collect_paths(next_sib, next_path, all_paths)
 
     # Determines number of non-identity Paulis in a given legal Pauli path
     def get_hamming_weight(self,path:List[List[str]]):

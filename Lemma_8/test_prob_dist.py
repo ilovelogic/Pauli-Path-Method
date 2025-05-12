@@ -24,7 +24,7 @@ class TestProbDist(unittest.TestCase):
     def setUpClass(self):
         
         self.numQubits = 3 # must be at least 3
-        self.depth = 2
+        self.depth = 1
 
         #self.C = QuantumCircuit(self.numQubits)
         # making two-qubit  H⊗I matrix
@@ -55,8 +55,10 @@ class TestProbDist(unittest.TestCase):
             layer_num = gates[i][2]
             if layer_num+1 > len(gate_pos):
                 gate_pos.append([])
-            a, b = gates[i][1]
-            gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
+            reversed_qubits = [self.numQubits - 1 - q for q in gates[i][1]]
+            gate_pos[layer_num].append(tuple(reversed_qubits))
+            #a, b = gates[i][1]
+            #gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
             #gate_pos[layer_num].append(gates[i][1])
 
         #circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
