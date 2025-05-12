@@ -10,6 +10,7 @@ from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_d
 from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
 import itertools
+import copy
 
 
 class ProbDist:
@@ -136,7 +137,10 @@ class ProbDist:
 
 
         # accounting for the fact that we excluded the all I's case from our path generation
-        self.s_list[len(xyz_pauli_paths)] = [["I" for _ in range(len(xyz_pauli_paths[0][0].operator))] for _ in range(len(xyz_pauli_paths[0]))]
-
+        self.s_list[len(xyz_pauli_paths)] = [["I" for _ in range(len(xyz_pauli_paths[0][0].operator))] for _ in range(len(xyz_pauli_paths[0]))]    
         #for lil_list in self.s_list:
            #print(lil_list)
+
+        for i in range(len(self.s_list)):
+            path = copy.deepcopy(self.s_list[i])
+            self.s_list[i] = [''.join(layer) for layer in path]

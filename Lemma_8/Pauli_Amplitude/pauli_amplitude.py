@@ -3,7 +3,9 @@ from qiskit.quantum_info import Pauli, Statevector
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
-from Pauli_Amplitude.fcs import FCalculator
+#from Pauli_Amplitude.fcs import FCalculator
+from memory_profiler import profile
+
 
 def reverse_qubit_indices(pauli_path):
     """Reverse qubit indices in a Pauli path to match Qiskit's little-endian convention."""
@@ -13,7 +15,7 @@ def reverse_output_state(x):
     """Reverse output state string to match Qiskit's qubit ordering."""
     return x[::-1]
 
-
+#@profile
 def normalize_pauli(pauli_string):
     """
     Normalize a Pauli string to match the normalized Pauli basis.
@@ -25,7 +27,7 @@ def normalize_pauli(pauli_string):
     
     return normalization_factor * pauli_matrix 
 
-
+#@profile
 def extract_qubit_pauli(pauli_string, qubits):
     """
     Extracts the relevant sub-Pauli operator for specific qubits.
@@ -37,12 +39,13 @@ def extract_qubit_pauli(pauli_string, qubits):
     Returns:
         str: Sub-Pauli operator for specified qubits.
     """
-    print(f"extract_qubit_pauli: pauli_string='{pauli_string}', qubits={qubits}")
+    #print(f"extract_qubit_pauli: pauli_string='{pauli_string}', qubits={qubits}")
     for q in qubits:
         if q >= len(pauli_string):
             print(f" Index {q} out of range for string of length {len(pauli_string)}")
     return ''.join([pauli_string[q] for q in qubits])
 
+#@profile
 def calculate_gate_transition_amplitude(sd, sd_minus_1, gate, qubit_indices):
     """
     Calculate Tr(s_d U_gate s_{d-1} U_gate†) for a single 2-qubit gate.
@@ -70,6 +73,7 @@ def calculate_gate_transition_amplitude(sd, sd_minus_1, gate, qubit_indices):
     transformed_sd_minus_1 = gate_unchanged @ sd_minus_1_matrix @ gate_conj
     return np.trace(sd_matrix @ transformed_sd_minus_1) #.real
 
+#@profile
 def calculate_non_gate_transition_amplitude(sd, sd_minus_1, qubit_indices):
     """
     Calculate transition amplitude for qubits not acted upon by any gate.
@@ -97,6 +101,7 @@ def calculate_non_gate_transition_amplitude(sd, sd_minus_1, qubit_indices):
     # For non-gate qubits, the transition is just Tr(sd_sub · sd_minus_1_sub)
     return np.trace(sd_matrix @ sd_minus_1_matrix) #.real
 
+#@profile
 def calculate_layer_transition_amplitude(sd, sd_minus_1, layer_gates, n_qubits):
     """
     Calculate transition amplitude for an entire layer of gates.
@@ -132,6 +137,7 @@ def calculate_layer_transition_amplitude(sd, sd_minus_1, layer_gates, n_qubits):
     
     return layer_amplitude
 
+#@profile
 def calculate_input_overlap(s0):
     """
     Calculate Tr(s0 |0^n><0^n|).
@@ -158,6 +164,7 @@ def calculate_input_overlap(s0):
     # Return normalized overlap with sign based on Z count
     return norm_factor #* ((-1)**z_count)
 
+#@profile
 def calculate_output_overlap(x, sd):
     """
     Calculate Tr(|x><x| s_d).
@@ -186,7 +193,7 @@ def calculate_output_overlap(x, sd):
             
     return norm_factor * sign
 
-
+#@profile
 def compute_fourier_coefficient(C, s, x):
     """
     Compute f(C, s, x) for a given circuit C and Pauli path s.
@@ -238,6 +245,7 @@ def compute_fourier_coefficient(C, s, x):
     
     return input_overlap * transition_amplitude * output_overlap
 
+#@profile
 # Preprocessing functions for taking in anne and jesus input 
 def preprocess_circuit_gates(raw_gate_data, n):
     from collections import defaultdict
@@ -273,13 +281,16 @@ def preprocess_circuit_gates(raw_gate_data, n):
         layers[layer].append((gate_matrix, reversed_qubits))
     return [layers[i] for i in sorted(layers)]
 
+#@profile
 def preprocess_pauli_path(raw_path):
     return [''.join(layer) for layer in raw_path]
 
+#@profile
 def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state, n):
     circuit_layers = preprocess_circuit_gates(raw_gate_data, n)  # Pass `n` here
-    pauli_path_str = preprocess_pauli_path(raw_pauli_path)
-    reversed_pauli_path = reverse_qubit_indices(pauli_path_str)
+    #pauli_path_str = preprocess_pauli_path(raw_pauli_path)
+    
+    reversed_pauli_path = reverse_qubit_indices(raw_pauli_path)
     reversed_output = reverse_output_state(output_state)
     #return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
     return compute_fourier_coefficient(circuit_layers, reversed_pauli_path, reversed_output)
@@ -287,3 +298,47 @@ def compute_fourier_from_raw_inputs(raw_gate_data, raw_pauli_path, output_state,
     #f_calc = FCalculator(circuit_layers, pauli_path_str, output_state)
     #return f_calc.calculate_f()
     return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
+
+import gc
+import random
+
+''' 
+def generate_random_pauli_string(n):
+    return [random.choice(['I', 'X', 'Y', 'Z']) for _ in range(n)]
+
+
+def main():
+    n_qubits = 5
+    n_paths = 250
+    depth = 3  # 3 layers
+
+    # Step 1: Create dummy gates (identity or CNOT)
+    gate_matrix = np.eye(4)
+    raw_gate_data = []
+    for layer in range(depth):
+        raw_gate_data.append((gate_matrix, [0, 1], layer))
+        raw_gate_data.append((gate_matrix, [2, 3], layer))
+        raw_gate_data.append((gate_matrix, [1, 4], layer))
+
+    # Step 2: Generate 250 random Pauli paths (each path has depth+1 layers)
+    pauli_paths = []
+    for _ in range(n_paths):
+        path = [generate_random_pauli_string(n_qubits) for _ in range(depth + 1)]
+        pauli_paths.append(path)
+
+    # Step 3: Set fixed output state
+    output_state = "00000"
+
+    # Step 4: Call Fourier coefficient calculator for each path
+    results = []
+    for path in pauli_paths:
+        result = compute_fourier_from_raw_inputs(raw_gate_data, path, output_state, n_qubits)
+        results.append(result)
+        gc.collect()  # optional: manually free memory between iterations
+
+    print("Completed all paths. First few results:", results[:5])
+
+if __name__ == "__main__":
+    main()
+
+'''

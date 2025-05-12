@@ -16,14 +16,16 @@ import numpy as np
 import pdb
 
 from qiskit import QuantumCircuit 
+from memory_profiler import profile
 
 
 class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
+    #@profile
     def setUpClass(self):
         
-        self.numQubits = 4 # must be at least 3
+        self.numQubits = 3 # must be at least 3
         self.depth = 2
 
         #self.C = QuantumCircuit(self.numQubits)
@@ -46,6 +48,7 @@ class TestProbDist(unittest.TestCase):
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
         print(self.C)
         self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
+        
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
         print(gates)
         gate_pos = []
@@ -58,7 +61,7 @@ class TestProbDist(unittest.TestCase):
             a, b = gates[i][1]
             gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
             #gate_pos[layer_num].append(gates[i][1])
-
+        
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         
         self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
