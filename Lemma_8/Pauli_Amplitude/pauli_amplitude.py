@@ -326,6 +326,7 @@ def traverse_tree_with_noise(sib_op, path_so_far, C, x, total, n, gamma):
                 factor = (1 - gamma) ** ham_weight
                 f_s = compute_fourier_coefficient(C, final_path, x)
                 total[0] += f_s * factor
+                # may be source of problem?
         else:
             for next_sib in sib_op.next_sibs:
                 traverse_tree_with_noise(next_sib, next_path, C, x, total, n, gamma)
