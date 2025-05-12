@@ -36,7 +36,7 @@ def extract_qubit_pauli(pauli_string, qubits):
     Returns:
         str: Sub-Pauli operator for specified qubits.
     """
-    print(f"extract_qubit_pauli: pauli_string='{pauli_string}', qubits={qubits}")
+    #print(f"extract_qubit_pauli: pauli_string='{pauli_string}', qubits={qubits}")
     for q in qubits:
         if q >= len(pauli_string):
             print(f" Index {q} out of range for string of length {len(pauli_string)}")
