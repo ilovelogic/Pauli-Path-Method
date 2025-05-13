@@ -1,7 +1,7 @@
 from pauli_amplitude import compute_fourier_coefficient, compute_fourier_from_raw_inputs
 import unittest
-from Lemma_8.circuit_sim import CircuitSim
-from Lemma_8.prob_dist import ProbDist
+from circuit_sim import CircuitSim
+from prob_dist import ProbDist
 from Brute_Force_RCS.circuit_utils import random_circuit, extract_gates_info
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import Aer

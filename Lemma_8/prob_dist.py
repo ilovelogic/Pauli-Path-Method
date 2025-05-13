@@ -1,5 +1,6 @@
 # pip install "qiskit-aer>=0.11.0"
 from collections import defaultdict
+from memory_profiler import profile
 from typing import List, DefaultDict
 from pauli_operator import PauliOperator
 from circuit_sim import CircuitSim
@@ -49,7 +50,9 @@ class ProbDist:
 
 
     # Algorithm 1 from the rcs paper
+    @profile 
     def calc_noisy_prob_dist(self, noise_rate:float):
+      
       total_prob = 0
       for i in range(1 << self.n):
         x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's

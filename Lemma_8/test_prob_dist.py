@@ -22,7 +22,7 @@ from memory_profiler import profile
 class TestProbDist(unittest.TestCase):
     #python -m Lemma_8.test_prob_dist
     @classmethod
-    #@profile
+    
     def setUpClass(self):
         
         self.numQubits = 3 # must be at least 3
