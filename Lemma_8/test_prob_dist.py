@@ -5,7 +5,6 @@ from collections import defaultdict
 from circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
 from prob_dist import ProbDist
-from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
 from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
@@ -23,8 +22,8 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         
-        self.numQubits = 3 # must be at least 3
-        self.depth = 2
+        self.numQubits = 15 # must be at least 3
+        self.depth = 4
 
         #self.C = QuantumCircuit(self.numQubits)
         # making two-qubit  H⊗I matrix
@@ -62,7 +61,7 @@ class TestProbDist(unittest.TestCase):
         #circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
 
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC,0)
+        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
         return
 
     def test_stat_measures(self):
