@@ -195,7 +195,7 @@ def preprocess_circuit_gates(raw_gate_data, n):
         #mapped_qubits = [reversed_qubit_map[q] for q in qubits]
 
         reversed_qubits = [n - 1 - q for q in qubits]  # Reverse gate indices
-        #print(f"Original qubits: {qubits}, Reversed: {reversed_qubits}")
+
         if len(qubits) == 2:
             #q0, q1 = reversed_qubits
             sorted_qubits = sorted(reversed_qubits)
@@ -235,29 +235,55 @@ def compute_noisy_fourier(C, sib_op_heads, x, n, gamma):
         float: Sum of Fourier coefficients over all legal Pauli paths.
     """
 
-    x = reverse_output_state(x) # reverse the output state to match Qiskit
+    #x = reverse_output_state(x) # reverse the output state to match Qiskit
     
     total = 0.0 # probability for this state
     fourier_coeffs_for_paths = [] # all fourier coefficients for paths ending at this state
+    #pdb.set_trace()
 
     for root in sib_op_heads:
-        root_op = root.pauli_ops[0].operator[::-1]
-        cur_fourier = calculate_input_overlap(root_op) 
-        if cur_fourier != 0: # we only care about non-zero contributions
-            for sib in root.next_sibs:
-                traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, 
-                                    root_op, 0, C, x, n, gamma)
-        else:
-            raise ValueError("Invalid root node in SiblingOps tree: contains non-I/Z operators.")
+        #build_list(root, fourier_coeffs_for_paths, 1, 
+                                    #[], -1, C, x, n, gamma)
+        traverse_tree_with_noise(root, fourier_coeffs_for_paths, 1, [], -1, C, x, n, gamma)
 
-    print(x)
-    print(fourier_coeffs_for_paths)
-    print()
     for fourier_coeff in fourier_coeffs_for_paths:
+        #print(fourier_coeff)
         total += fourier_coeff
+    #print(f'fourier_coeffs_for_paths = {len(fourier_coeffs_for_paths)}')
     return total
 
-def traverse_tree_with_noise(sib_op, fourier_coeffs_for_paths, cur_fourier, prev_op, index, C, x, n, gamma):
+def build_list(sib, fourier_coeffs_for_paths, cur_fourier, op_list, index, C, x, n, gamma):
+    """
+    Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
+    
+    Parameters:
+        sib_op (SiblingOps): Current node.
+        path_so_far (List[str]): List of Pauli strings (s0 to sd-1 so far).
+        C (list): Circuit layers.
+        x (str): Output bitstring.
+        total (List[float]): Single-element list used to accumulate total.
+        n (int): Number of qubits.
+    """
+    for op in sib.pauli_ops:
+
+        cur_op = op.operator #[::-1] # reverses the operator to match Qiskit
+
+        this_op_list = copy.deepcopy(op_list)
+                
+        this_op_list.append(cur_op)
+  
+
+        #ham_weight = sum(p != 'I' for p in cur_op) # accounting for noise
+        #branched_cur_fourier *= (1 - gamma) ** ham_weight
+        
+        if sib.next_sibs is None:
+            print(f'index = {index}, op_list = {this_op_list}')
+            fourier_coeffs_for_paths.append(this_op_list)
+        else: 
+            for next_sib in sib.next_sibs:
+                build_list(next_sib, fourier_coeffs_for_paths, cur_fourier, this_op_list, index+1, C, x, n, gamma)
+
+def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op, index, C, x, n, gamma):
     """
     Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
     
@@ -270,29 +296,36 @@ def traverse_tree_with_noise(sib_op, fourier_coeffs_for_paths, cur_fourier, prev
         n (int): Number of qubits.
     """
 
-    for op in sib_op.pauli_ops:
-        cur_op = op.operator[::-1] # reverses the operator to match Qiskit
-        layer_amplitude = calculate_layer_transition_amplitude(
-            cur_op, 
-            prev_op,
-            C[index],
-            n
-        ) 
-        if layer_amplitude == 0:
-            return
+    for op in sib.pauli_ops:
+
+        cur_op = op.operator #[::-1] # reverses the operator to match Qiskit
+
+        if prev_op == []:
+            layer_amplitude = calculate_input_overlap(cur_op)
+        else:
+            layer_amplitude = calculate_layer_transition_amplitude(
+                cur_op, 
+                prev_op,
+                C[index],
+                n
+            )
+        
         # ask how the reversal comes into play
         branched_cur_fourier = cur_fourier * layer_amplitude
 
+        # each non-identity Pauli is affected by the depolarizing noise
+        # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
         ham_weight = sum(p != 'I' for p in cur_op) # accounting for noise
-        branched_cur_fourier = (1 - gamma) ** ham_weight
-
-        if branched_cur_fourier == 0:
-            return # zero will add nothing to the final probability, so we exit early
+        branched_cur_fourier *= (1 - gamma) ** ham_weight
         
-        if sib_op.next_sibs is None:
+        if sib.next_sibs is None:
             final_fourier = branched_cur_fourier * calculate_output_overlap(x, cur_op)
-            fourier_coeffs_for_paths.append(final_fourier)
-            return
-           
-        for next_sib in sib_op.next_sibs:
-            traverse_tree_with_noise(next_sib, fourier_coeffs_for_paths, branched_cur_fourier, cur_op, index+1, C, x, n, gamma)
+            if final_fourier != 0:
+                fourier_coeffs_for_paths.append(final_fourier)
+                #print(f'outcome = {x}, prev = {prev_op}, cur = {cur_op}, amplitude = {final_fourier}')
+            #elif final_fourier == 0:
+                #print(f'0 = {x}, prev = {prev_op}, cur = {cur_op}, index = {index}')
+        else: 
+            for next_sib in sib.next_sibs:
+                traverse_tree_with_noise(next_sib, fourier_coeffs_for_paths, branched_cur_fourier, cur_op, index+1, C, x, n, gamma)
+     
