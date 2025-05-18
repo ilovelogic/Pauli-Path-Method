@@ -7,7 +7,7 @@ import numpy as np
 import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
-from Pauli_Amplitude.pauli_amplitude import compute_fourier_coefficient, compute_fourier_from_raw_inputs, compute_noisy_fourier_from_tree, is_valid_terminal, preprocess_circuit_gates
+from Pauli_Amplitude.og_pauli_amp import compute_fourier_from_raw_inputs, preprocess_circuit_gates
 from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
 import itertools
@@ -30,7 +30,7 @@ class ProbDist:
         self.n = num_qubs
 
         #test on this one, right now the values aren't looking right 
-        #self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
 
         #self.C = gates
         self.C = preprocess_circuit_gates(gates, self.n) # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
@@ -53,47 +53,16 @@ class ProbDist:
 
     # Algorithm 1 from the rcs paper
     def calc_noisy_prob_dist(self, noise_rate:float):
-      total_prob = 0.0
-      # Collect all legal Pauli paths
-      #all_paths = []
-      #for root in self.sib_op_heads:
-      #    self.traverse_tree_collect_paths(root, [], all_paths)
-      
-        # Loop over all output bitstrings
+
+      self.other_probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
       for i in range(1 << self.n):
         x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
-
-        '''
-        self.probs[x] = 0
-        for s in self.s_list:
-          #print(s)
-          ham_weight = self.get_hamming_weight(s) # total number of non-identity Paulis in s
-          # each non-identity Pauli is affected by the depolarizing noise
-          # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
-
-          ##here's where fourier function is passed in 
-          fourier_coeff = compute_fourier_from_raw_inputs(self.C, s, x, self.n)
-          self.probs[x] += ((1-noise_rate)**ham_weight)*fourier_coeff
-          #print out the pauli paths 
-          #if (abs(fourier_coeff) > 1/(10**10)):
-             #print(f'{x} and {s}, amplitude = {fourier_coeff}')
-        '''
+   
         self.probs[x] = compute_noisy_fourier(self.C, self.sib_op_heads, x, self.n, noise_rate)
-        #printing the output state from erika's code and total prob
-
+        self.probs[x] += compute_fourier_from_raw_inputs(self.C, 
+                        [["I" for _ in range(self.n)] for _ in range(len(self.C)+1)], x, self.n)
         print(f'p({x}) = {self.probs[x]}')
-        total_prob += self.probs[x]
-      print(f'Total probability sum = {total_prob}') # sum should be 1
 
-    # Determines number of non-identity Paulis in a given legal Pauli path
-    def get_hamming_weight(self,path:List[List[str]]):
-      hamming_weight = 0
-      for pauli_op in path:
-         for pauli in pauli_op:
-            if pauli != 'I':
-               hamming_weight += 1
-      return hamming_weight
-    
     # ------------------------------------------------------------------------------
     # TVD of pauli prob dist and true dist
 
@@ -142,11 +111,8 @@ class ProbDist:
         
         self.s_list = [[] for _ in range(len(xyz_pauli_paths)+1)]
         for i in range(len(xyz_pauli_paths)):
-          #print(f"\n=== Layer {i} Pauli Paths ===")
           for pauli_op in xyz_pauli_paths[i]:
-              #pauli_str = ''.join(pauli_op.operator)
               self.s_list[i].append(pauli_op.operator)
-              #print(f"Path {j}: {pauli_str}")
 
 
         # accounting for the fact that we excluded the all I's case from our path generation

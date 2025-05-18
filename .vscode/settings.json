@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./Lemma_8/Pauli_Amplitude"
+    ]
+}

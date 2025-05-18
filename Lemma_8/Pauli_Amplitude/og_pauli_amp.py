@@ -3,11 +3,10 @@ from qiskit.quantum_info import Pauli, Statevector
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 import matplotlib.pyplot as plt
-import copy
-from typing import Set
 
-import pdb # my debugging bestie
-
+def reverse_qubit_indices(pauli_path):
+    """Reverse qubit indices in a Pauli path to match Qiskit's little-endian convention."""
+    return [op[::-1] for op in pauli_path]
 
 def reverse_output_state(x):
     """Reverse output state string to match Qiskit's qubit ordering."""
@@ -37,7 +36,7 @@ def extract_qubit_pauli(pauli_string, qubits):
     Returns:
         str: Sub-Pauli operator for specified qubits.
     """
-
+    #print(f"extract_qubit_pauli: pauli_string='{pauli_string}', qubits={qubits}")
     for q in qubits:
         if q >= len(pauli_string):
             print(f" Index {q} out of range for string of length {len(pauli_string)}")
@@ -150,36 +149,13 @@ def calculate_input_overlap(s0):
     
     # For a legal initial Pauli operator with only I and Z:
     # Count Z operators to determine sign
-    #z_count = s0.count('Z')
+    z_count = s0.count('Z')
     
     # Normalization factor
     norm_factor = 1.0 / np.sqrt(2**n)
     
     # Return normalized overlap with sign based on Z count
     return norm_factor #* ((-1)**z_count)
-
-def calculate_partial_overlap(fixed_bits, sd):
-    """
-    Tr(sd ⋅ (⨂_{i ∈ T} |x_i⟩⟨x_i| ⊗ ⨂_{j ∉ T} I)) from Lemma 9.
-    Returns the marginal measurement term for fixed qubits.
-    """
-    n = len(sd)
-    k = len(fixed_bits)
-
-    if not all(p in ['I', 'Z'] for p in sd):
-        return 0.0
-
-    sign = 1
-    for i, p in enumerate(sd):
-        if i in fixed_bits:
-            if p == 'Z' and fixed_bits[i] == '1':
-                sign *= -1
-        elif p != 'I':
-            return 0.0  # Tr(X or Y) over identity = 0
-
-    return sign * (1 / np.sqrt(2 ** n)) * (2 ** (n - k))
-
-
 
 def calculate_output_overlap(x, sd):
     """
@@ -209,6 +185,58 @@ def calculate_output_overlap(x, sd):
             
     return norm_factor * sign
 
+
+def compute_fourier_coefficient(C, s, x):
+    """
+    Compute f(C, s, x) for a given circuit C and Pauli path s.
+    
+    Parameters:
+        C (list of list of tuples): Circuit as a list of layers,
+                                    where each layer contains tuples of gates and their acting qubits.
+                                    Example: [[(CNOT01, [0, 1]), (CNOT23, [2, 3])], ...]
+        s (list of str): Pauli path as a list of strings (e.g., ["IZIZ", "YIXI", "XXIX", "ZZII"]).
+        x (str): Output state as a binary string (e.g., "0000").
+    
+    Returns:
+        float: Fourier coefficient f(C, s, x).
+    """
+
+    # Reverse qubit indices for Qiskit compatibility
+    s_reversed = reverse_qubit_indices(s)
+    x_reversed = reverse_output_state(x)
+    n = len(s[0])  # Number of qubits
+    d = len(s)-1     # Depth of the circuit
+    
+    # Check if path is legal (s0 and sd contain only I and Z)
+    if not all(op in ['I', 'Z'] for op in s[0]) or not all(op in ['I', 'Z'] for op in s[-1]):
+        return 0.0
+    
+    # Input overlap
+    input_overlap = calculate_input_overlap(s_reversed[0])
+    #input_overlap = calculate_input_overlap(s[0])
+    if input_overlap == 0:
+        return 0.0
+    
+    # Transition amplitudes
+    transition_amplitude = 1.0
+    for i in range(d):
+        #layer_amplitude = calculate_layer_transition_amplitude(s[i+1], s[i], C[i], n)
+        layer_amplitude = calculate_layer_transition_amplitude(
+            s_reversed[i+1], 
+            s_reversed[i],
+            C[i],
+            n
+        )
+        transition_amplitude *= layer_amplitude
+        if transition_amplitude == 0:
+            return 0.0
+    
+    # Output overlap
+    output_overlap = calculate_output_overlap(x_reversed, s_reversed[-1])
+    #output_overlap = calculate_output_overlap(x, s[-1])
+    
+    return input_overlap * transition_amplitude * output_overlap
+
 # Preprocessing functions for taking in anne and jesus input 
 def preprocess_circuit_gates(raw_gate_data, n):
     from collections import defaultdict
@@ -220,7 +248,7 @@ def preprocess_circuit_gates(raw_gate_data, n):
         #mapped_qubits = [reversed_qubit_map[q] for q in qubits]
 
         reversed_qubits = [n - 1 - q for q in qubits]  # Reverse gate indices
-
+        #print(f"Original qubits: {qubits}, Reversed: {reversed_qubits}")
         if len(qubits) == 2:
             #q0, q1 = reversed_qubits
             sorted_qubits = sorted(reversed_qubits)
@@ -244,188 +272,13 @@ def preprocess_circuit_gates(raw_gate_data, n):
         layers[layer].append((gate_matrix, reversed_qubits))
     return [layers[i] for i in sorted(layers)]
 
-def compute_marginal_noisy_fourier(C, sib_op_heads, fixed_bits, n, gamma):
-    """
-    Computes ∑_{x ∈ {0,1}^n: x_T = fixed_bits} q̄(C, x) as per Lemma 9.
-    """
-    total = 0.0
-    fourier_coeffs_for_paths = []
-    visited_roots = set()  
+def preprocess_pauli_path(raw_path):
+    return [''.join(layer) for layer in raw_path]
 
-    for root in sib_op_heads:
-        if id(root) in visited_roots:
-            continue
-        visited_roots.add(id(root)) 
-        traverse_tree_with_noise(
-            root,
-            fourier_coeffs_for_paths,
-            1.0,
-            [],
-            -1,
-            C,
-            x=None,
-            n=n,
-            gamma=gamma,
-            fixed_bits=fixed_bits
-        )
-    #print(f"[DEBUG] Total paths contributing to marginal {fixed_bits}: {len(fourier_coeffs_for_paths)}")
-
-    return sum(fourier_coeffs_for_paths)
-
-
-def compute_noisy_fourier(C, sib_op_heads, x, n, gamma):
-    #pdb.set_trace()
-    """
-    Compute the total Fourier coefficient f(C, s, x) by traversing the SiblingOps tree.
-    
-    Parameters:
-        C (list): Preprocessed circuit as layers of (unitary, [qubits]) tuples.
-        sib_op_heads (List[SiblingOps]): Root nodes of Pauli path trees.
-        x (str): Output bitstring (e.g., "0000").
-        n (int): Number of qubits.
-        
-    Returns:
-        float: Sum of Fourier coefficients over all legal Pauli paths.
-    """
-
-    #x = reverse_output_state(x) # reverse the output state to match Qiskit
-    
-    total = 0.0 # probability for this state
-    fourier_coeffs_for_paths = [] # all fourier coefficients for paths ending at this state
-    #pdb.set_trace()
-
-    for root in sib_op_heads:
-        #build_list(root, fourier_coeffs_for_paths, 1, 
-                                    #[], -1, C, x, n, gamma)
-        traverse_tree_with_noise(root, fourier_coeffs_for_paths, 1, [], -1, C, x, n, gamma)
-
-    for fourier_coeff in fourier_coeffs_for_paths:
-        #print(fourier_coeff)
-        total += fourier_coeff
-    #print(f'fourier_coeffs_for_paths = {len(fourier_coeffs_for_paths)}')
-    return total
-
-def build_list(sib, fourier_coeffs_for_paths, cur_fourier, op_list, index, C, x, n, gamma):
-    """
-    Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
-    
-    Parameters:
-        sib_op (SiblingOps): Current node.
-        path_so_far (List[str]): List of Pauli strings (s0 to sd-1 so far).
-        C (list): Circuit layers.
-        x (str): Output bitstring.
-        total (List[float]): Single-element list used to accumulate total.
-        n (int): Number of qubits.
-    """
-    for op in sib.pauli_ops:
-
-        cur_op = op.operator #[::-1] # reverses the operator to match Qiskit
-
-        this_op_list = copy.deepcopy(op_list)
-                
-        this_op_list.append(cur_op)
-  
-
-        #ham_weight = sum(p != 'I' for p in cur_op) # accounting for noise
-        #branched_cur_fourier *= (1 - gamma) ** ham_weight
-        
-        if sib.next_sibs is None:
-            print(f'index = {index}, op_list = {this_op_list}')
-            fourier_coeffs_for_paths.append(this_op_list)
-        else: 
-            for next_sib in sib.next_sibs:
-                build_list(next_sib, fourier_coeffs_for_paths, cur_fourier, this_op_list, index+1, C, x, n, gamma)
-
-def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op, index, C, x, n, gamma, 
-                             fixed_bits=None, visited=None):
-    """
-    Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
-    
-    Parameters:
-        sib_op (SiblingOps): Current node.
-        path_so_far (List[str]): List of Pauli strings (s0 to sd-1 so far).
-        C (list): Circuit layers.
-        x (str): Output bitstring.
-        total (List[float]): Single-element list used to accumulate total.
-        n (int): Number of qubits.
-    """
-
-    if visited is None:
-        visited = set()
-
-    sib_id = id(sib)
-    if sib_id in visited:
-        print(f"[CYCLE DETECTED] Already visited sib at index {index}")
-        return
-    visited.add(sib_id)
-
-    for op in sib.pauli_ops:
-
-
-        cur_op = op.operator #[::-1] # reverses the operator to match Qiskit
-
-        if prev_op == []:
-            layer_amplitude = calculate_input_overlap(cur_op)
-        else:
-            layer_amplitude = calculate_layer_transition_amplitude(
-                cur_op, 
-                prev_op,
-                C[index],
-                n
-            )
-        
-        #print(f"[DEBUG] amplitude {layer_amplitude} at depth {index+1} with ops: {prev_op} → {cur_op}")
- 
-        # ask how the reversal comes into play
-        branched_cur_fourier = cur_fourier * layer_amplitude
-
-        # each non-identity Pauli is affected by the depolarizing noise
-        # E(ρ) := (1 − γ)ρ + γ(I/2)Tr(ρ)
-        ham_weight = sum(p != 'I' for p in cur_op) # accounting for noise
-        branched_cur_fourier *= (1 - gamma) ** ham_weight
-        
-        #print(f"[DEBUG] depth {index+1} | cur_op = {cur_op}, prev_op = {prev_op}")
-        #MAX_DEPTH = len(C)
-
-        if sib.next_sibs is None:
-            print(f"[DEBUG] FINAL layer | cur_op = {cur_op}")
-
-            if fixed_bits is not None:
-                final_fourier = branched_cur_fourier * calculate_partial_overlap(fixed_bits, cur_op)
-            else:
-                final_fourier = branched_cur_fourier * calculate_output_overlap(x, cur_op)
-
-            if final_fourier != 0:
-                fourier_coeffs_for_paths.append(final_fourier)
-            return
-
-        else:
-            for next_sib in sib.next_sibs:
-                print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
-                traverse_tree_with_noise(
-                    next_sib,
-                    fourier_coeffs_for_paths,
-                    branched_cur_fourier,
-                    cur_op,
-                    index + 1,
-                    C,
-                    x,
-                    n,
-                    gamma,
-                    fixed_bits,
-                    visited
-                )
-
-
-        ''' 
-        if sib.next_sibs is None:
-            final_fourier = branched_cur_fourier * calculate_output_overlap(x, cur_op)
-            if final_fourier != 0:
-                fourier_coeffs_for_paths.append(final_fourier)
-                #print(f'outcome = {x}, prev = {prev_op}, cur = {cur_op}, amplitude = {final_fourier}')
-            #elif final_fourier == 0:
-                #print(f'0 = {x}, prev = {prev_op}, cur = {cur_op}, index = {index}')
-        else: 
-            for next_sib in sib.next_sibs:
-                traverse_tree_with_noise(next_sib, fourier_coeffs_for_paths, branched_cur_fourier, cur_op, index+1, C, x, n, gamma)
-     '''
+def compute_fourier_from_raw_inputs(circuit_layers, raw_pauli_path, output_state, n):
+    #circuit_layers = preprocess_circuit_gates(raw_gate_data, n)  # Pass `n` here
+    pauli_path_str = preprocess_pauli_path(raw_pauli_path)
+    reversed_pauli_path = reverse_qubit_indices(pauli_path_str)
+    reversed_output = reverse_output_state(output_state)
+    #return compute_fourier_coefficient(circuit_layers, pauli_path_str, output_state)
+    return compute_fourier_coefficient(circuit_layers, reversed_pauli_path, reversed_output)

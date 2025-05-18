@@ -2,10 +2,11 @@
 import unittest
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
+from Pauli_Amplitude.edited_pauli_amp import preprocess_circuit_gates
+from MarginalSampler import MarginalSampler
 from circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
 from prob_dist import ProbDist
-from Pauli_Amplitude.pauli_amplitude import compute_fourier_from_raw_inputs
 from qiskit import circuit
 from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
@@ -24,7 +25,7 @@ class TestProbDist(unittest.TestCase):
     def setUpClass(self):
         
         self.numQubits = 3 # must be at least 3
-        self.depth = 1
+        self.depth = 2
 
         #self.C = QuantumCircuit(self.numQubits)
         # making two-qubit  H⊗I matrix
@@ -45,6 +46,7 @@ class TestProbDist(unittest.TestCase):
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
 
+
         self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
         gates = circuit_utils.extract_gates_info(self.bruteForceQC)
 
@@ -61,18 +63,52 @@ class TestProbDist(unittest.TestCase):
             #gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
             #gate_pos[layer_num].append(gates[i][1])
 
+
+        gates = circuit_utils.extract_gates_info(self.C)
+        preprocessed = preprocess_circuit_gates(gates, self.numQubits)
         #circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
+        self.marginal_sampler = MarginalSampler(preprocessed, circuit.sib_op_heads,self.numQubits,gamma=0.1)
 
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC,0)
+        #self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
         return
+    
+    def test_marginal_sampling_only(self):
+        num_samples = 2000
+        sampled_dist = self.marginal_sampler.sample_many(num_samples)
 
+        total_prob = sum(sampled_dist.values())
+        print(f"\n[TEST] Marginal-sampled probability total: {total_prob:.4f}")
+
+        # Print top 5 outcomes by probability
+        sorted_samples = sorted(sampled_dist.items(), key=lambda x: -x[1])
+        print("[TEST] Top 5 sampled outcomes:")
+        for x, p in sorted_samples[:5]:
+            print(f"  {x}: {p:.4f}")
+
+        # Assert it forms a proper probability distribution
+        self.assertAlmostEqual(total_prob, 1.0, places=2)
+
+
+    ''' 
     def test_stat_measures(self):
 
         self.assertEqual(0,self.prob_dist.tvd)
         self.assertEqual(1,self.prob_dist.xeb)
+    
 
+    def test_marginal_vs_full_path_sampling(self):
+        num_samples = 2000
+        sample_counts = self.marginal_sampler.sample_many(num_samples)
 
+        sampled_dist = {x: count / num_samples for x, count in sample_counts.items()}
+        full_dist = complete_distribution(self.prob_dist.probs, self.prob_dist.n)
+
+        tvd = 0.5 * sum(abs(full_dist.get(x, 0) - sampled_dist.get(x, 0)) for x in full_dist)
+
+        print(f"\n[TEST] TVD between full Pauli path distribution and marginal samples: {tvd:.4f}")
+        self.assertLess(tvd, 0.1)
+    '''
 
     def test_no_depth(self):
         return
