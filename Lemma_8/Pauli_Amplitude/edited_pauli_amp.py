@@ -353,11 +353,6 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
     if visited is None:
         visited = set()
 
-    sib_id = id(sib)
-    if sib_id in visited:
-        print(f"[CYCLE DETECTED] Already visited sib at index {index}")
-        return
-    visited.add(sib_id)
 
     for op in sib.pauli_ops:
 
@@ -366,6 +361,7 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
 
         if prev_op == []:
             layer_amplitude = calculate_input_overlap(cur_op)
+
         else:
             layer_amplitude = calculate_layer_transition_amplitude(
                 cur_op, 
@@ -384,6 +380,11 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         ham_weight = sum(p != 'I' for p in cur_op) # accounting for noise
         branched_cur_fourier *= (1 - gamma) ** ham_weight
         
+        cur_op_tuple = tuple(cur_op)
+        key = (index, cur_op_tuple)
+        if key in visited:
+            return
+        visited.add(key)
         #print(f"[DEBUG] depth {index+1} | cur_op = {cur_op}, prev_op = {prev_op}")
         #MAX_DEPTH = len(C)
 
@@ -397,12 +398,12 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
 
             if final_fourier != 0:
                 fourier_coeffs_for_paths.append(final_fourier)
-            return
+            continue
 
-        else:
-            for next_sib in sib.next_sibs:
-                print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
-                traverse_tree_with_noise(
+        #else:
+        for next_sib in sib.next_sibs:
+            print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
+            traverse_tree_with_noise(
                     next_sib,
                     fourier_coeffs_for_paths,
                     branched_cur_fourier,
@@ -413,7 +414,7 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
                     n,
                     gamma,
                     fixed_bits,
-                    visited
+                    visited.copy()
                 )
 
 
