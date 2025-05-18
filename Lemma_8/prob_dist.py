@@ -11,6 +11,9 @@ from Pauli_Amplitude.og_pauli_amp import compute_fourier_from_raw_inputs, prepro
 from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
 import itertools
+# pip3 install memory-profiler requests
+from memory_profiler import profile
+import requests
 
 
 class ProbDist:
@@ -51,6 +54,7 @@ class ProbDist:
 
 
     # Algorithm 1 from the rcs paper
+    @profile
     def calc_noisy_prob_dist(self, noise_rate:float):
 
       self.other_probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
