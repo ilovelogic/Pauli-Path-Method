@@ -5,8 +5,8 @@ from pauli_operator import PauliOperator
 from circuit_sim import CircuitSim
 import numpy as np
 import pdb
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, tvd_truedist_empdist, xeb_truedist_empdist_noisy
-from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, tvd_truedist_empdist, xeb_truedist_empdist_noisy, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model, reverse_keys
 from Pauli_Amplitude.og_pauli_amp import compute_fourier_from_raw_inputs, preprocess_circuit_gates
 from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
