@@ -190,7 +190,7 @@ def create_noise_model(depolarizing_param: float):
         NoiseModel: A Qiskit noise model object with the specified noise.
     """
 
-    if depolarizing_error > 1 or depolarizing_error <= 0:
+    if depolarizing_param > 1 or depolarizing_param <= 0:
         raise ValueError("depolarizing param should be between greater than 0 and less than or equal to 1")
     
     noise_model = NoiseModel()
