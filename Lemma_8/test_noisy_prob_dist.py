@@ -64,9 +64,6 @@ class TestNoisyProbDist(unittest.TestCase):
 
         print("\n \n Time taken for pauli prob dist generation: ")
         print(duration)
-
-        print("prob dist: ")
-        print(self.prob_dist.probs)
         return
 
     def test_stat_measures(self):
