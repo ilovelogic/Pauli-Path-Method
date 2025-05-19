@@ -4,7 +4,7 @@ from Pauli_Amplitude.edited_pauli_amp import compute_marginal_noisy_fourier
 
 
 class MarginalSampler:
-    def __init__(self, C, sib_op_heads, n_qubits, gamma, num_samples=2000):
+    def __init__(self, C, sib_op_heads, n_qubits, gamma, num_samples=16):
         self.C = C
         self.sib_op_heads = sib_op_heads
         self.n = n_qubits
@@ -12,9 +12,9 @@ class MarginalSampler:
         self.num_samples = num_samples
 
         # Sample immediately and store normalized distribution
-        self.sampled_probs = self.sample_many(1)  # was 2000
+        #self.sampled_probs = self.sample_many(1)  # was 2000
 
-        #self.sampled_probs = self.sample_many(self.num_samples)
+        self.sampled_probs = self.sample_many(self.num_samples)
 
     def sample(self):
         return self.sample_marginal_bits()
@@ -41,6 +41,7 @@ class MarginalSampler:
             fb1 = fixed_bits.copy()
             fb1[i] = '1'
 
+            '''
             p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb0, self.n, self.gamma)
             p1 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb1, self.n, self.gamma)
 
@@ -50,6 +51,12 @@ class MarginalSampler:
             else:
                 prob0 = p0 / total
                 bit = '0' if np.random.rand() < prob0 else '1'
+            '''
+            p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb0, self.n, self.gamma)
+
+            prob0 = min(max(p0, 0.0), 1.0)  # ensure in [0, 1] range
+            bit = '0' if np.random.rand() < prob0 else '1'
+
             #print(f"[DEBUG] Qubit {i}: p(0|...) = {p0:.4e}, p(1|...) = {p1:.4e}, chosen bit = {bit}")
             fixed_bits[i] = bit
 

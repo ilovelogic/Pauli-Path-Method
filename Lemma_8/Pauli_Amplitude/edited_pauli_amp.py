@@ -166,6 +166,7 @@ def calculate_partial_overlap(fixed_bits, sd):
     n = len(sd)
     k = len(fixed_bits)
 
+    #making sure it's a legal s_d path, only Is and Zs
     if not all(p in ['I', 'Z'] for p in sd):
         return 0.0
 
@@ -389,7 +390,7 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         #MAX_DEPTH = len(C)
 
         if sib.next_sibs is None:
-            print(f"[DEBUG] FINAL layer | cur_op = {cur_op}")
+            #print(f"[DEBUG] FINAL layer | cur_op = {cur_op}")
 
             if fixed_bits is not None:
                 final_fourier = branched_cur_fourier * calculate_partial_overlap(fixed_bits, cur_op)
@@ -402,7 +403,7 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
 
         #else:
         for next_sib in sib.next_sibs:
-            print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
+            #print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
             traverse_tree_with_noise(
                     next_sib,
                     fourier_coeffs_for_paths,
