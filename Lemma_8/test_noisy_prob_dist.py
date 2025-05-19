@@ -27,6 +27,9 @@ class TestNoisyProbDist(unittest.TestCase):
         self.numQubits = 4 # must be at least 3
         self.depth = 2
         
+        truncation_param = 0
+        l = (self.depth+1)*self.numQubits - truncation_param
+
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
         print()
         warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -49,11 +52,11 @@ class TestNoisyProbDist(unittest.TestCase):
         noise_rate = 0.001
 
         print("\n Noise rate: %s", noise_rate)
-        print("Truncation parameter: (depth+1)*numQubits-2*1000000")
+        print(f'Truncation parameter: {truncation_param}')
 
         start = time.time()
 
-        circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
+        circuit = CircuitSim(self.numQubits, l, gate_pos) # 1D, keeps all paths
         self.prob_dist = ProbDist(circuit, gates, self.numQubits, self.depth, self.bruteForceQC, noise_rate)
 
         end = time.time()
@@ -64,12 +67,6 @@ class TestNoisyProbDist(unittest.TestCase):
 
         print("prob dist: ")
         print(self.prob_dist.probs)
-        l = (self.depth+1)*self.numQubits-9
-        circuit = CircuitSim(self.numQubits, l, gate_pos) # 1D, keeps all paths
-        print()
-        print("Noise rate: 0.001")
-        print(f'Truncation parameter: {l}')
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits, self.depth, self.bruteForceQC, 0.001)
         return
 
     def test_stat_measures(self):
