@@ -64,9 +64,17 @@ class TestNoisyProbDist(unittest.TestCase):
 
         print("prob dist: ")
         print(self.prob_dist.probs)
+        l = (self.depth+1)*self.numQubits-9
+        circuit = CircuitSim(self.numQubits, l, gate_pos) # 1D, keeps all paths
+        print()
+        print("Noise rate: 0.001")
+        print(f'Truncation parameter: {l}')
+        self.prob_dist = ProbDist(circuit, gates, self.numQubits, self.depth, self.bruteForceQC, 0.001)
         return
 
     def test_stat_measures(self):
+        print(f'XEB={self.prob_dist.xeb}')
+        print(f'TVD={self.prob_dist.tvd}')
         return
         #self.assertEqual(0,self.prob_dist.tvd)
         #self.assertEqual(1,self.prob_dist.xeb)
