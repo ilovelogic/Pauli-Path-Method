@@ -5,8 +5,8 @@ from pauli_operator import PauliOperator
 from circuit_sim import CircuitSim
 import numpy as np
 import pdb
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model, reverse_keys
 from Pauli_Amplitude.og_pauli_amp import compute_fourier_from_raw_inputs, preprocess_circuit_gates
 from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
@@ -51,6 +51,7 @@ class ProbDist:
     
         self.calc_TVD()
         self.calc_linearXEB()
+        self.calc_fidelity()
 
         
 
@@ -72,7 +73,7 @@ class ProbDist:
         if (self.probs[x].real < 0):
            self.probs[x] = 0
         print(f'Probability of outcome {x} = {float(self.probs[x].real):.6f}')
-      #print("--------------------------------------")
+      print("--------------------------------------")
       print()
 
 
@@ -82,15 +83,15 @@ class ProbDist:
     def calc_TVD(self):
       #TVD of true distribution and pauli probability distribution
 
-      trueDist = calculate_true_distribution(self.bruteForceQC)
+      trueDist = reverse_keys(calculate_true_distribution(self.bruteForceQC))
       # trueDist assumes that we can access the qiskit representation of whatever 1D
       # circuit we generated.
       # Im assuming the self class can contain the 1d circuit
 
-      full_prob_dist = complete_distribution(self.probs,self.n)
+      # full_prob_dist = complete_distribution(self.probs,self.n)
       # full prob dist just ensures that every possible basis state is present in the
       # probability outcome to work with my TVD function.
-      self.tvd = total_variation_distance(trueDist, full_prob_dist) # replace with outs
+      self.tvd = total_variation_distance(trueDist, self.probs) # replace with outs
 
 
     def calc_linearXEB(self):
@@ -112,13 +113,19 @@ class ProbDist:
          print()
 
       print("Calculating True Distribution with Qiskit")  
-      trueDist = calculate_true_distribution(self.bruteForceQC)
+      trueDist = reverse_keys(calculate_true_distribution(self.bruteForceQC))
       
       for outcome, prob in trueDist.items():
         print(f"Probability of outcome {outcome} = {float(prob):.6f}")
-      full_prob_dist = complete_distribution(self.probs,self.n)
-      self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
+      self.xeb = compute_xeb(trueDist, self.probs, self.n)
 
+    def calc_fidelity(self):
+          #calc fidelity of true distribution and pauli probability distribution
+
+          trueDist = calculate_true_distribution(self.bruteForceQC)
+          trueDist = reverse_keys(trueDist)
+
+          self.fidelity = classical_fidelity(trueDist, self.probs)
 
     def brute_force_paths(self):
 

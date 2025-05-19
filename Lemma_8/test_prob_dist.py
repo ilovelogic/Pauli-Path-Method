@@ -7,9 +7,8 @@ from Brute_Force_RCS import circuit_utils
 from prob_dist import ProbDist
 from qiskit import circuit
 from itertools import product
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
-import math
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution, reverse_keys
 import numpy as np
 import warnings
 
@@ -69,6 +68,10 @@ class TestProbDist(unittest.TestCase):
         return
 
     def test_stat_measures(self):
+        print("Pauli Results---------")
+        print(f"tvd: {self.prob_dist.tvd}")  # should tend towards 0
+        print(f"fidelity: {self.prob_dist.fidelity}")  # should tend towards 1
+
         return
         #self.assertEqual(0,self.prob_dist.tvd)
         #self.assertEqual(1,self.prob_dist.xeb)

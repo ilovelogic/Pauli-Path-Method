@@ -332,3 +332,16 @@ def generate_emp_distribution(qc: QuantumCircuit, shots: int, noise=None, depth=
 
     return distribution
 
+
+def reverse_keys(qiskit_basis_dist: dict[str, float]) -> dict[str, float]:
+    """
+    Reverses the bitstring keys in a probability distribution dictionary.
+
+    Args:
+        qiskit_basis_dist (dict): A probability distribution with bitstring keys (e.g., '011') 
+                                  and float values.
+
+    Returns:
+        dict: A new dictionary with the same values but reversed bitstring keys.
+    """
+    return {key[::-1]: float(value) for key, value in qiskit_basis_dist.items()}

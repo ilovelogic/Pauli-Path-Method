@@ -12,6 +12,7 @@ from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_d
 import math
 import numpy as np
 import warnings
+import time
 
 import pdb
 
@@ -45,11 +46,24 @@ class TestNoisyProbDist(unittest.TestCase):
             gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
             #gate_pos[layer_num].append(gates[i][1])
 
+        noise_rate = 0.001
+
+        print("\n Noise rate: %s", noise_rate)
+        print("Truncation parameter: (depth+1)*numQubits-2*1000000")
+
+        start = time.time()
+
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
-        print()
-        print("Noise rate: 0.001")
-        print("Truncation parameter: (depth+1)*numQubits-2")
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits, self.depth, self.bruteForceQC, 0.001)
+        self.prob_dist = ProbDist(circuit, gates, self.numQubits, self.depth, self.bruteForceQC, noise_rate)
+
+        end = time.time()
+        duration = end - start
+
+        print("\n \n Time taken for pauli prob dist generation: ")
+        print(duration)
+
+        print("prob dist: ")
+        print(self.prob_dist.probs)
         return
 
     def test_stat_measures(self):
