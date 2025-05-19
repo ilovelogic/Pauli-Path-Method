@@ -6,7 +6,7 @@ from circuit_sim import CircuitSim
 import numpy as np
 import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
+from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model
 from Pauli_Amplitude.og_pauli_amp import compute_fourier_from_raw_inputs, preprocess_circuit_gates
 from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
@@ -44,8 +44,10 @@ class ProbDist:
         self.sib_op_heads = circuit_sim.sib_op_heads
 
         self.bruteForceQC = QC
+
+        self.noise_rate = noise_rate
         
-        self.calc_noisy_prob_dist(noise_rate)
+        self.calc_noisy_prob_dist()
     
         self.calc_TVD()
         self.calc_linearXEB()
@@ -54,17 +56,25 @@ class ProbDist:
 
 
     # Algorithm 1 from the rcs paper
-    @profile
-    def calc_noisy_prob_dist(self, noise_rate:float):
+    #@profile
+    def calc_noisy_prob_dist(self):
+
+      print()
+      print("Calculating Distribution with the Pauli Path Method")
 
       self.other_probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
       for i in range(1 << self.n):
         x = format(i, f'0{self.n}b') # possible outcome of the circuit, represented as a string of 1's and 0's
    
-        self.probs[x] = compute_noisy_fourier(self.C, self.sib_op_heads, x, self.n, noise_rate)
+        self.probs[x] = compute_noisy_fourier(self.C, self.sib_op_heads, x, self.n, self.noise_rate)
         self.probs[x] += compute_fourier_from_raw_inputs(self.C, 
                         [["I" for _ in range(self.n)] for _ in range(len(self.C)+1)], x, self.n)
-        print(f'p({x}) = {self.probs[x]}')
+        if (self.probs[x].real < 0):
+           self.probs[x] = 0
+        print(f'Probability of outcome {x} = {float(self.probs[x].real):.6f}')
+      #print("--------------------------------------")
+      print()
+
 
     # ------------------------------------------------------------------------------
     # TVD of pauli prob dist and true dist
@@ -86,8 +96,26 @@ class ProbDist:
     def calc_linearXEB(self):
       #XEB of true distribution and pauli probability distribution
 
+      if (self.noise_rate > 0):
+         print("Calculating Noisy Distribution with Qiskit")
+         noise_model = create_noise_model(depolarizing_param=0.0001)
+         self.bruteForceQC.measure_all()
+         counts = run_noisy_simulation(self.bruteForceQC, noise_model, shots=1000)
+         
+         total_shots = sum(counts.values())
+
+         
+         for i in range(2**self.n):
+          bitstring = format(i, f'0{self.n}b')  # e.g., '0000', '0001', ..., '1111'
+          prob = counts.get(bitstring, 0) / total_shots
+          print(f"Probability of outcome {bitstring} = {prob:.6f}")
+         print()
+
+      print("Calculating True Distribution with Qiskit")  
       trueDist = calculate_true_distribution(self.bruteForceQC)
-      print(trueDist)
+      
+      for outcome, prob in trueDist.items():
+        print(f"Probability of outcome {outcome} = {float(prob):.6f}")
       full_prob_dist = complete_distribution(self.probs,self.n)
       self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
 
