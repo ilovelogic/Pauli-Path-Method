@@ -74,7 +74,7 @@ class TestProbDist(unittest.TestCase):
         return
     
     def test_marginal_sampling_only(self):
-        num_samples = 3
+        num_samples = 500
         sampled_dist = self.marginal_sampler.sample_many(num_samples)
 
         total_prob = sum(sampled_dist.values())
@@ -82,8 +82,8 @@ class TestProbDist(unittest.TestCase):
 
         # Print top 5 outcomes by probability
         sorted_samples = sorted(sampled_dist.items(), key=lambda x: -x[1])
-        print("[TEST] Top 5 sampled outcomes:")
-        for x, p in sorted_samples[:5]:
+        print("marginally sampled outcomes:")
+        for x, p in sorted_samples:
             print(f"  {x}: {p:.4f}")
 
         # Assert it forms a proper probability distribution

@@ -41,23 +41,24 @@ class MarginalSampler:
             fb1 = fixed_bits.copy()
             fb1[i] = '1'
 
-            '''
             p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb0, self.n, self.gamma)
             p1 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb1, self.n, self.gamma)
 
             total = p0 + p1
             if total == 0:
-                bit = '0'  # fallback
+                prob0 = 0.5
             else:
                 prob0 = p0 / total
-                bit = '0' if np.random.rand() < prob0 else '1'
-            '''
-            p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb0, self.n, self.gamma)
 
-            prob0 = min(max(p0, 0.0), 1.0)  # ensure in [0, 1] range
             bit = '0' if np.random.rand() < prob0 else '1'
 
+            #reversed_fb0 = {self.n - 1 - i: b for i, b in fb0.items()}
+            #p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads,fb0, self.n, self.gamma)
+
+            #prob0 = min(max(p0, 0.0), 1.0)  # ensure in [0, 1] range
+            #print('prob0', prob0)
+            #print("bit:", bit)
             #print(f"[DEBUG] Qubit {i}: p(0|...) = {p0:.4e}, p(1|...) = {p1:.4e}, chosen bit = {bit}")
             fixed_bits[i] = bit
-
-        return ''.join(fixed_bits[i] for i in range(self.n))
+        #print('fixed_bits', fixed_bits)
+        return ''.join(fixed_bits[i] for i in reversed(range(self.n)))

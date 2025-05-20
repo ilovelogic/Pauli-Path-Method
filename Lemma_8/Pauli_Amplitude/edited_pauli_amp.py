@@ -166,14 +166,17 @@ def calculate_partial_overlap(fixed_bits, sd):
     n = len(sd)
     k = len(fixed_bits)
 
+    corrected_bits = {n - 1 - i: b for i, b in fixed_bits.items()}
+
     #making sure it's a legal s_d path, only Is and Zs
     if not all(p in ['I', 'Z'] for p in sd):
         return 0.0
+    
 
     sign = 1
     for i, p in enumerate(sd):
-        if i in fixed_bits:
-            if p == 'Z' and fixed_bits[i] == '1':
+        if i in corrected_bits:
+            if p == 'Z' and corrected_bits[i] == '1':
                 sign *= -1
         elif p != 'I':
             return 0.0  # Tr(X or Y) over identity = 0
