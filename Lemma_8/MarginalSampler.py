@@ -34,7 +34,6 @@ class MarginalSampler:
         Samples a full bitstring x ∈ {0,1}^n using bit-by-bit marginal sampling.
         """
         fixed_bits = {}
-
         for i in range(self.n):
             fb0 = fixed_bits.copy()
             fb0[i] = '0'
@@ -43,13 +42,17 @@ class MarginalSampler:
 
             p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb0, self.n, self.gamma)
             p1 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb1, self.n, self.gamma)
-
+            p0 = max(p0.real, 0)
+            p1 = max(p1.real, 0)
             total = p0 + p1
+            
             if total == 0:
+                #print("total 0")
                 prob0 = 0.5
             else:
+                #print("not 0")
                 prob0 = p0 / total
-
+            
             bit = '0' if np.random.rand() < prob0 else '1'
 
             #reversed_fb0 = {self.n - 1 - i: b for i, b in fb0.items()}
@@ -60,5 +63,9 @@ class MarginalSampler:
             #print("bit:", bit)
             #print(f"[DEBUG] Qubit {i}: p(0|...) = {p0:.4e}, p(1|...) = {p1:.4e}, chosen bit = {bit}")
             fixed_bits[i] = bit
+            #print(f"Qubit {i} | p0: {p0.real:.5f} | p1: {p1.real:.5f} | prob0: {prob0:.5f} | sampled: {bit}")
+
         #print('fixed_bits', fixed_bits)
-        return ''.join(fixed_bits[i] for i in reversed(range(self.n)))
+        #print("fixed_bits:", fixed_bits, "bitstring:", ''.join(fixed_bits[i] for i in reversed(range(self.n))), "p0:", p0.real)
+
+        return ''.join(fixed_bits[i] for i in range(self.n))

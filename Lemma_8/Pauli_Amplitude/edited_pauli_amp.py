@@ -166,7 +166,7 @@ def calculate_partial_overlap(fixed_bits, sd):
     n = len(sd)
     k = len(fixed_bits)
 
-    corrected_bits = {n - 1 - i: b for i, b in fixed_bits.items()}
+    #corrected_bits = {n - 1 - i: b for i, b in fixed_bits.items()}
 
     #making sure it's a legal s_d path, only Is and Zs
     if not all(p in ['I', 'Z'] for p in sd):
@@ -175,11 +175,12 @@ def calculate_partial_overlap(fixed_bits, sd):
 
     sign = 1
     for i, p in enumerate(sd):
-        if i in corrected_bits:
-            if p == 'Z' and corrected_bits[i] == '1':
+        if i in fixed_bits:
+            if p == 'Z' and fixed_bits[i] == '1':
                 sign *= -1
-        elif p != 'I':
-            return 0.0  # Tr(X or Y) over identity = 0
+        elif i not in fixed_bits and p != 'I':
+            return 0.0
+
 
     return sign * (1 / np.sqrt(2 ** n)) * (2 ** (n - k))
 
@@ -254,12 +255,14 @@ def compute_marginal_noisy_fourier(C, sib_op_heads, fixed_bits, n, gamma):
     """
     total = 0.0
     fourier_coeffs_for_paths = []
-    visited_roots = set()  
+    #visited_roots = set()  
 
     for root in sib_op_heads:
+        '''
         if id(root) in visited_roots:
             continue
         visited_roots.add(id(root)) 
+        '''
         traverse_tree_with_noise(
             root,
             fourier_coeffs_for_paths,
@@ -341,7 +344,7 @@ def build_list(sib, fourier_coeffs_for_paths, cur_fourier, op_list, index, C, x,
                 build_list(next_sib, fourier_coeffs_for_paths, cur_fourier, this_op_list, index+1, C, x, n, gamma)
 
 def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op, index, C, x, n, gamma, 
-                             fixed_bits=None, visited=None):
+                             fixed_bits=None):
     """
     Recursively traverse a SiblingOps tree to accumulate Fourier coefficient contributions.
     
@@ -354,8 +357,8 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         n (int): Number of qubits.
     """
 
-    if visited is None:
-        visited = set()
+    #if visited is None:
+    #    visited = set()
 
 
     for op in sib.pauli_ops:
@@ -386,9 +389,9 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         
         cur_op_tuple = tuple(cur_op)
         key = (index, cur_op_tuple)
-        if key in visited:
-            return
-        visited.add(key)
+        #if key in visited:
+        #    return
+        #visited.add(key)
         #print(f"[DEBUG] depth {index+1} | cur_op = {cur_op}, prev_op = {prev_op}")
         #MAX_DEPTH = len(C)
 
@@ -418,7 +421,6 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
                     n,
                     gamma,
                     fixed_bits,
-                    visited.copy()
                 )
 
 

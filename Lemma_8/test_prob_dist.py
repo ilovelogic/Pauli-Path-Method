@@ -2,7 +2,7 @@
 import unittest
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
-from Pauli_Amplitude.edited_pauli_amp import preprocess_circuit_gates
+from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier, preprocess_circuit_gates
 from MarginalSampler import MarginalSampler
 from circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
@@ -74,13 +74,12 @@ class TestProbDist(unittest.TestCase):
         return
     
     def test_marginal_sampling_only(self):
-        num_samples = 500
+        num_samples = 2000
         sampled_dist = self.marginal_sampler.sample_many(num_samples)
 
         total_prob = sum(sampled_dist.values())
         print(f"\n[TEST] Marginal-sampled probability total: {total_prob:.4f}")
 
-        # Print top 5 outcomes by probability
         sorted_samples = sorted(sampled_dist.items(), key=lambda x: -x[1])
         print("marginally sampled outcomes:")
         for x, p in sorted_samples:
