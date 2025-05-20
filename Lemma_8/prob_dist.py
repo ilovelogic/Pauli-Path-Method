@@ -59,9 +59,10 @@ class ProbDist:
     # Algorithm 1 from the rcs paper
     #@profile
     def calc_noisy_prob_dist(self):
-
+      
       print()
       print("Calculating Distribution with the Pauli Path Method")
+      
 
       self.other_probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
       for i in range(1 << self.n):
@@ -72,9 +73,11 @@ class ProbDist:
                         [["I" for _ in range(self.n)] for _ in range(len(self.C)+1)], x, self.n)
         if (self.probs[x].real < 0):
            self.probs[x] = 0
+           
         print(f'Probability of outcome {x} = {float(self.probs[x].real):.6f}')
       print("--------------------------------------")
       print()
+      
 
 
     # ------------------------------------------------------------------------------
@@ -116,7 +119,8 @@ class ProbDist:
       
       shots = 1000000
       if (self.noise_rate > 0):
-         self.xeb = xeb_truedist_empdist_noisy(self.n, self.noise_rate, shots, self.depth)
+         self.xeb = xeb_truedist_empdist_noisy(self.n, self.noise_rate, 10000, self.depth)
+         
          print("Calculating Noisy Distribution with Qiskit")
          noise_model = create_noise_model(depolarizing_param=self.noise_rate)
          counts = run_noisy_simulation(self.bruteForceQC, noise_model, shots=shots)
@@ -127,16 +131,16 @@ class ProbDist:
           prob = counts.get(bitstring, 0) / total_shots
           print(f"Probability of outcome {bitstring} = {prob:.6f}")
          print()
+         
 
       print("Calculating True Distribution with Qiskit")  
-      trueDist = reverse_keys(calculate_true_distribution(self.bruteForceQC))
       
+      trueDist = calculate_true_distribution(self.bruteForceQC)
+      trueDist = reverse_keys(trueDist)
+      full_prob_dist = complete_distribution(self.probs,self.n)
+      self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
       for outcome, prob in trueDist.items():
         print(f"Probability of outcome {outcome} = {float(prob):.6f}")
-      if (self.noise_rate == 0):
-        full_prob_dist = complete_distribution(self.probs,self.n)
-        self.xeb = compute_xeb(trueDist, full_prob_dist, self.n)
-      self.xeb = compute_xeb(trueDist, self.probs, self.n)
 
     def calc_fidelity(self):
           #calc fidelity of true distribution and pauli probability distribution

@@ -10,6 +10,7 @@ from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
 from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution, reverse_keys
 import numpy as np
+import time
 import warnings
 
 import pdb
@@ -61,16 +62,27 @@ class TestProbDist(unittest.TestCase):
             gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
             #gate_pos[layer_num].append(gates[i][1])
 
+        start = time.time()
+
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         #circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
 
         self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+
+        end = time.time()
+        duration = end - start
+
+
+        print("\n \nTime taken for Pauli probability distribution generation: ")
+        print(duration)
+        
         return
 
     def test_stat_measures(self):
-        print("Pauli Results---------")
-        print(f"tvd: {self.prob_dist.tvd}")  # should tend towards 0
-        print(f"fidelity: {self.prob_dist.fidelity}")  # should tend towards 1
+        print()
+        print("---- Statistical Measure ----")
+        #print(f"tvd: {self.prob_dist.tvd}")  # should tend towards 0
+        print(f"Fidelity: {self.prob_dist.fidelity.real}")  # should tend towards 1
 
         return
         #self.assertEqual(0,self.prob_dist.tvd)

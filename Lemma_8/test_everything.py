@@ -17,6 +17,7 @@ import os
 import pdb
 import matplotlib.pyplot as plt
 
+
 from qiskit import QuantumCircuit 
         
 class TestEverything(unittest.TestCase):
@@ -63,10 +64,9 @@ class TestEverything(unittest.TestCase):
     trunc_start: int, # should be greater than or equal to
     trunc_end: int,
     trunc_step: int,
-    output_dir: str = "."
 ):
     filename = f"MeasuringTimeVaryingTruncation{numQubits}Qubits_{depth}Depth_{noise}Noise"
-    filepath = os.path.join(output_dir, filename)
+    filepath = os.path.join(filename)
 
     with open(filepath, "w") as f:
         f.write("truncation,average_time_seconds\n")
@@ -89,11 +89,10 @@ class TestEverything(unittest.TestCase):
       noise: float,
       trunc_start: int,
       trunc_end: int,
-      trunc_step: int,
-      output_dir: str = "."
+      trunc_step: int
   ) -> None:
       filename = f"MeasuringTimeVaryingTruncation{numQubits}Qubits_{depth}Depth_{noise}Noise"
-      filepath = os.path.join(output_dir, filename)
+      filepath = os.path.join(filename)
 
       if not os.path.exists(filepath):
           raise FileNotFoundError(f"{filepath} does not exist.")
@@ -132,11 +131,10 @@ class TestEverything(unittest.TestCase):
       noise: float,
       trunc_start: int,
       trunc_end: int,
-      trunc_step: int,
-      output_dir: str = "."
+      trunc_step: int
   ) -> None:
       filename = f"MeasuringTVDVaryingTruncation{numQubits}Qubits_{depth}Depth_{noise}Noise"
-      filepath = os.path.join(output_dir, filename)
+      filepath = os.path.join(filename)
 
       with open(filepath, "w") as f:
           f.write("truncation,average_tvd\n")
@@ -171,11 +169,10 @@ class TestEverything(unittest.TestCase):
       noise: float,
       trunc_start: int,
       trunc_end: int,
-      trunc_step: int,
-      output_dir: str = "."
+      trunc_step: int
   ) -> None:
       filename = f"MeasuringTVDVaryingTruncation{numQubits}Qubits_{depth}Depth_{noise}Noise"
-      filepath = os.path.join(output_dir, filename)
+      filepath = os.path.join(filename)
 
       if not os.path.exists(filepath):
           raise FileNotFoundError(f"{filepath} does not exist.")
@@ -210,30 +207,28 @@ class TestEverything(unittest.TestCase):
   def test_time_with_different_truncations(self):
     numQubits = 4 
     depth = 2
-    noise = 0.0
-    trunc_start = (depth+1)*numQubits
-    trunc_end = (depth+1)*numQubits + 5
+    noise = 0.001
+    trunc_start = depth+1
+    trunc_end = (depth+1)*numQubits
     trunc_step = 1
-    output_dir = "results"
 
 # Uncomment these to actually get some results
-    # self.measure_time_varying_truncation(numQubits,depth,noise, trunc_start, trunc_end, trunc_step, output_dir)
-    # self.plot_time_varying_truncation(numQubits,depth,noise, trunc_start, trunc_end, trunc_step, output_dir)
+    # self.measure_time_varying_truncation(numQubits,depth,noise, trunc_start, trunc_end, trunc_step)
+    # self.plot_time_varying_truncation(numQubits,depth,noise, trunc_start, trunc_end, trunc_step)
 
     return
   
   def test_TVD_with_different_truncations(self):
     numQubits = 4
     depth = 2
-    noise = 0.0
-    trunc_start = (depth + 1) * numQubits
-    trunc_end = trunc_start + 5
+    noise = 0.001
+    trunc_start = depth + 1
+    trunc_end = (depth+1)*numQubits
     trunc_step = 1
-    output_dir = "results"
     
 # Uncomment these to actually get some results
-    # self.measure_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step, output_dir)
-    # self.plot_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step, output_dir)
+    self.measure_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step)
+    self.plot_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step)
 
 if __name__ == '__main__':
   unittest.main()

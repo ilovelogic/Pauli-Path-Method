@@ -27,7 +27,7 @@ class TestNoisyProbDist(unittest.TestCase):
         self.numQubits = 4 # must be at least 3
         self.depth = 2
         
-        truncation_param = 0
+        truncation_param = 3
         l = (self.depth+1)*self.numQubits - truncation_param
 
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
@@ -51,7 +51,8 @@ class TestNoisyProbDist(unittest.TestCase):
 
         noise_rate = 0.001
 
-        print("\n Noise rate: %s", noise_rate)
+        print()
+        print(f'Noise rate: {noise_rate}')
         print(f'Truncation parameter: {truncation_param}')
 
         start = time.time()
@@ -62,13 +63,15 @@ class TestNoisyProbDist(unittest.TestCase):
         end = time.time()
         duration = end - start
 
-        print("\n\nTime taken for pauli prob dist generation: ")
+
+        print("\n \nTime taken for Pauli probability distribution generation: : ")
         print(duration)
+       
         return
 
     def test_stat_measures(self):
-        print(f'XEB={self.prob_dist.xeb}')
-        print(f'TVD={self.prob_dist.tvd}')
+        #print(f'XEB={self.prob_dist.xeb}')
+        #print(f'TVD={self.prob_dist.tvd}')
         return
         #self.assertEqual(0,self.prob_dist.tvd)
         #self.assertEqual(1,self.prob_dist.xeb)
