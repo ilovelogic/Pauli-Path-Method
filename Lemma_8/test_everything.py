@@ -216,7 +216,6 @@ class TestEverything(unittest.TestCase):
     trunc_step = 1
     output_dir = "results"
 
-# Uncomment these to actually get some results
     # self.measure_time_varying_truncation(numQubits,depth,noise, trunc_start, trunc_end, trunc_step, output_dir)
     # self.plot_time_varying_truncation(numQubits,depth,noise, trunc_start, trunc_end, trunc_step, output_dir)
 
@@ -225,15 +224,15 @@ class TestEverything(unittest.TestCase):
   def test_TVD_with_different_truncations(self):
     numQubits = 4
     depth = 2
-    noise = 0.0
-    trunc_start = (depth + 1) * numQubits
-    trunc_end = trunc_start + 5
+    noise = 0.001
+    trunc_start = 3 # how many paths are you keeping
+    trunc_end = (depth + 1) * numQubits # how many paths are you keeping
     trunc_step = 1
     output_dir = "results"
     
 # Uncomment these to actually get some results
-    # self.measure_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step, output_dir)
-    # self.plot_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step, output_dir)
+    self.measure_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step, output_dir)
+    self.plot_tvd_varying_truncation(numQubits, depth, noise, trunc_start, trunc_end, trunc_step, output_dir)
 
 if __name__ == '__main__':
   unittest.main()

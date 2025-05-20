@@ -28,7 +28,9 @@ def calculate_true_distribution(qc):
     
     
     # Direct mapping without renormalization
-    return {state: probabilities[i] for i, state in enumerate(basis_states)}
+    return {state: float(probabilities[i].real) for i, state in enumerate(basis_states)}
+
+
 
 # Debugging function to make sure prob distributions sum up to around 1.
 # should be called with probability distributions.

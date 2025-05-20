@@ -82,22 +82,20 @@ class ProbDist:
 
     def calc_TVD(self):
       #TVD of true distribution and pauli probability distribution
-      shots = 1000000
+      shots = 100000
       if (self.noise_rate > 0.0):
-        # calculates the tvd of the noisy emprirical brute force versus noisy pauli dist
-        true_dist = calculate_true_distribution(self.bruteForceQC)
-
         noise_model = create_noise_model(self.noise_rate)
         noisy_empirical_dist = generate_emp_distribution(self.bruteForceQC, shots, noise_model, self.depth)
+        self.noisyEmpDist = noisy_empirical_dist # saves the emp dist so we wont have to recalculate it
 
         # print("testing noisy empirical dist" )
-        # print(noisy_empirical_dist)
+        # print(reverse_keys(noisy_empirical_dist))
         # print("testing self.probs" )
         # print(self.probs)
         # print("---------------------------trust dist: \n")
         # print(true_dist)
 
-        self.tvd = total_variation_distance(reverse_keys(noisy_empirical_dist), self.probs)
+        self.tvd = total_variation_distance(noisy_empirical_dist, self.probs)
 
         
       else:
@@ -116,15 +114,13 @@ class ProbDist:
       
       shots = 1000000
       if (self.noise_rate > 0):
-         self.xeb = xeb_truedist_empdist_noisy(self.n, self.noise_rate, shots, self.depth)
+         self.xeb = compute_xeb(self.noisyEmpDist,self.probs, self.n)
+
          print("Calculating Noisy Distribution with Qiskit")
-         noise_model = create_noise_model(depolarizing_param=self.noise_rate)
-         counts = run_noisy_simulation(self.bruteForceQC, noise_model, shots=shots)
-         total_shots = sum(counts.values())
 
          for i in range(2**self.n):
           bitstring = format(i, f'0{self.n}b')  # e.g., '0000', '0001', ..., '1111'
-          prob = counts.get(bitstring, 0) / total_shots
+          prob = self.noisyEmpDist.get(bitstring, 0) 
           print(f"Probability of outcome {bitstring} = {prob:.6f}")
          print()
 
