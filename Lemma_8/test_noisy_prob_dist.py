@@ -62,7 +62,7 @@ class TestNoisyProbDist(unittest.TestCase):
         end = time.time()
         duration = end - start
 
-        print("\n \n Time taken for pauli prob dist generation: ")
+        print("\n\nTime taken for pauli prob dist generation: ")
         print(duration)
         return
 

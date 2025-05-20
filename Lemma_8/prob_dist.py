@@ -6,7 +6,7 @@ from circuit_sim import CircuitSim
 import numpy as np
 import pdb
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, tvd_truedist_empdist, xeb_truedist_empdist_noisy, classical_fidelity
-from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model, reverse_keys
+from Brute_Force_RCS.circuit_utils import  complete_distribution, run_noisy_simulation, create_noise_model, reverse_keys, generate_emp_distribution
 from Pauli_Amplitude.og_pauli_amp import compute_fourier_from_raw_inputs, preprocess_circuit_gates
 from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
@@ -82,34 +82,46 @@ class ProbDist:
 
     def calc_TVD(self):
       #TVD of true distribution and pauli probability distribution
+      shots = 1000000
+      if (self.noise_rate > 0.0):
+        # calculates the tvd of the noisy emprirical brute force versus noisy pauli dist
+        true_dist = calculate_true_distribution(self.bruteForceQC)
 
-      if (self.noise_rate > 0):
-        self.tvd = tvd_truedist_empdist(self.n, self.noise_rate, 10000, self.depth)
+        noise_model = create_noise_model(self.noise_rate)
+        noisy_empirical_dist = generate_emp_distribution(self.bruteForceQC, shots, noise_model, self.depth)
+
+        # print("testing noisy empirical dist" )
+        # print(noisy_empirical_dist)
+        # print("testing self.probs" )
+        # print(self.probs)
+        # print("---------------------------trust dist: \n")
+        # print(true_dist)
+
+        self.tvd = total_variation_distance(reverse_keys(noisy_empirical_dist), self.probs)
+
+        
       else:
         trueDist = calculate_true_distribution(self.bruteForceQC)
         # trueDist assumes that we can access the qiskit representation of whatever 1D
         # circuit we generated.
         # Im assuming the self class can contain the 1d circuit
 
-        full_prob_dist = complete_distribution(self.probs,self.n)
         # full prob dist just ensures that every possible basis state is present in the
         # probability outcome to work with my TVD function.
-        self.tvd = total_variation_distance(trueDist, full_prob_dist) # replace with outs
+        self.tvd = total_variation_distance(reverse_keys(trueDist), self.probs) # replace with outs
 
 
     def calc_linearXEB(self):
       #XEB of true distribution and pauli probability distribution
-
+      
+      shots = 1000000
       if (self.noise_rate > 0):
-         self.xeb = xeb_truedist_empdist_noisy(self.n, self.noise_rate, 10000, self.depth)
+         self.xeb = xeb_truedist_empdist_noisy(self.n, self.noise_rate, shots, self.depth)
          print("Calculating Noisy Distribution with Qiskit")
-         noise_model = create_noise_model(depolarizing_param=0.0001)
-         self.bruteForceQC.measure_all()
-         counts = run_noisy_simulation(self.bruteForceQC, noise_model, shots=1000)
-         
+         noise_model = create_noise_model(depolarizing_param=self.noise_rate)
+         counts = run_noisy_simulation(self.bruteForceQC, noise_model, shots=shots)
          total_shots = sum(counts.values())
 
-         
          for i in range(2**self.n):
           bitstring = format(i, f'0{self.n}b')  # e.g., '0000', '0001', ..., '1111'
           prob = counts.get(bitstring, 0) / total_shots
@@ -165,3 +177,4 @@ class ProbDist:
 
         #for lil_list in self.s_list:
            #print(lil_list)
+

@@ -40,12 +40,14 @@ def random_circuit(num_qubits:int, depth=None):
         if d % 2 == 0:  # Even layers 
             for i in range(num_qubits - 2, -1, -2):
                 random_gate = random_unitary(4).to_instruction()
-                random_gate.label="random_unitary_layer_" + str(d)
+                random_gate.label="random_unitary"
+                random_gate.metadata = {"layer": d}
                 qc.append(random_gate, [i, i + 1])
         else:  # Odd layers
             for i in range(num_qubits - 3, -1, -2):
                 random_gate = random_unitary(4).to_instruction()
-                random_gate.label="random_unitary_layer_" + str(d)
+                random_gate.label="random_unitary"
+                random_gate.metadata = {"layer": d}
                 qc.append(random_gate, [i, i + 1])
 
     return qc
@@ -138,25 +140,18 @@ def extract_gates_info(qc):
     """
     gate_info = []
 
-    layer_c = 0
-    for instruction in qc.data:
-        gate = instruction.operation
-        qubits = instruction.qubits
+    for instr_tuple in qc.data:
+        gate = instr_tuple.operation
+        qubits = instr_tuple.qubits
         qubit_indices = [qc.find_bit(q).index for q in qubits]
-        #gate_matrix = Operator(gate).data
+        gate_matrix = Operator(gate).data
 
-        if gate.name != "measure":
-            gate_matrix = Operator(gate).data
-
-        # Parse layer number from label if possible
-        label = gate.label
-        if label and label.startswith("random_unitary_layer_"):
-            layer = int(label.split("_")[-1])
-        else:
-            layer = layer_c
-            layer_c += 1
+        layer = None
+        if gate.metadata and "layer" in gate.metadata:
+            layer = gate.metadata["layer"]
 
         gate_info.append((gate_matrix, tuple(qubit_indices), layer))
+
     return gate_info
 
 def run_ideal_simulation(qc: QuantumCircuit, shots=100):
@@ -194,31 +189,18 @@ def create_noise_model(depolarizing_param: float):
         raise ValueError("depolarizing param should be between greater than 0 and less than or equal to 1")
     
     noise_model = NoiseModel()
-
+    
     # Create a 2-qubit depolarizing error
     error = depolarizing_error(depolarizing_param, 2)
-
-    # Attach the error to all gates labeled 'random_unitary'
+    
+    # Add the error to all 'random_unitary' gates
     noise_model.add_all_qubit_quantum_error(error, 'random_unitary')
-
-    # Add 'unitary' as a recognized basis gate in the simulation
+    
+    # Add 'unitary' to the basis gates
     noise_model.add_basis_gates(['unitary'])
-
+    
     return noise_model
 
-# Gathers how many times a basis state is observed over 'shots' amount of times for a particular circuit
-def run_noisy_simulation(circuit, noise_model, shots=100):
-    sim_noise = AerSimulator(noise_model=noise_model)
-    
-    # Transpile the circuit for the noisy simulator
-    tcirc_noise = transpile(circuit, sim_noise)
-    
-    # Run on the noisy simulator
-    result = sim_noise.run(tcirc_noise, shots=shots).result()
-    counts = result.get_counts(circuit)
-    
-    # Counts are helpful to return so we can visualize
-    return counts
 
 def run_noisy_simulation(circuit: QuantumCircuit, noise_model: NoiseModel, shots=100):
     """
@@ -234,6 +216,8 @@ def run_noisy_simulation(circuit: QuantumCircuit, noise_model: NoiseModel, shots
         counts: A dictionary with noisy measurement outcomes and their counts.
         measurement outcomes as keys and counts as values.
     """
+    circuit.measure_all()
+    
     sim_noise = AerSimulator(noise_model=noise_model)
 
     # Transpile the circuit for execution on the noisy simulator
@@ -241,7 +225,9 @@ def run_noisy_simulation(circuit: QuantumCircuit, noise_model: NoiseModel, shots
 
     # Run the simulation
     result = sim_noise.run(tcirc_noise, shots=shots).result()
-    counts = result.get_counts(circuit)
+    counts = result.get_counts(tcirc_noise)
+
+    circuit.remove_final_measurements(inplace=True)
 
     return counts
 
