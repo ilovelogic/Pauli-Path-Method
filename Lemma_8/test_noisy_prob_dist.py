@@ -27,7 +27,7 @@ class TestNoisyProbDist(unittest.TestCase):
         self.numQubits = 4 # must be at least 3
         self.depth = 2
         
-        truncation_param = 3
+        truncation_param = 2
         l = (self.depth+1)*self.numQubits - truncation_param
 
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
@@ -64,7 +64,7 @@ class TestNoisyProbDist(unittest.TestCase):
         duration = end - start
 
 
-        print("\n \nTime taken for Pauli probability distribution generation: : ")
+        print(f'\n \nTime taken for Pauli probability distribution generation:')
         print(duration)
        
         return

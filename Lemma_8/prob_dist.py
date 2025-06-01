@@ -88,7 +88,6 @@ class ProbDist:
       shots = 1000000
       if (self.noise_rate > 0.0):
         # calculates the tvd of the noisy emprirical brute force versus noisy pauli dist
-        true_dist = calculate_true_distribution(self.bruteForceQC)
 
         noise_model = create_noise_model(self.noise_rate)
         noisy_empirical_dist = generate_emp_distribution(self.bruteForceQC, shots, noise_model, self.depth)
