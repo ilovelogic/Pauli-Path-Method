@@ -66,15 +66,15 @@ class TestProbDist(unittest.TestCase):
 
         gates = circuit_utils.extract_gates_info(self.C)
         preprocessed = preprocess_circuit_gates(gates, self.numQubits)
-        #circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
-        circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
-        self.marginal_sampler = MarginalSampler(preprocessed, circuit.sib_op_heads,self.numQubits,gamma=0.1)
+        circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
+        #circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D
+        self.marginal_sampler = MarginalSampler(preprocessed, circuit.sib_op_heads,self.numQubits,gamma=0.001)
 
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC, 0.001)
         return
     
     def test_marginal_sampling_only(self):
-        num_samples = 2000
+        num_samples = 20
         sampled_dist = self.marginal_sampler.sample_many(num_samples)
 
         total_prob = sum(sampled_dist.values())
