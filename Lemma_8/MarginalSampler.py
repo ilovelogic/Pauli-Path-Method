@@ -42,8 +42,14 @@ class MarginalSampler:
 
             p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb0, self.n, self.gamma)
             p1 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads, fb1, self.n, self.gamma)
+            print(f'p(0) before ={p0}')
             p0 = max(p0.real, 0)
+            print(f'p(0) after ={p0}')
+        
+            print(f'p(1) before ={p1}')
             p1 = max(p1.real, 0)
+            print(f'p(1) after ={p1}')
+         
             total = p0 + p1
             
             if total == 0:
@@ -52,8 +58,11 @@ class MarginalSampler:
             else:
                 #print("not 0")
                 prob0 = p0 / total
+            print(f'P(0|{fb0}) = {p0:.4e}, P(1|{fb1}) = {p1:.4e}, prob0 = {prob0:.4f}')
             
             bit = '0' if np.random.rand() < prob0 else '1'
+            print(f'bit={bit}')
+            print()
 
             #reversed_fb0 = {self.n - 1 - i: b for i, b in fb0.items()}
             #p0 = compute_marginal_noisy_fourier(self.C, self.sib_op_heads,fb0, self.n, self.gamma)
