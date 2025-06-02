@@ -253,7 +253,7 @@ def compute_marginal_noisy_fourier(C, sib_op_heads, fixed_bits, n, gamma):
     """
     Computes ∑_{x ∈ {0,1}^n: x_T = fixed_bits} q̄(C, x) as per Lemma 9.
     """
-    total = 0.0
+
     fourier_coeffs_for_paths = []
     #visited_roots = set()  
 
@@ -357,10 +357,6 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         n (int): Number of qubits.
     """
 
-    #if visited is None:
-    #    visited = set()
-
-
     for op in sib.pauli_ops:
 
 
@@ -405,23 +401,23 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
 
             if final_fourier != 0:
                 fourier_coeffs_for_paths.append(final_fourier)
-            continue
+            #continue
 
-        #else:
-        for next_sib in sib.next_sibs:
-            #print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
-            traverse_tree_with_noise(
-                    next_sib,
-                    fourier_coeffs_for_paths,
-                    branched_cur_fourier,
-                    cur_op,
-                    index + 1,
-                    C,
-                    x,
-                    n,
-                    gamma,
-                    fixed_bits,
-                )
+        else:
+            for next_sib in sib.next_sibs:
+                #print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
+                traverse_tree_with_noise(
+                        next_sib,
+                        fourier_coeffs_for_paths,
+                        branched_cur_fourier,
+                        cur_op,
+                        index + 1,
+                        C,
+                        x,
+                        n,
+                        gamma,
+                        fixed_bits,
+                    )
 
 
         ''' 
