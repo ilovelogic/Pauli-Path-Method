@@ -35,9 +35,9 @@ class CircuitSim:
         self.init_pauli_paths() # Adds the PauliPathTrav that matches each weight combo to self.pauli_path_travs
         self.travs_to_list()
 
-        self.build_xyz_tree()
+        self.build_xyz_trees()
 
-        self.tree_to_lists()
+        self.trees_to_lists()
 
     @staticmethod
     def valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]]):
@@ -125,7 +125,7 @@ class CircuitSim:
             
 
     
-    # Translates PauliPathTrav objects into a list of paths, still in 'R', 'N', 'P', and 'I'
+    # Translates our PauliPathTrav object list into a list of paths, still in 'R', 'N', 'P', and 'I'
     def travs_to_list(self):
         self.rnp_pauli_paths = []
         for pauli_path_trav in self.pauli_path_travs:
@@ -150,19 +150,20 @@ class CircuitSim:
             partial_pauli_path_copy = copy.deepcopy(partial_pauli_path)
             self.pauli_op_hopping(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
 
-    # Translates each Pauli path list in 'R', 'N', 'P', and 'I' to construct a tree 
-    # structure, with its branching representing valid selections of 'X', 'Y', and 'Z'
-    def build_xyz_tree(self):
+    # Uses each Pauli path list in 'R', 'N', 'P', and 'I' to construct its own tree, 
+    # with the tree's branching representing valid selections of 'X', 'Y', and 'Z'
+    def build_xyz_trees(self):
         self.sib_op_heads = []
         for list_of_paths in self.rnp_pauli_paths:
             for path in list_of_paths:
-                first_op_list = self.rn_to_z(path[0]) # returns a list with single element, 'I' 'Z' version of path[00]
+                first_op_list = self.rn_to_z(path[0]) # returns a list with single element, 
+                # 'I' 'Z' version of path[00]
 
                 sib_op = SiblingOps(first_op_list, 1, path)
                 self.sib_op_heads.append(sib_op)
 
     # Turns each tree into seperate lists representing Pauli paths
-    def tree_to_lists(self):
+    def trees_to_lists(self):
         self.xyz_pauli_paths = []
         
         for sib_op_head in self.sib_op_heads:
@@ -170,14 +171,15 @@ class CircuitSim:
             self.branch(sib_op_head,sib_op_paths)
     
 
+    # Adds 
     def branch(self, cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]]):
-        if (cur_sib.next_sibs == None):
+        if (cur_sib.next_sibs == None): # Base case: add the 'I' 'Z' leaf pauli op to all paths
             for pauli_path in pauli_paths_in_womb:
                 pauli_path.append(cur_sib.pauli_ops[0]) # only the next pauli operator is the one with all 'I's and 'Z's
                 self.xyz_pauli_paths.append(pauli_path) # adds all the completed pauli paths
-        else:
-            for pauli_op in cur_sib.pauli_ops:
-                for next_sib in cur_sib.next_sibs:
+        else: # partway through tree construction, need to branch
+            for pauli_op in cur_sib.pauli_ops: # for every pauli op in the current sibling
+                for next_sib in cur_sib.next_sibs: 
                     branched_pauli_paths = copy.deepcopy(pauli_paths_in_womb)
                     for pauli_path in branched_pauli_paths:
                         pauli_path.append(pauli_op)
