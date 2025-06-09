@@ -189,6 +189,15 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
 **Methods**
    - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
    - `enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)`: Recursively fills the `weight_combo` attribute of the `CircuitSim` with each distinct list that specifies the Hamming weights of a legal Pauli path, taking into account the restrictions of the circuit architecture. For each list, the ith int in the list assigns the Hamming weight of the ith Pauli operator of the Pauli path.
+   - `init_pauli_paths()`: Initiates the list of all `PauliPathTrav` objects that fit the circuit architecture and upper bound on Hamming weight.
+   - `travs_to_list()`: Translates `PauliPathTrav` object list into a list of paths, still in 'R', 'N', 'P', and 'I', and stores the lists in attribute `rnp_pauli_paths`.
+   - `trav_to_list(trav:PauliPathTrav)`: Helper function for `travs_to_list()`.
+   - `pauli_op_hopping(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator)`: Helper function for `trav_to_list()`.
+   - `build_xyz_trees()`: For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `SiblingOps` tree, with the tree's branching representing different valid selections of 'X', 'Y', and 'Z'. Stores the root of each tree in attribute `sib_op_heads`.
+   - `trees_to_lists()`: Turns each tree into seperate lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
+   - `branch(cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]])`: Helper function for `trees_to_lists()`
+   - ``
+
 
    ---
 
