@@ -196,7 +196,7 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    - `build_xyz_trees()`: For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `SiblingOps` tree, with the tree's branching representing different valid selections of 'X', 'Y', and 'Z'. Stores the root of each tree in attribute `sib_op_heads`.
    - `trees_to_lists()`: Turns each tree into seperate lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
    - `branch(cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]])`: Helper function for `trees_to_lists()`
-   - ``
+   - `rn_to_z(first_op:PauliOperator)`: A static method that replaces all 'R's and 'N's in the first `PauliOperator` with 'Z's.
 
 
    ---
