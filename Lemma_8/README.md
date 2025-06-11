@@ -147,10 +147,10 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
 ### sibling_ops.py
 
-**Overview**
-
 <img src="images/sibling_ops.png" width="700" />\
-The `SiblingOps` class uses a recursive structure to generate Pauli paths.
+
+**Nesting Structure**\
+The `SiblingOps` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`pauli_ops`), which all share the same list of `PauliOperator` objects that could come next in their Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `pauli_ops` list. 
 
 **Initialization**\
    `SiblingOps(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
@@ -163,7 +163,7 @@ The `SiblingOps` class uses a recursive structure to generate Pauli paths.
    - `rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`: 
    - `fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`: 
    - `fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`:
-   - `carries_to_the_end(cur_op:PauliOperator, i:int)`:
+   - `carries_to_the_end(cur_op:PauliOperator, i:int)`: 
    - `rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`:
 
 ---
