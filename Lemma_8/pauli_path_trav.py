@@ -18,7 +18,7 @@ class PauliPathTrav:
         self.num_op_layers = len(weight_combo) # weight_combo stores exactly one weight for each layer
         self.weight_combo = weight_combo
         self.gate_pos = gate_pos
-        self.layers = [None]*self.num_op_layers # List of DefaultDicts of all operators possible at each layer
+        self.layers = [None]*self.num_op_layers # List of PauliOpLayers of all operators possible at each layer
         
         if (num_qubits == 0 or self.num_op_layers == 0): # No circuit -> nothing to do
             return
