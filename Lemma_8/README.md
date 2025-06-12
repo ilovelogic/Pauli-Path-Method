@@ -30,6 +30,18 @@ A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of P
 
 Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability distribution for outcome $x$. 
 
+Of course, to calculate the above expression, we first need to know all possible legal Pauli paths. The `Lemma_8` program accomplishes that task. Given the desired depth, number of qubits, gate positions, and upperbound on Hamming weight. According to the aforementioned paper, a legal Pauli path is defined as follows.
+
+   >### Definition 6 (Legal Pauli Path)
+   >For a given circuit architecture, a Pauli path $s = (s_0, s_1, \ldots, s_d)$ is legal if the following two conditions are satisfied:
+   >
+   >1. For all 2-qubit gates in the circuit, its input and output Paulis are either both $II$, or both not $II$.
+   >2. $s_0$ and $s_d$ only contain $I$ and $Z$.
+   >
+   > The reason for considering legal Pauli paths is that the illegal ones are irrelevant, as they contribute 0 to the Pauli path integral.
+
+
+
 ---
 
 ## Architecture Overview
@@ -61,7 +73,7 @@ When we first propogate from a `PauliOperator` object, we use the following strs
    - "P": The Pauli matrix is specified by whatever the Pauli is at the same index in the prior Pauli operator in the path. This is for the case of a non-identity Pauli whose related qubit does not enter any gates between this Pauli operator and the prior one.
 
 We use "R", "N", and "P" rather than directly including "X", "Y", and "Z" in order to avoid blowing up in memory at this stage. Since each "R" encapsulates the possibility of "X", "Y", or "Z", our number of Pauli paths to store is exponentially less than it would be if we opted 
-to store each individual combination of choosing either "X", "Y", or "Z" for all of "R"s in our list. \
+to store each individual combination of choosing either "X", "Y", or "Z" for all of "R"s in our list.
 
 Later, using the class `XYZGeneration`, we will replace each `PauliOperator`'s "R", "N", and "P" with "X", "Y", and "Z", yet we will do so in a tree-like structure that handles the memory problem. \
 \
@@ -74,17 +86,16 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
    >Instantiates a PauliOperator object with its `operator` attribute initialized, and its `prior_ops` and `next_ops` attributes initialized if those parameters were included in the call.
 
 **Attributes**
-   - `operator`: A list of strs representing this `PauliOperator`, consisting of "I"s, "R"s, "N"s, and "P"s.
+   - `operator`: A list of strs representing this `PauliOperator`, eiither in terms of "I"s, "R"s, "N"s, and "P"s or "I"s, "X"s, "Y"s, and "Z"s.
    - `prior_ops`: A list containing all `PauliOperator` objects that can directly precede this `PauliOperator` in a legal Pauli path.
    - `next_ops`: A list containing each of the `PauliOperator` objects that could come directly after this `PauliOperator` in a legal Pauli path.
    - `list_alloc`: A 2D array, where `list_alloc[i,j]` is the number of ways we
    can fill i gates with non-identity I/O using an overall Hamming weight of j
-   - `xyz_paulis`: A list of str lists, where each str list is a distinct permutation of assigning either "X", "Y", or "Z" to each of the "R"s in our `PauliOperator` object's operator
 
 **Methods:**
 
 - **`weight_to_operators(sib_ops: List[PauliOperator], next_weight: int, pos_to_fill: List[tuple], backward: int)`**  
-  If `backward` is 1, this method determines all possible `PauliOperator` objects that can directly precede the given `PauliOperator` in a legal Pauli path. These objects are appended to the `prior_ops` attribute of the class. Otherwise, it determines all possible `PauliOperator` objects that can directly follow the given one in a legal Pauli path and appends them to the `next_ops` attribute.
+  If `backward` is 1, this method determines all possible `PauliOperator` objects that can directly precede the given `PauliOperator` in a legal Pauli path. These objects are appended to the `prior_ops` attribute of the class, with their `operator`s being in terms of "I", "R", "N", and "P". Otherwise, it determines all possible `PauliOperator` objects that can directly follow the given one in a legal Pauli path and appends them to the `next_ops` attribute.
 
 - **`list_allocs(num_p: int, num_w: int)`**  
   A static method that calculates the number of ways to distribute `num_w` (the total Hamming weight) across `num_p` non-identity gate positions. It returns a 2D integer array where each entry `(i, j)` represents the number of ways to fill `i` gates with a total Hamming weight of `j`.
@@ -102,7 +113,10 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
 <img src="images/Layer_sibs.png" width="400" />
 
 **Sorting for Propagation**\
-We store all the possibile Pauli paths in terms of layers. At each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in "family" lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer. We store each such "family" list in a DefaultDict (`backward_rnp_sibs`), where the "family" list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the "family" list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this "family" list and any of the `PauliOperator` objects the prior propagation list. `forward_rnp_sibs` is a DefaultDict with the same set up except that it stores "family" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
+We determine all possibile Pauli paths by working terms of layers, with one `PauliOpLayer` representing each of the layers. For each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer.
+\
+
+We store each such list in a DefaultDict (`backward_rnp_sibs`), where the list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this list and any of the `PauliOperator` objects the prior propagation list. `forward_rnp_sibs` is a DefaultDict with the same set up except that it stores "family" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
 
 **Initialization**\
    `PauliOpLayer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
@@ -149,7 +163,7 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
    - **`min_backward(min_layers:List[PauliOperator],min_depth:int)`**\
 
    - **`min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`**\
-   
+
    - **`propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`**\
    Takes in a list of forward or backward sibling operators at a layer (`all_sibs`), and determines the new sibling operators that each sibling operators list in the input list propagate to. Uses helper function weight_to_operaters from the PauliOperator class to get the sibling operators that all the PauliOperators in any given sibling operators of the input propagate to.
    
@@ -171,11 +185,16 @@ The `XYZGeneration` class uses a recursive structure to generate Pauli paths. Th
    - `next_gen`: A list of `XYZGeneration` objects, where the `parent_ops` attribute of each of these `XYZGeneration` contains all the `PauliOperator` objects that could come directly after any of the `PauliOperator` objects in a valid Pauli path.
 
 **Methods**
-   - `rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`: 
-   - `fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`: 
-   - `fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`:
-   - `carries_to_the_end(cur_op:PauliOperator, i:int)`: 
-   - `rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`:
+   - **`rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`**\
+
+   - **`fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`**\
+
+   - **`fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`**\
+
+   - **`carries_to_the_end(cur_op:PauliOperator, i:int)`**\
+
+   - **`rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`**\ 
+  
 
 ---
 
@@ -198,16 +217,35 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    - `pauli_paths`: A list of all possible PauliPathTrav objects, given the upper bound on Hamming weight and circuit architecture.
 
 **Methods**
-   - `valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`: A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
-   - `enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)`: Recursively fills the `weight_combo` attribute of the `CircuitSim` with each distinct list that specifies the Hamming weights of a legal Pauli path, taking into account the restrictions of the circuit architecture. For each list, the ith int in the list assigns the Hamming weight of the ith Pauli operator of the Pauli path.
-   - `init_pauli_paths()`: Initiates the list of all `PauliPathTrav` objects that fit the circuit architecture and upper bound on Hamming weight.
-   - `travs_to_list()`: Translates `PauliPathTrav` object list into a list of paths, still in 'R', 'N', 'P', and 'I', and stores the lists in attribute `rnp_pauli_paths`.
-   - `trav_to_list(trav:PauliPathTrav)`: Helper function for `travs_to_list()`.
-   - `pauli_op_hopping(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator)`: Helper function for `trav_to_list()`.
-   - `build_xyz_trees()`: For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `SiblingOps` tree, with the tree's branching representing different valid selections of 'X', 'Y', and 'Z'. Stores the root of each tree in attribute `sib_op_heads`.
-   - `trees_to_lists()`: Turns each tree into seperate lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
-   - `branch(cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]])`: Helper function for `trees_to_lists()`
-   - `rn_to_z(first_op:PauliOperator)`: A static method that replaces all 'R's and 'N's in the first `PauliOperator` with 'Z's.
+   - **`valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`**\
+    A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
+
+   - **`enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)`**\
+    Recursively fills the `weight_combo` attribute of the `CircuitSim` with each distinct list that specifies the Hamming weights of a legal Pauli path, taking into account the restrictions of the circuit architecture. For each list, the ith int in the list assigns the Hamming weight of the ith Pauli operator of the Pauli path.
+
+   - **`init_pauli_paths()`**\
+    Initiates the list of all `PauliPathTrav` objects that fit the circuit architecture and upper bound on Hamming weight.
+
+   - **`travs_to_list()`**\
+   Translates each `PauliPathTrav` in `pauli_path_travs` into a list of Pauli paths, still in 'R', 'N', 'P', and 'I', and stores these lists in attribute `rnp_pauli_paths`. Calls helper function `trav_to_list(trav:PauliPathTrav)` on each `PauliPathTrav` object to obtain its corresponding list of paths.
+
+   - **`trav_to_list(trav:PauliPathTrav)`**\
+   For every `PauliOperator` in the `forward_rnp_sibs` attribute of `trav`, calls on helper function `pauli_op_hopping`. Uses `pauli_op_hopping` to append all Pauli paths starting with that `PauliOperator` and taking some traversal through `trav` to the `List[List[PauliOperator]]` `trav_list`. Returns `trav_list` once it is filled.
+
+   - **`pauli_op_hopping(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator)`**\
+
+   - **`build_xyz_trees()`**\
+   For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `XYZGeneration` tree, with the tree's branching representing different valid selections of 'X', 'Y', and 'Z'. Stores the root of each tree in attribute `xyz_gen_heads`.
+
+   - **`trees_to_lists()`**\
+   Turns each `XYZGeneration` tree into lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
+
+   - **`branch(cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]])`**\
+
+   - **`rn_to_z(first_op:PauliOperator)`**\
+   A static method that replaces all 'R's and 'N's in the first `PauliOperator` with 'Z's, in order to satisfy the second requirement to be a legal Pauli path.
+
+
 
 
    ---
