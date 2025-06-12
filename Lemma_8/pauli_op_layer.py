@@ -30,13 +30,13 @@ class PauliOpLayer:
             self.check_qubits(unsorted_pauli_ops)
 
             if (self.backward):
-                self.forward_sibs = pauli_ops # The input list in this case comes sorted according to
+                self.forward_rnp_sibs = pauli_ops # The input list in this case comes sorted according to
                 # the lists that the Layer at the next depth propagated to when it propagated backward
             else: 
-                self.backward_sibs = pauli_ops # The input list in this case comes sorted according to
+                self.backward_rnp_sibs = pauli_ops # The input list in this case comes sorted according to
                 # the lists that the Layer at the previous depth propagated to when it propagated forward
             
-            self.find_sibs(unsorted_pauli_ops) # Need to sort this list according to which ops at this depth propagate together 
+            self.group_sibs(unsorted_pauli_ops) # Need to sort this list according to which ops at this depth propagate together 
             # either backward (if self.backward) or forward (else)
 
     """
@@ -70,7 +70,7 @@ class PauliOpLayer:
                     self.carry_over_qubits[i][ind2] = 'I' # So when we compare the qubits that don't change,
                     # we don't also compare the ones that can change in a gate
 
-    def find_sibs(self,unsorted_pauli_ops:List[PauliOperator]):
+    def group_sibs(self,unsorted_pauli_ops:List[PauliOperator]):
         sorted_pauli_ops = defaultdict(list) # Hash map of PauliOperators,
         # where each key (tuple of an entry from pos_to_fill and carry_over_qubits) maps to a list of 
         # all PauliOperators with a particular set of non-gate qubits and non-identity I/O gate positions
@@ -82,6 +82,6 @@ class PauliOpLayer:
             # by initializing a new list for that key before trying to append
         
         if (self.backward):
-            self.backward_sibs = sorted_pauli_ops
+            self.backward_rnp_sibs = sorted_pauli_ops
         else:
-            self.forward_sibs = sorted_pauli_ops
+            self.forward_rnp_sibs = sorted_pauli_ops

@@ -12,7 +12,7 @@ from Pauli_Amplitude.edited_pauli_amp import compute_noisy_fourier
 from qiskit import circuit
 import itertools
 # pip3 install memory-profiler requests
-from memory_profiler import profile
+# from memory_profiler import profile
 import requests
 
 

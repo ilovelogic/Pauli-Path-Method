@@ -133,7 +133,7 @@ class CircuitSim:
 
     def trav_to_list(self,trav:PauliPathTrav):
         trav_list = []
-        for sibs in trav.layers[0].forward_sibs.values():
+        for sibs in trav.layers[0].forward_rnp_sibs.values():
             for pauli_op in sibs:
                 self.pauli_op_hopping(trav_list, [], pauli_op)
         return trav_list
