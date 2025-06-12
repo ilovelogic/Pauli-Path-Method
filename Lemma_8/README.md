@@ -39,7 +39,7 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - [PauliOpLayer](#pauli_op_layerpy): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
    - [PauliPathTrav](#pauli_path_travpy): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
    - [CircuitSim](#circuit_simpy): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
-   - [SiblingOps](#sibling_opspy): Builds a list (`next_ops`) of all `SiblingOps` objects that can come after this SiblingOps` to form valid Pauli path traversals.
+   - [SiblingOps](#sibling_opspy): Builds a list (`next_ops`) of all `SiblingOps` objects that can come after this `SiblingOps` to form valid Pauli path traversals.
 2. **Testing**:
    - [TestCircuits](#test_circuitspy): A suite of tests to validate functionality, both in general use cases and edge cases. Restricted to circuits with 0 to 25 qubits.
 
@@ -137,11 +137,11 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
    - `layers`: A list of `PauliOpLayer` objects, where the ith `PauliOpLayer` object keeps track of all possible ith Pauli operators in our Pauli path.
 
 **Methods**
-   - `build_min_configs()`
-   - `unsorted_min_layer_ops(min_weight)`
+   - `build_min_configs()`: Determines and returns the index of the lowest Hamming weight layer and all possible `PauliOperator` objects at that layer. Also returns the non-identity gate positions between the min weight layer and its prior layer and the non-identity gate positions between the min layer and its next layer, both as `List[tuple]`. Uses helper methods `unsorted_min_layer_ops`, `min_backward`, and `min_forward`.
+   - `unsorted_min_layer_ops(min_weight)`: 
    - `min_backward(min_layers:List[PauliOperator],min_depth:int)`
    - `min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`
-   - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`
+   - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`: Takes in a list of forward or backward sibling operators at a layer (`all_sibs`), and determines the new sibling operators that each sibling operators list in the input list propagate to. Uses helper function weight_to_operaters from the PauliOperator class to get the sibling operators that all the PauliOperators in any given sibling operators of the input propagate to.
    
 
 ---
