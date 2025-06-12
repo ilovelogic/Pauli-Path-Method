@@ -52,14 +52,18 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
 ### pauli_operator.py
 
 **List of Strs Representation**\
-Each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ Paulis $X$, $Y$, $Z$, and $I$. Accordingly, the `PauliOperator` class represents a Pauli operator by a list of strs (the `operator` attribute), where the ith str in the list characterizes the ith Pauli in the tensor product. Below are the different strs that can show up in the list along with what they specify. 
+Each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ Paulis $X$, $Y$, $Z$, and $I$. Accordingly, the `PauliOperator` class represents a Pauli operator by a list of strs (the `operator` attribute), where the ith str in the list characterizes the ith Pauli in the tensor product. 
+
+When we first propogate from a `PauliOperator` object, we use the following strs in `operator` attributes. 
    - "I": The associated Pauli matrix is the $2 \times 2$ identity matrix.
    - "R": The Pauli matrix can be either $X$, $Y$, or $Z$ (any of the non-identity Paulis).
    - "N": The Pauli matrix must be the same as the Pauli at the same index in the next Pauli operator in the path. We use "N" in the case where there is a non-identity Pauli whose associated qubit is not sent into any gates between this operator and the next, so it must not change between layers.
    - "P": The Pauli matrix is specified by whatever the Pauli is at the same index in the prior Pauli operator in the path. This is for the case of a non-identity Pauli whose related qubit does not enter any gates between this Pauli operator and the prior one.
 
-We use "R", "N", and "P" rather than directly including "X", "Y", and "Z" in order to avoid blowing up in memory. Since each "R" encapsulates the possibility of "X", "Y", or "Z", our number of Pauli paths to store is exponentially less than it would be if we opted 
+We use "R", "N", and "P" rather than directly including "X", "Y", and "Z" in order to avoid blowing up in memory at this stage. Since each "R" encapsulates the possibility of "X", "Y", or "Z", our number of Pauli paths to store is exponentially less than it would be if we opted 
 to store each individual combination of choosing either "X", "Y", or "Z" for all of "R"s in our list. \
+
+Later, using the class `XYZGeneration`, we will replace each `PauliOperator`'s "R", "N", and "P" with "X", "Y", and "Z", yet we will do so in a tree-like structure that handles the memory problem. \
 \
 <img src="images/PauliOperator_ops.png" width="450" />\
 **Immediate Neighbors**\
@@ -137,11 +141,17 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
    - `layers`: A list of `PauliOpLayer` objects, where the ith `PauliOpLayer` object keeps track of all possible ith Pauli operators in our Pauli path.
 
 **Methods**
-   - `build_min_configs()`: Determines and returns the index of the lowest Hamming weight layer and all possible `PauliOperator` objects at that layer. Also returns the non-identity gate positions between the min weight layer and its prior layer and the non-identity gate positions between the min layer and its next layer, both as `List[tuple]`. Uses helper methods `unsorted_min_layer_ops`, `min_backward`, and `min_forward`.
-   - `unsorted_min_layer_ops(min_weight)`: 
-   - `min_backward(min_layers:List[PauliOperator],min_depth:int)`
-   - `min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`
-   - `propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`: Takes in a list of forward or backward sibling operators at a layer (`all_sibs`), and determines the new sibling operators that each sibling operators list in the input list propagate to. Uses helper function weight_to_operaters from the PauliOperator class to get the sibling operators that all the PauliOperators in any given sibling operators of the input propagate to.
+   - **`build_min_configs()`**\
+   Determines and returns the index of the lowest Hamming weight layer and all possible `PauliOperator` objects at that layer. Also returns the non-identity gate positions between the min weight layer and its prior layer and the non-identity gate positions between the min layer and its next layer, both as `List[tuple]`. Uses helper methods `unsorted_min_layer_ops`, `min_backward`, and `min_forward`.
+
+   - **`unsorted_min_layer_ops(min_weight)`**\ 
+
+   - **`min_backward(min_layers:List[PauliOperator],min_depth:int)`**\
+
+   - **`min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`**\
+   
+   - **`propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`**\
+   Takes in a list of forward or backward sibling operators at a layer (`all_sibs`), and determines the new sibling operators that each sibling operators list in the input list propagate to. Uses helper function weight_to_operaters from the PauliOperator class to get the sibling operators that all the PauliOperators in any given sibling operators of the input propagate to.
    
 
 ---
