@@ -41,7 +41,7 @@ class ProbDist:
         
 
         # tree roots for Pauli path traversal
-        self.sib_op_heads = circuit_sim.sib_op_heads
+        self.sib_op_heads = circuit_sim.xyz_gen_heads
 
         self.bruteForceQC = QC
 

@@ -39,7 +39,7 @@ Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability 
    - [PauliOpLayer](#pauli_op_layerpy): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
    - [PauliPathTrav](#pauli_path_travpy): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
    - [CircuitSim](#circuit_simpy): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
-   - [SiblingOps](#sibling_opspy): Builds a list (`next_ops`) of all `SiblingOps` objects that can come after this `SiblingOps` to form valid Pauli path traversals.
+   - [XYZGeneration](#xyzgenerationpy): Builds a list (`next_gen`) of all `XYZGeneration` objects that can come after this `XYZGeneration` to form valid Pauli path traversals.
 2. **Testing**:
    - [TestCircuits](#test_circuitspy): A suite of tests to validate functionality, both in general use cases and edge cases. Restricted to circuits with 0 to 25 qubits.
 
@@ -146,19 +146,19 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
 
 ---
 
-### sibling_ops.py
+### xyz_generation.py
 
 <img src="images/sibling_ops.png" width="700" />\
 
 **Nesting Structure**\
-The `SiblingOps` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`pauli_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `pauli_ops` list. 
+The `XYZGeneration` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`parent_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `parent_ops` list. 
 
 **Initialization**\
-   `SiblingOps(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
+   `XYZGeneration(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
 
 **Attributes**
-   - `pauli_ops`: The list of `PauliOperator` objects for a particular index in the Pauli path that have the same selection from "X", "Y", and "Z" for their non-gate non-identity qubits.
-   - `next_sibs`: A list of `SiblingOps` objects, where the `pauli_ops` attribute of each of these `SiblingOps` contains all the `PauliOperator` objects that could come directly after any of the `PauliOperator` objects in a valid Pauli path.
+   - `parent_ops`: The list of `PauliOperator` objects for a particular index in the Pauli path that have the same selection from "X", "Y", and "Z" for their non-gate non-identity qubits.
+   - `next_gen`: A list of `XYZGeneration` objects, where the `parent_ops` attribute of each of these `XYZGeneration` contains all the `PauliOperator` objects that could come directly after any of the `PauliOperator` objects in a valid Pauli path.
 
 **Methods**
    - `rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`: 

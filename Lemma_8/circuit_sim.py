@@ -4,7 +4,7 @@ import math
 from typing import List
 from pauli_operator import PauliOperator
 from pauli_path_trav import PauliPathTrav
-from sibling_ops import SiblingOps
+from xyz_generation import XYZGeneration
 
 class CircuitSim:
     """
@@ -133,8 +133,8 @@ class CircuitSim:
 
     def trav_to_list(self,trav:PauliPathTrav):
         trav_list = []
-        for sibs in trav.layers[0].forward_rnp_sibs.values():
-            for pauli_op in sibs:
+        for rnp_sibs in trav.layers[0].forward_rnp_sibs.values():
+            for pauli_op in rnp_sibs:
                 self.pauli_op_hopping(trav_list, [], pauli_op)
         return trav_list
 
@@ -153,37 +153,37 @@ class CircuitSim:
     # Uses each Pauli path list in 'R', 'N', 'P', and 'I' to construct its own tree, 
     # with the tree's branching representing valid selections of 'X', 'Y', and 'Z'
     def build_xyz_trees(self):
-        self.sib_op_heads = []
+        self.xyz_gen_heads = []
         for list_of_paths in self.rnp_pauli_paths:
             for path in list_of_paths:
                 first_op_list = self.rn_to_z(path[0]) # returns a list with single element, 
                 # 'I' 'Z' version of path[00]
 
-                sib_op = SiblingOps(first_op_list, 1, path)
-                self.sib_op_heads.append(sib_op)
+                xyz_gen = XYZGeneration(first_op_list, 1, path)
+                self.xyz_gen_heads.append(xyz_gen)
 
     # Turns each tree into seperate lists representing Pauli paths
     def trees_to_lists(self):
         self.xyz_pauli_paths = []
         
-        for sib_op_head in self.sib_op_heads:
-            sib_op_paths = [[]]
-            self.branch(sib_op_head,sib_op_paths)
+        for xyz_gen_head in self.xyz_gen_heads:
+            xyz_gen_paths = [[]]
+            self.branch(xyz_gen_head,xyz_gen_paths)
     
 
     # Adds 
-    def branch(self, cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]]):
-        if (cur_sib.next_sibs == None): # Base case: add the 'I' 'Z' leaf pauli op to all paths
+    def branch(self, cur_xyz_gen:XYZGeneration, pauli_paths_in_womb:List[List[PauliOperator]]):
+        if (cur_xyz_gen.next_gen == None): # Base case: add the 'I' 'Z' leaf pauli op to all paths
             for pauli_path in pauli_paths_in_womb:
-                pauli_path.append(cur_sib.pauli_ops[0]) # only the next pauli operator is the one with all 'I's and 'Z's
+                pauli_path.append(cur_xyz_gen.parent_ops[0]) # only the next pauli operator is the one with all 'I's and 'Z's
                 self.xyz_pauli_paths.append(pauli_path) # adds all the completed pauli paths
         else: # partway through tree construction, need to branch
-            for pauli_op in cur_sib.pauli_ops: # for every pauli op in the current sibling
-                for next_sib in cur_sib.next_sibs: 
+            for pauli_op in cur_xyz_gen.parent_ops: # for every pauli op in the current generation
+                for next_gen in cur_xyz_gen.next_gen: 
                     branched_pauli_paths = copy.deepcopy(pauli_paths_in_womb)
                     for pauli_path in branched_pauli_paths:
                         pauli_path.append(pauli_op)
-                    self.branch(next_sib,branched_pauli_paths)
+                    self.branch(next_gen,branched_pauli_paths)
             
 
     @staticmethod
