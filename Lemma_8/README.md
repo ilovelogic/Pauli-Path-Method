@@ -124,6 +124,7 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 
 **Overview**\
 <img src="images/PauliPath_layers.png" width="800" />
+Given a circuit architecture and weight configuration, we generate a list of `PauliOpLayer` objects (`layers`), which encapsulates all the possibilities of what `PauliOperator` objects we are free to use at each index of a legal Pauli path. 
 
 **Initialization**\
    `PauliPathTrav(num_qubits:int, weight_combo:List[int],gate_pos:List[List[tuple]])`
@@ -150,7 +151,7 @@ We store all the possibile Pauli paths in terms of layers. At each layer, we sto
 <img src="images/sibling_ops.png" width="700" />\
 
 **Nesting Structure**\
-The `SiblingOps` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`pauli_ops`), which all share the same list of `PauliOperator` objects that could come next in their Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `pauli_ops` list. 
+The `SiblingOps` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`pauli_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `pauli_ops` list. 
 
 **Initialization**\
    `SiblingOps(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
