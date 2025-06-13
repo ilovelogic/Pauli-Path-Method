@@ -190,13 +190,19 @@ The `XYZGeneration` class uses a recursive structure to generate Pauli paths. Th
 **Methods**
    - **`rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`**\
 
+
    - **`fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`**\
+   Fills `r_pos_list` with all "R" qubit positions and `n_pos_list` with all non-carry "N" qubit positions in `next_op`. Note that an "N" that carries is a qubit position that remains a non-gate position in every following `PauliOperator` in the Pauli path. Replaces any 'P's it encounters with the non-identity Pauli at the same index in the immediately preceding `PauliOperator`.
 
    - **`fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`**\
+   
 
-   - **`carries_to_the_end(cur_op:PauliOperator, i:int)`**\
+   - **`carries_to_the_end(pauli_path_index:int, i:int)`**\
+   Checks if the non-gate qubit at index `i` in the Pauli operator at index `pauli_path_index`
+   in the Pauli path carries to the end of the Pauli path. In other words, investigates if it remains a non-gate qubit until the last layer of the Pauli path. In this is the case, that position in that Pauli operator and onward in the path would be forced to be a 'Z' to meet the all 'I's and 'Z' at last layer requirement.
 
-   - **`rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`**\ 
+   - **`rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`**\
+   Replaces all 'R's and 'P's in the last layer with 'Z's to meet the restriction of only 'I's and 'Z' being present in the last `PauliOperator` of the Pauli path.
   
 
 ---
