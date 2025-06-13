@@ -22,7 +22,46 @@ A Python implementation of the algorithm described in Lemma 8 from the work of [
 
 This program plays a key role in classically simulating noisy random circuit sampling in polynomial time. It accomplishes this by using an approach known as the Pauli path method. 
 
-A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of Pauli operators representing the evolution of quantum states during a circuit's operation. Pauli paths are used to calculuate the Pauli path integral, which is a means of calculating the output probability distribution of the circuit. The Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
+Before we outline the method, we define relevant words that will come up in the method description.
+   >### Terminology
+   >- Qubit: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: $$\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}$$, where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
+   >- Gate: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
+   >- Unitary: A matrix that mathematically specifies the operation of a quantum gate.
+   >- Measurement: Measuring a qubit causes its superposition of 1 and 0 to collapse to exactly one of these outcomes. Measurement cannot be undone, so once you measure a qubit, there is no way to return it to its prior state.
+   >- Circuit: Refers to a quantum circuit. Quantum circuits start with some fixed number of input qubits and then apply a sequence of gates on the input. The qubits may be measured at any point in the circuit, and upon measurement, collapse irreversibly to a particular outcome.
+   >- Random Circuit Sampling: RCS is a benchmarking task designed to demonstrate quantum supremacy. The process involves repeatedly obtaining samples from the output distribution of randomly chosen quantum circuits. These circuits are characterized by an arbitrary set of gates and some fixed circuit architecture. In other words, the placement of the gates in the circuit is constant while the gates themselves are chosen arbitrarily.
+   >- Noise: In the real world, quantum computers are susceptible to noise. Noise is errors caused by unexpected effects from neighboring qubits or external sources like radiation, magnetic field, electrical field, etc. As seen in the below figure, ideal RCS has no noise at all (a). Noise is indicated by the blue dots as seen in the noisy RCS diagram (b).
+   >- Depth: The number of gate layers in a quantum circuit. In the above circuit example, the depth is 5.
+   >- Pauli: The four Pauli matrices comprise the Pauli basis. They are as follows:
+   >$$I = 
+   >\begin{pmatrix}
+   >1 & 0 \\
+   >0 & 1
+   >\end{pmatrix}, \quad
+   >X = 
+   >\begin{pmatrix}
+   >0 & 1 \\
+   >1 & 0
+   >\end{pmatrix}, \quad
+   Y = 
+   \begin{pmatrix}
+   0 & -i \\
+   i & 0
+   \end{pmatrix}, \quad
+   Z = 
+   \begin{pmatrix}
+   1 & 0 \\
+   0 & -1
+   \end{pmatrix}.$$
+   >- Tensor Product: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property 
+   >$$\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$$ 
+   >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
+   >- Pauli operator: For an $n$-qubit system, the corresponding Pauli operators are of the form
+   >$$P=P_1 \otimes P_2 \otimes \dots \otimes P_n$$
+   >where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
+   >- Hamming weight: Counts the number of non-identity Paulis ($X,Y,Z$) present. For example, the Hamming weight of $I \otimes X \otimes Y$ is 2. 
+
+A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of Pauli operators representing the evolution of quantum states during a circuit's operation. Pauli paths are used to calculuate the Pauli path integral, which is a means of determining the output probability distribution of the circuit. The Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
 
    >### Definition 1 (Pauli Path Integral)
    > Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth. The Pauli path integral is written as: 
@@ -31,7 +70,7 @@ A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of P
 
 Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability distribution for outcome $x$. 
 
-Of course, to calculate the above expression, we first need to know all possible legal Pauli paths. The `Lemma_8` program accomplishes that task. Given the desired depth, number of qubits, gate positions, and upperbound on Hamming weight. According to the aforementioned paper, a legal Pauli path is defined as follows.
+To calculate the above expression, we first need to know all possible legal Pauli paths. According to the aforementioned paper, a legal Pauli path is defined as follows.
 
    >### Definition 6 (Legal Pauli Path)
    >For a given circuit architecture, a Pauli path $s = (s_0, s_1, \ldots, s_d)$ is legal if the following two conditions are satisfied:
@@ -41,7 +80,7 @@ Of course, to calculate the above expression, we first need to know all possible
    >
    > The reason for considering legal Pauli paths is that the illegal ones are irrelevant, as they contribute 0 to the Pauli path integral.
 
-
+The `Lemma_8` program generates all legal Pauli paths that fit the specified depth, number of qubits, gate positions, and upperbound on Hamming weight. It accomplishes this task using 5 classes, which are outlined below.
 
 ---
 
@@ -65,7 +104,7 @@ Of course, to calculate the above expression, we first need to know all possible
 ### PauliOperator
 
 **List of Strs Representation**\
-Each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ Paulis $X$, $Y$, $Z$, and $I$. Accordingly, the `PauliOperator` class represents a Pauli operator by a list of strs (the `operator` attribute), where the ith str in the list characterizes the ith Pauli in the tensor product. 
+Recall that each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ Paulis $X$, $Y$, $Z$, and $I$. Accordingly, the `PauliOperator` class represents a Pauli operator by a list of strs (the `operator` attribute), where the ith str in the list characterizes the ith Pauli in the tensor product. 
 
 When we first propogate from a `PauliOperator` object, we use the following strs in `operator` attributes. 
    - "I": The associated Pauli matrix is the $2 \times 2$ identity matrix.
