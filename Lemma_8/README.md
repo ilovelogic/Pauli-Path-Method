@@ -158,11 +158,14 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
    - **`build_min_configs()`**\
    Determines and returns the index of the lowest Hamming weight layer and all possible `PauliOperator` objects at that layer. Also returns the non-identity gate positions between the min weight layer and its prior layer and the non-identity gate positions between the min layer and its next layer, both as `List[tuple]`. Uses helper methods `unsorted_min_layer_ops`, `min_backward`, and `min_forward`.
 
-   - **`unsorted_min_layer_ops(min_weight)`**\ 
+   - **`unsorted_min_layer_ops(min_weight)`**\
+    Returns an unsorted list of all PauliOperators whose number of qubits match the attribute `num_qubits` and whose Hamming weight equals `min_weight`.
 
    - **`min_backward(min_layers:List[PauliOperator],min_depth:int)`**\
+   Instantiates the `PauliOpLayer` object `min_layer_ops` and sets its `backward_rnp_sibs` attribute, which is a `DefaultDict` whose values are `PauliOperator` objects (in "R", "N", "P, and "I") that are grouped by the key of the tuple of their gate positions and non-gate qubits in the backward direction. As a result, `backward_rnp_sibs` stores the `PauliOperator` objects at index `min_index` in the Pauli path sorted according to which propagate *backward* to the same list of `PauliOperator` objects. Returns `backward_rnp_sibs` and a `DefaultDict` that, for every `PauliOperator` possible at this layer, keeps track of all positions in the `PauliOperator` immediately prior to this `PauliOperator` that will require non-identity Paulis.
 
    - **`min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`**\
+   Given the `PauliOpLayer` object `min_layer_ops`, instantiates its `forward_rnp_sibs` attribute. Its `forward_rnp_sibs` is a `DefaultDict` with values of `PauliOperator` objects categorized by their gate positions and non-gate qubits in the context of moving forward in the circuit. As a result, `forward_rnp_sibs` stores the `PauliOperator` objects at index `min_index` in the Pauli path organized by which propagate *forward* to the same list of `PauliOperator` objects. Returns `forward_rnp_sibs` and the `DefaultDict` that stores, for every `PauliOperator` at this layer, all qubit indices in the `PauliOperator` directly preceding this `PauliOperator` that need non-identity Paulis.
 
    - **`propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`**\
    Takes in a list of forward or backward sibling operators at a layer (`all_sibs`), and determines the new sibling operators that each sibling operators list in the input list propagate to. Uses helper function weight_to_operaters from the PauliOperator class to get the sibling operators that all the PauliOperators in any given sibling operators of the input propagate to.
