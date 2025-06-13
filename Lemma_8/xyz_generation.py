@@ -29,6 +29,8 @@ class XYZGeneration:
 
         filled_n_list = []
 
+        # We will fill in the 'N' positions with 'X', 'Y', and 'Z' in all possible combinations
+        # resulting in 3 ** len(n_pos_list) configurations
         for i in range(3 ** len(n_pos_list)):
             filled_n_list.append(copy.deepcopy(self.pauli_path[next_index]))
 
@@ -39,7 +41,7 @@ class XYZGeneration:
         filled_rn_list = [[] for _ in range(len(filled_n_list))] # one grouping per n filling configuration
 
         for i in range(len(filled_n_list)):
-            for j in range(3 ** len(r_pos_list)):
+            for j in range(3 ** len(r_pos_list)): # 3 options for every 'R' position
                 filled_rn_list[i].append(copy.deepcopy(filled_n_list[i]))
 
             self.fill_in_pos(filled_rn_list[i],r_pos_list,'X',0,0)
@@ -70,6 +72,7 @@ class XYZGeneration:
         if index == len(pos_list): # index is the position of the index in the pos_list
             # at which we want to edit the pauli in filled_pos's operators in the range beginning with start
             return
+        
         for i in range(start, start + (3 ** (len(pos_list)-index-1))):
             filled_pos[i].operator[pos_list[index]] = pauli
         
@@ -77,6 +80,10 @@ class XYZGeneration:
         self.fill_in_pos(filled_pos,pos_list,'Y', index+1,start+(3 ** (len(pos_list)-index-2)))
         self.fill_in_pos(filled_pos,pos_list,'Z', index+1,start+(2 * (3 ** (len(pos_list)-index-2))))
 
+    # Checks if the non-gate qubit at index i in the Pauli operator at index pauli_path_index
+    # in the Pauli path carries to the end of the Pauli path, i.e., if it remains a non-gate qubit
+    # until the last layer of the Pauli path. In this case, it would be forced to 
+    # always be a 'Z' to meet the all 'I's and 'Z' at last layer requirement
     def carries_to_the_end(self, pauli_path_index:int, i:int):
         if self.pauli_path[pauli_path_index].next_ops == None: # reached last layer
             return 1 # the non-gate qubit remain a non-gate qubit to the last layer
