@@ -68,9 +68,28 @@ class XYZGeneration:
                 self.pauli_path[next_index].operator[i] = self.parent_ops[0].operator[i]
 
 
-    def fill_in_pos(self,filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int):
-        if index == len(pos_list): # index is the position of the index in the pos_list
-            # at which we want to edit the pauli in filled_pos's operators in the range beginning with start
+    """
+    This function recursively fills specified qubit positions of PauliOperators in
+    filled_pos list with all possible combinations of 'X', 'Y', and 'Z'
+
+    Args:
+        self (XYZGeneration) :  The XYZGeneration instance, used to recursively call this function.
+        filled_pos (List[PauliOperator]) : The list of PauliOperators to fill with all possible combinations
+        of 'X', 'Y', and 'Z' at the positions in pos_list. This list is updated in place.
+        pos_list (List[int]) : The list of qubit positions that we will recursively fill with
+        non-identity Paulis.
+        index (int) : The index of pos_list that contains the qubit position at which we want to 
+        edit every PauliOperator in filled_pos in the range beginning with start.
+        pauli (str) : The Pauli ('X', 'Y', or 'Z') to write to that given index .
+        start (int) : The beginning of the range of PauliOperators in filled_pos that
+        we should edit on this function call.
+
+    Returns:
+        void : Updates filled_pos to contain all PauliOperators whose qubits at the positions in pos_list
+        contain all possible combinations of "X", "Y", and "Z".
+    """
+    def fill_in_pos(self,filled_pos:List[PauliOperator],pos_list:List[int], index:int, pauli:str, start:int):
+        if index == len(pos_list): # We have filled all positions in pos_list
             return
         
         for i in range(start, start + (3 ** (len(pos_list)-index-1))):
