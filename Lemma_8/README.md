@@ -235,7 +235,8 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    - **`trav_to_list(trav:PauliPathTrav)`**\
    For every `PauliOperator` in the `forward_rnp_sibs` attribute of `trav`, calls on helper function `pauli_op_hopping`. Uses `pauli_op_hopping` to append all Pauli paths starting with that `PauliOperator` and taking some traversal through `trav` to the `List[List[PauliOperator]]` `trav_list`. Returns `trav_list` once it is filled.
 
-   - **`pauli_op_hopping(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator)`**\
+   - **`trav_branching(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator)`**\
+   Recursively traverses every Pauli path through a `PauliPathTrav` and appends them to `trav_list`. The initial call must be on an empty `partial_pauli_path` and one of the `PauliOperator` objects in the first layer of a `PauliPathTrav`.
 
    - **`build_xyz_trees()`**\
    For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `XYZGeneration` tree, with the tree's branching representing different valid selections of 'X', 'Y', and 'Z'. Stores the root of each tree in attribute `xyz_gen_heads`.
@@ -243,10 +244,11 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    - **`trees_to_lists()`**\
    Turns each `XYZGeneration` tree into lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
 
-   - **`branch(cur_sib:SiblingOps, pauli_paths_in_womb:List[List[PauliOperator]])`**\
+   - **`xyz_tree_branching(cur_xyz_gen:XYZGeneration, pauli_paths_in_womb:List[List[PauliOperator]])`**\
+   Recursively traverses all possible Pauli paths along an `XYZGeneration` tree and appends them to `xyz_pauli_paths`.
 
    - **`rn_to_z(first_op:PauliOperator)`**\
-   A static method that replaces all 'R's and 'N's in the first `PauliOperator` with 'Z's, in order to satisfy the second requirement to be a legal Pauli path.
+   A static method that replaces all 'R's and 'N's in the first `PauliOperator` of a path with 'Z's, in order to satisfy the second requirement to be a legal Pauli path.
 
 
 
