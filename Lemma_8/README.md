@@ -192,17 +192,17 @@ The `XYZGeneration` class uses a recursive structure to generate Pauli paths. Th
 
 
    - **`fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`**\
-   Fills `r_pos_list` with all "R" qubit positions and `n_pos_list` with all non-carry "N" qubit positions in `next_op`. Note that an "N" that carries is a qubit position that remains a non-gate position in every following `PauliOperator` in the Pauli path. Replaces any 'P's it encounters with the non-identity Pauli at the same index in the immediately preceding `PauliOperator`.
+   Fills `r_pos_list` with all "R" qubit positions and `n_pos_list` with all non-carry "N" qubit positions in `next_op`. Note that an "N" that carries is a qubit position that remains a non-gate position in every following `PauliOperator` in the Pauli path. Replaces any "P"s it encounters with the non-identity Pauli at the same index in the immediately preceding `PauliOperator`.
 
    - **`fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`**\
+   Updates `filled_pos` to contain all `PauliOperator` objects whose qubits at the positions in specified by `pos_list` hold all possible combinations of "X", "Y", and "Z".
    
-
    - **`carries_to_the_end(pauli_path_index:int, i:int)`**\
    Checks if the non-gate qubit at index `i` in the Pauli operator at index `pauli_path_index`
-   in the Pauli path carries to the end of the Pauli path. In other words, investigates if it remains a non-gate qubit until the last layer of the Pauli path. In this is the case, that position in that Pauli operator and onward in the path would be forced to be a 'Z' to meet the all 'I's and 'Z' at last layer requirement.
+   in the Pauli path carries to the end of the Pauli path. In other words, investigates if it remains a non-gate qubit until the last layer of the Pauli path. In this is the case, that position in that Pauli operator and onward in the path would be forced to be a "Z" to meet the all "I"s and "Z" at last layer requirement.
 
    - **`rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`**\
-   Replaces all 'R's and 'P's in the last layer with 'Z's to meet the restriction of only 'I's and 'Z' being present in the last `PauliOperator` of the Pauli path.
+   Replaces all "R"s and "P"s in the last layer with "Z"s to meet the restriction of only "I"s and "Z" being present in the last `PauliOperator` of the Pauli path.
   
 
 ---
@@ -236,7 +236,7 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
     Initiates the list of all `PauliPathTrav` objects that fit the circuit architecture and upper bound on Hamming weight.
 
    - **`travs_to_list()`**\
-   Translates each `PauliPathTrav` in `pauli_path_travs` into a list of Pauli paths, still in 'R', 'N', 'P', and 'I', and stores these lists in attribute `rnp_pauli_paths`. Calls helper function `trav_to_list(trav:PauliPathTrav)` on each `PauliPathTrav` object to obtain its corresponding list of paths.
+   Translates each `PauliPathTrav` in `pauli_path_travs` into a list of Pauli paths, still in "R", "N", "P", and "I", and stores these lists in attribute `rnp_pauli_paths`. Calls helper function `trav_to_list(trav:PauliPathTrav)` on each `PauliPathTrav` object to obtain its corresponding list of paths.
 
    - **`trav_to_list(trav:PauliPathTrav)`**\
    For every `PauliOperator` in the `forward_rnp_sibs` attribute of `trav`, calls on helper function `pauli_op_hopping`. Uses `pauli_op_hopping` to append all Pauli paths starting with that `PauliOperator` and taking some traversal through `trav` to the `List[List[PauliOperator]]` `trav_list`. Returns `trav_list` once it is filled.
@@ -245,7 +245,7 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    Recursively traverses every Pauli path through a `PauliPathTrav` and appends them to `trav_list`. The initial call must be on an empty `partial_pauli_path` and one of the `PauliOperator` objects in the first layer of a `PauliPathTrav`.
 
    - **`build_xyz_trees()`**\
-   For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `XYZGeneration` tree, with the tree's branching representing different valid selections of 'X', 'Y', and 'Z'. Stores the root of each tree in attribute `xyz_gen_heads`.
+   For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `XYZGeneration` tree, with the tree's branching representing different valid selections of"X", "Y", and "Z". Stores the root of each tree in attribute `xyz_gen_heads`.
 
    - **`trees_to_lists()`**\
    Turns each `XYZGeneration` tree into lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
@@ -254,7 +254,7 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    Recursively traverses all possible Pauli paths along an `XYZGeneration` tree and appends them to `xyz_pauli_paths`.
 
    - **`rn_to_z(first_op:PauliOperator)`**\
-   A static method that replaces all 'R's and 'N's in the first `PauliOperator` of a path with 'Z's, in order to satisfy the second requirement to be a legal Pauli path.
+   A static method that replaces all "R"s and "N"s in the first `PauliOperator` of a path with "Z"s, in order to satisfy the second requirement to be a legal Pauli path.
 
 
 
