@@ -135,10 +135,10 @@ class CircuitSim:
         trav_list = []
         for rnp_sibs in trav.layers[0].forward_rnp_sibs.values():
             for pauli_op in rnp_sibs:
-                self.pauli_op_hopping(trav_list, [], pauli_op)
+                self.trav_branching(trav_list, [], pauli_op)
         return trav_list
 
-    def pauli_op_hopping(self,trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator):
+    def trav_branching(self,trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator):
         partial_pauli_path.append(pauli_op)
 
         # Base case: Reached last Pauli operator layer of the circuit
@@ -148,7 +148,7 @@ class CircuitSim:
     
         for i in range(len(pauli_op.next_ops)):
             partial_pauli_path_copy = copy.deepcopy(partial_pauli_path)
-            self.pauli_op_hopping(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
+            self.trav_branching(trav_list, partial_pauli_path_copy, pauli_op.next_ops[i])
 
     # Uses each Pauli path list in 'R', 'N', 'P', and 'I' to construct its own tree, 
     # with the tree's branching representing valid selections of 'X', 'Y', and 'Z'
@@ -168,11 +168,12 @@ class CircuitSim:
         
         for xyz_gen_head in self.xyz_gen_heads:
             xyz_gen_paths = [[]]
-            self.branch(xyz_gen_head,xyz_gen_paths)
+            self.xyz_tree_branching(xyz_gen_head,xyz_gen_paths)
     
 
-    # Adds 
-    def branch(self, cur_xyz_gen:XYZGeneration, pauli_paths_in_womb:List[List[PauliOperator]]):
+    # Recursively traverses all possible Pauli paths along the XYZGeneration tree 
+    # and appends them to xyz_pauli_paths
+    def xyz_tree_branching(self, cur_xyz_gen:XYZGeneration, pauli_paths_in_womb:List[List[PauliOperator]]):
         if (cur_xyz_gen.next_gen == None): # Base case: add the 'I' 'Z' leaf pauli op to all paths
             for pauli_path in pauli_paths_in_womb:
                 pauli_path.append(cur_xyz_gen.parent_ops[0]) # only the next pauli operator is the one with all 'I's and 'Z's
@@ -183,7 +184,7 @@ class CircuitSim:
                     branched_pauli_paths = copy.deepcopy(pauli_paths_in_womb)
                     for pauli_path in branched_pauli_paths:
                         pauli_path.append(pauli_op)
-                    self.branch(next_gen,branched_pauli_paths)
+                    self.xyz_tree_branching(next_gen,branched_pauli_paths)
             
 
     @staticmethod
