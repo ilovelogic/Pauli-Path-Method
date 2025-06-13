@@ -9,11 +9,12 @@ A Python implementation of the algorithm described in Lemma 8 from the work of [
 - [Introduction](#introduction)
 - [Architecture Overview](#architecture-overview)
 - [Class Documentation](#class-documentation)
-  - [PauliOperator](#pauli_operatorpy)
-  - [PauliOpLayer](#pauli_op_layerpy)
-  - [PauliPathTrav](#pauli_path_travpy)
-  - [CircuiSim](#circuit_simpy)
-  - [TestCircuit](#test_circuitpy)
+  - [PauliOperator](#paulioperator)
+  - [PauliOpLayer](#paulioplayer)
+  - [PauliPathTrav](#paulipathtrav)
+  - [XYZGeneration](#xyzgeneration)
+  - [CircuiSim](#circuitsim)
+  - [TestCircuit](#testcircuit)
 
 ---
 
@@ -47,13 +48,13 @@ Of course, to calculate the above expression, we first need to know all possible
 ## Architecture Overview
 
 1. **Core Classes**:
-   - [PauliOperator](#pauli_operatorpy): Stores a Pauli operator, the list of all `PauliOperator` objects that can precede this operator in a legal Pauli path, and a list of those that can come after it. Can generate both of these lists. Each Pauli operator is represented as a list of strs, where each str represents which Pauli matrices can be at that particular index in the tensor product comprising the Pauli operator.
-   - [PauliOpLayer](#pauli_op_layerpy): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
-   - [PauliPathTrav](#pauli_path_travpy): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
-   - [CircuitSim](#circuit_simpy): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
-   - [XYZGeneration](#xyzgenerationpy): Builds a list (`next_gen`) of all `XYZGeneration` objects that can come after this `XYZGeneration` to form valid Pauli path traversals.
+   - [PauliOperator](#paulioperator): Stores a Pauli operator, the list of all `PauliOperator` objects that can precede this operator in a legal Pauli path, and a list of those that can come after it. Can generate both of these lists. Each Pauli operator is represented as a list of strs, where each str represents which Pauli matrices can be at that particular index in the tensor product comprising the Pauli operator.
+   - [PauliOpLayer](#paulioplayer): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
+   - [PauliPathTrav](#paulipathtrav): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
+   - [CircuitSim](#circuitsim): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
+   - [XYZGeneration](#xyzgeneration): Builds a list (`next_gen`) of all `XYZGeneration` objects that can come after this `XYZGeneration` to form valid Pauli path traversals.
 2. **Testing**:
-   - [TestCircuits](#test_circuitspy): A suite of tests to validate functionality, both in general use cases and edge cases. Restricted to circuits with 0 to 25 qubits.
+   - [TestCircuits](#testcircuits): A suite of tests to validate functionality, both in general use cases and edge cases. Restricted to circuits with 0 to 25 qubits.
 
 ---
 
@@ -61,7 +62,7 @@ Of course, to calculate the above expression, we first need to know all possible
 
 ---
 
-### pauli_operator.py
+### PauliOperator
 
 **List of Strs Representation**\
 Each Pauli operator is a tensor product of matrices drawn from the $2 \times 2$ Paulis $X$, $Y$, $Z$, and $I$. Accordingly, the `PauliOperator` class represents a Pauli operator by a list of strs (the `operator` attribute), where the ith str in the list characterizes the ith Pauli in the tensor product. 
@@ -108,18 +109,20 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
 
 ---
 
-### pauli_op_layer.py
+### PauliOpLayer
 
-<img src="images/Layer_sibs.png" width="400" />
+<img src="images/backward_forward_sibs.png" width="400" />
 
 **Sorting for Propagation**\
-We determine all possibile Pauli paths by working terms of layers, with one `PauliOpLayer` representing each of the layers. For each layer, we store all the `PauliOperator` objects which could be the Pauli operator for a particular position in a legal Pauli path. We group `PauliOperator` objects at this `PauliOperator` layer in lists according to which propagate backward to the same list of `PauliOperator` objects at the prior `PauliOperator` layer.
-\
+We determine all possibile Pauli paths by working terms of layers, which are represented by the object `PauliOpLayer`. Each `PauliOpLayer` stores all the `PauliOperator` objects which could be the Pauli operator for some particular position in a legal Pauli path. 
 
-We store each such list in a DefaultDict (`backward_rnp_sibs`), where the list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits between any `PauliOperator` in this list and any of the `PauliOperator` objects the prior propagation list. `forward_rnp_sibs` is a DefaultDict with the same set up except that it stores "family" lists sorted based on which `PauliOperator` objects propagate forward to the same list of possibilities at the *next* layer.
+We group `PauliOperator` objects at this `PauliOperator` layer in lists according to which propagate backward to the same list of `PauliOperator` objects and which propagate forward together.
+
+We store each backward-twinning list in a DefaultDict (`backward_rnp_sibs`), where the list is the value and the key is a tuple of the list of non-identity gate positions between any `PauliOperator` in the list and all of the `PauliOperator` objects in the list it propagates backward to, along with a List of strs representing the non-gate qubits of the `PauliOperator` in this list in the context of looking backward. `forward_rnp_sibs` is a DefaultDict with the same set up except that it stores lists containing `PauliOperator` objects that propagate forward to the same list of possibilities at the *next* layer.
 
 **Initialization**\
    `PauliOpLayer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
+   >Takes as argument `pauli_ops`, a `DefaultDict` that is either sorted according to backward or forward propagation at this layer of the Pauli path. Calls methods `check_qubits` and `group_sibs` to group the `PauliOperator` objects in `pauli_ops` based off of the opposite propagation direction. Assigns attribute `forward_rnp_sibs` to be the `DefaultDict` sorted by which propagate forward together and `backward_rnp_sibs` to be the `DefaultDict` that groups based on backward propagation.
 
 **Attributes**
    - `backward`: An int that is 1 if we need to propagate backward from this `PauliOpLayer` and 0 otherwise.
@@ -138,7 +141,7 @@ We store each such list in a DefaultDict (`backward_rnp_sibs`), where the list i
 
 ---
 
-### pauli_path_trav.py
+### PauliPathTrav
 
 **Overview**\
 <img src="images/PauliPath_layers.png" width="800" />
@@ -146,6 +149,7 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
 
 **Initialization**\
    `PauliPathTrav(num_qubits:int, weight_combo:List[int],gate_pos:List[List[tuple]])`
+   >Begins by creating a `PauliOpLayer` that stores all possible `PauliOperator` objects meeting the weight requirement at the minimum weight layer. Then propagates backward from the min layer until reaching the beginning of the path and forward from the min layer until getting to the end of the path. As it propagates, it builds the `PauliOpLayer` for each index of the Pauli path and stores it in the corresponding index of the attribute `layers`. 
 
 **Attributes**
    - `num_qubits`: An int that is the number of qubits in the circuit.
@@ -173,9 +177,9 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
 
 ---
 
-### xyz_generation.py
+### XYZGeneration
 
-<img src="images/sibling_ops.png" width="700" />\
+<img src="images/xyz_gen.png" width="700" />\
 
 **Nesting Structure**\
 The `XYZGeneration` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`parent_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `parent_ops` list. 
@@ -207,7 +211,7 @@ The `XYZGeneration` class uses a recursive structure to generate Pauli paths. Th
 
 ---
 
-### circuit_sim.py
+### CircuitSim
 
 **Overview**
 
@@ -257,8 +261,6 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    A static method that replaces all "R"s and "N"s in the first `PauliOperator` of a path with "Z"s, in order to satisfy the second requirement to be a legal Pauli path.
 
 
-
-
    ---
 
-## test_circuit.py
+## TestCircuit
