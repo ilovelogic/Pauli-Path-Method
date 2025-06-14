@@ -102,15 +102,24 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 
 ### Brute Force Simulation:
 [Brute Force RCS README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Lemma_8/Brute_Force_RCS/README.md)
-
+\
+\
 ## State of the Research 
 
-### Pauli Path State of Research:
-Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight. Can encapsulate all possible paths in either tree format, which speeds up Fourier coefficient calculations, or list format. Handles both 1D brickwork circuit architecture and 2D brickwork. 
+### Research Question:
+Our original research questions were "Is RCS a worthwhile approach to proving quantum supremacy? Should we focus our attempts elsewhere?" Our program significantly speeds up runtime by the path truncation approach, so it appears that working with a different benchmark may be in order.
+
+Below, we outline what each one of us contributed to answering the research question.
+
+### Anne Kelley:
+I handled generating the legal Pauli paths restricted by an upper bound on Hamming weight. The Pauli path generation is essential to classically simulating RCS, given that you can't compute the probability distribution without tracing the Fourier coefficients of the paths. My code:
+- Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight.
+- Can encapsulate all possible paths in either tree format, which speeds up Fourier coefficient calculations, or list format. 
+- Handles both 1D brickwork circuit architecture and 2D brickwork. 
 
 A further optimization would be to generalize to the gate sets used by Google and USTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
-### Brute Force Simulation State of the Research:
+### Brute Force Simulation State of the Research (Jesus Azpitarte):
 Currently, random sampling is working for 1d brickwork circuits. Adopting 2D circuit generation for sampling shouldn't be difficult. It's merely making sure the labels work similarly as in the 1D case.
 
 ##### Explanation of 2D brickwork: 
