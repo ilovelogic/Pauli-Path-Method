@@ -18,7 +18,7 @@ class PauliPathTrav:
         self.num_op_layers = len(weight_combo) # weight_combo stores exactly one weight for each layer
         self.weight_combo = weight_combo
         self.gate_pos = gate_pos
-        self.layers = [None]*self.num_op_layers # List of DefaultDicts of all operators possible at each layer
+        self.layers = [None]*self.num_op_layers # List of PauliOpLayers of all operators possible at each layer
         
         if (num_qubits == 0 or self.num_op_layers == 0): # No circuit -> nothing to do
             return
@@ -31,31 +31,31 @@ class PauliPathTrav:
         self.layers[min_index] = min_layer_ops
 
         if (min_index-1 >= 0): # min layer has a prior layer
-            min_prior_sibs = self.propagate_next(min_layer_ops.backward_sibs, pos_to_fill_b, 1, min_index-1)
+            min_prior_sibs = self.propagate_next(min_layer_ops.backward_rnp_sibs, pos_to_fill_b, 1, min_index-1)
             if (min_index-2 >= 0): # min layer's prior layer has a prior layer
                 self.layers[min_index-1] = PauliOpLayer(gate_pos[min_index-2], 1, min_prior_sibs)
             else:
                 self.layers[min_index-1] = PauliOpLayer()
-                self.layers[min_index-1].forward_sibs = min_prior_sibs
+                self.layers[min_index-1].forward_rnp_sibs = min_prior_sibs
 
         if (min_index < self.num_op_layers-1):
-            min_next_sibs_f = self.propagate_next(self.layers[min_index].forward_sibs, pos_to_fill_f, 0, min_index+1)
+            min_next_sibs_f = self.propagate_next(self.layers[min_index].forward_rnp_sibs, pos_to_fill_f, 0, min_index+1)
             if (min_index+1 < self.num_op_layers-1):
                 self.layers[min_index+1] = PauliOpLayer(gate_pos[min_index+1], 0, min_next_sibs_f)
             else:
                 self.layers[min_index+1] = PauliOpLayer()
-                self.layers[min_index+1].backward_sibs = min_next_sibs_f
+                self.layers[min_index+1].backward_rnp_sibs = min_next_sibs_f
 
         # Propagating backward
         for i in range(min_index-2, -1, -1): # Goes from min_index -1 to 0
-            # Determines all the sibs that the prior layer can propagate backwards to 
-            
-            next_sibs_b = self.propagate_next(self.layers[i+1].backward_sibs, self.layers[i+1].pos_to_fill, 1, i)
+            # Determines all the sibs that the prior layer can propagate backwards to
+
+            next_sibs_b = self.propagate_next(self.layers[i+1].backward_rnp_sibs, self.layers[i+1].pos_to_fill, 1, i)
             self.layers[i] = PauliOpLayer(gate_pos[i-1], 1, next_sibs_b)
 
         # Propagating forward
         for i in range(min_index+2, self.num_op_layers): # Goes from min_index + 2 to self.num_op_layers-1
-            next_sibs_f = self.propagate_next(self.layers[i-1].forward_sibs, self.layers[i-1].pos_to_fill, 0, i)
+            next_sibs_f = self.propagate_next(self.layers[i-1].forward_rnp_sibs, self.layers[i-1].pos_to_fill, 0, i)
             self.layers[i] = PauliOpLayer(gate_pos[i-1], 0, next_sibs_f)
 
         return
@@ -92,7 +92,7 @@ class PauliPathTrav:
         if (min_index == 0):
             min_layer_ops = PauliOpLayer(self.gate_pos[min_index], 0)
             min_layer_ops.check_qubits(min_layer_ops_list)
-            min_layer_ops.find_sibs(min_layer_ops_list)
+            min_layer_ops.group_sibs(min_layer_ops_list)
             # Since we are at the back-most layer, we return an empty list for the backward position list
             return min_layer_ops, [], min_layer_ops.pos_to_fill, min_index
         
@@ -106,47 +106,52 @@ class PauliPathTrav:
 
         return min_layer_ops, pos_to_fill_b, pos_to_fill_f, min_index
     
+    # Returns an unsorted list of all PauliOperators with self.num_qubits number of qubits
+    # and whose Hamming weight equals min_weight
     def unsorted_min_layer_ops(self, min_weight:int):
         arrangements = list(combinations(range(self.num_qubits), min_weight)) # Creates a list of all possible 
         # lists of indicies in increasing order of length min_weight using values from 0 to num_qubits-1
         # Ex. num_qubits = 3, min_weight = 2: [[0,1], [0,2], [1,2]]
+
         min_layer_ops_list = []
         for arrangement in arrangements: 
             temp = ['I'] * self.num_qubits # Generates list ['I','I',...] that has size num_qubits
             for index in arrangement:
-                temp[index] = 'R' # Replaces all the indices in one of our arrangements with 'R'
+                temp[index] = 'R' # Replaces all the indices specified in one of our arrangements with 'R'
                 # Results in a layer with Hamming weight = min_weight
             min_layer_ops_list.append(PauliOperator(temp))
         return min_layer_ops_list
 
+
+    # Sets min_layer_ops' backward_rnp_sibs,
+    # which is a DefaultDict whose values are PauliOperators (in "R", "N", "P, and "I")
+    # that are grouped by the key of the tuple of their gate positions and non-gate qubits.
+    # As a result, the DefaultDict sorts the PauliOperators at index min_index in the Pauli path
+    # according to which propagate *backward* to the same list of PauliOperators
     def min_backward(self,min_layer_ops_list:List[PauliOperator],min_index:int):
-        # Setting min_layer_ops' backward_sibs,
-        # which is the list of lists of sibling PauliOperators,
-        # where each individual list is a grouping of PauliOperators at index min_index in the Pauli path
-        # that propagate *backward* to the same list of PauliOperators
         min_layer_ops = PauliOpLayer(self.gate_pos[min_index-1], 1)
         min_layer_ops.check_qubits(min_layer_ops_list)
-        min_layer_ops.find_sibs(min_layer_ops_list)
+        min_layer_ops.group_sibs(min_layer_ops_list)
         pos_to_fill_b = min_layer_ops.pos_to_fill # For all Layers except for the one at min_index
         # we are only propagating in one direction,
-        # so we usually do not need to save the Layer's pos_to_fill in a seperate var
+        # so we usually do not need to save the Layer's pos_to_fill in a seperate variable
         # However, for min_index, we are propagating forward and backward,
         # so we need to save the backward pos_to_fill so we do not lose it
         # when we use min_layer_ops to propagate forward and pos_to_fill is set to the forward version
         return min_layer_ops, pos_to_fill_b
 
+    # Fills out min_layer_ops' forward_rnp_sibs,
+    # which is the list of lists of related PauliOperators,
+    # where each inner list is a grouping of PauliOperators at index min_index in the Pauli path 
+    # that propagate *forward* to the same list of PauliOperators
     def min_forward(self,min_layer_ops_list:List[PauliOperator],min_layer_ops:PauliOpLayer,min_index:int): 
-        # Setting min_layer_ops' forward_sibs,
-        # which is the list of lists of sibling PauliOperators,
-        # where each individual list is a grouping of PauliOperators at index min_index in the Pauli path 
-        # that propagate *forward* to the same list of PauliOperators
-        min_layer_ops.gate_pos = self.gate_pos[min_index] # for setting forward_sibs
+        min_layer_ops.gate_pos = self.gate_pos[min_index] # for setting forward_rnp_sibs
         min_layer_ops.backward = 0
         min_layer_ops.check_qubits(min_layer_ops_list)
-        min_layer_ops.find_sibs(min_layer_ops_list)
-        pos_to_fill_f = min_layer_ops.pos_to_fill # We technically do not need a seperate var since we could
-        # just reference min_configs.pos_to_fill
-        # The reason for the new var is simply for readability in the init function
+        min_layer_ops.group_sibs(min_layer_ops_list)
+        pos_to_fill_f = min_layer_ops.pos_to_fill # We technically do not need a seperate variable
+        # since we could just reference min_layer_ops.pos_to_fill
+        # The reason for the new variable is simply for readability in the init function
         return pos_to_fill_f
 
     """

@@ -6,13 +6,14 @@ from Pauli_Amplitude.edited_pauli_amp import preprocess_circuit_gates
 from MarginalSampler import MarginalSampler
 from circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
-from prob_dist import ProbDist
+from Lemma_8.get_prob_dist import GetProbDist
 from qiskit import circuit
 from itertools import product
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
-import math
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution, reverse_keys
 import numpy as np
+import time
+import warnings
 
 import pdb
 
@@ -24,7 +25,11 @@ class TestProbDist(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         
+<<<<<<< HEAD
         self.numQubits = 3 # must be at least 3
+=======
+        self.numQubits = 4 # must be at least 3
+>>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8
         self.depth = 2
 
         #self.C = QuantumCircuit(self.numQubits)
@@ -45,6 +50,9 @@ class TestProbDist(unittest.TestCase):
             #self.C.cx(i,i+1)
         
         self.C = circuit_utils.random_circuit(self.numQubits, self.depth)
+        print()
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        print(self.C)
 
 
         self.bruteForceQC = self.C # Qiskit Representation of a random circuit.
@@ -63,6 +71,7 @@ class TestProbDist(unittest.TestCase):
             #gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
             #gate_pos[layer_num].append(gates[i][1])
 
+<<<<<<< HEAD
 
         gates = circuit_utils.extract_gates_info(self.C)
         preprocessed = preprocess_circuit_gates(gates, self.numQubits)
@@ -71,6 +80,22 @@ class TestProbDist(unittest.TestCase):
         self.marginal_sampler = MarginalSampler(preprocessed, circuit.sib_op_heads,self.numQubits,gamma=0.1)
 
         #self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+=======
+        start = time.time()
+
+        circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
+        #circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
+
+        self.prob_dist = GetProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+
+        end = time.time()
+        duration = end - start
+
+
+        print("\n \nTime taken for Pauli probability distribution generation: ")
+        print(duration)
+        
+>>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8
         return
     
     def test_marginal_sampling_only(self):
@@ -92,10 +117,20 @@ class TestProbDist(unittest.TestCase):
 
     ''' 
     def test_stat_measures(self):
+        print()
+        print("---- Statistical Measure ----")
+        #print(f"tvd: {self.prob_dist.tvd}")  # should tend towards 0
+        print(f"Fidelity: {self.prob_dist.fidelity.real}")  # should tend towards 1
 
+<<<<<<< HEAD
         self.assertEqual(0,self.prob_dist.tvd)
         self.assertEqual(1,self.prob_dist.xeb)
     
+=======
+        return
+        #self.assertEqual(0,self.prob_dist.tvd)
+        #self.assertEqual(1,self.prob_dist.xeb)
+>>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8
 
     def test_marginal_vs_full_path_sampling(self):
         num_samples = 2000

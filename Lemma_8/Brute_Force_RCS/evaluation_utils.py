@@ -239,3 +239,29 @@ def xeb_truedist_empdist_ideal(num_qubits: int, noise_rate: float, shots: int, d
     # Compute the XEB score between the true and empirical distributions
     XEB = compute_xeb(noisy_dist, true_dist, num_qubits)
     return XEB
+
+
+def classical_fidelity(distribution1: dict[str, float], distribution2: dict[str, float]) -> float:
+    """
+    Computes the classical fidelity between two probability distributions.
+
+    Args:
+        distribution1 (dict): First probability distribution (must include all basis states).
+        distribution2 (dict): Second probability distribution (must include all basis states).
+
+    Returns:
+        float: The classical fidelity between the two distributions, ranging from 0 to 1.
+
+    Raises:
+        ValueError: If the distributions do not share the same basis states.
+    """
+    # Ensure the two distributions have the same basis states
+    keys1 = set(distribution1.keys())
+    keys2 = set(distribution2.keys())
+    if keys1 != keys2:
+        raise ValueError("Distributions must have the same basis states.")
+
+    # Calculate classical fidelity
+    fidelity = sum((distribution1[key] ** 0.5) * (distribution2[key] ** 0.5) for key in keys1)
+    return fidelity ** 2
+

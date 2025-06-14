@@ -14,7 +14,6 @@ class PauliOperator:
         if not isinstance(operator, list):
             raise TypeError("Expected a List[str] as the operator argument.")
                   
-        self.xyz_paulis = []
         self.operator = operator
         self.prior_ops = prior_ops
         self.next_ops = next_ops
