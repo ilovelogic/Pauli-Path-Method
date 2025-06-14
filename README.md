@@ -109,7 +109,7 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 [Fourier Coefficent README](https://github.com/ilovelogic/Lemma-8/tree/main/Pauli_Path_Method/Pauli_Amplitude/FourierCoeffREADME)
 
 ### Brute Force Simulation:
-[Brute Force RCS README](/workspaces/Lemma-8/Pauli_Path_Method/Brute_Force_RCS/README.md)
+[Brute Force RCS README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Pauli_Path_Method/Brute_Force_RCS/README.md)
 
 ## State of the Research 
 
