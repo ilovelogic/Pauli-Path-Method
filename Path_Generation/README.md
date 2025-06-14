@@ -169,7 +169,9 @@ The `XYZGeneration` class uses a recursive structure to generate Pauli paths. Th
 
 **Methods**
    - **`rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`**\
+   Generates `filled_rn_list`, which contains a `List` object for each grouping of `PauliOperator` objects at the `next_index` of `pauli_path` that made the same selection of "X", "Y", or "Z" for each "N". In other words, if one of the `PauliOperator`s in one of these lists choose an "X" to replace the "N" at position 2 and a "Z" for the "N" at position 5, then all the other `PauliOperator`s in its list also selected an "X" and "Z" at those positions. 
 
+   Note that these `List`s of `PauliOperator`s sort the `PauliOperator`s at path position `next_index` according to which have the same grouping of next possible `PauliOperator`s after them in the path. Accordingly, we can instantiate an `XYZGeneration` for each of these `List`s, with the index parameter of `next_index+1`, and append all these to the attribute `next_gen`. By creating `XYZGeneration` objects for each of these next `List`s, we recursively build our `XYZGeneration` nested tree, since these `XYZGeneration`s will also instantiate `XYZGeneration`s  to represent the `PauliOperator`s that can come after them, and so on. Evantually, our tree building will stop when we instantiate the `XYZGeneration`s with index `parameter len(self.pauli_path)`, in which case the constructor sets their `next_gen = None`.
 
    - **`fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`**\
    Fills `r_pos_list` with all "R" qubit positions and `n_pos_list` with all non-carry "N" qubit positions in `next_op`. Note that an "N" that carries is a qubit position that remains a non-gate position in every following `PauliOperator` in the Pauli path. Replaces any "P"s it encounters with the non-identity Pauli at the same index in the immediately preceding `PauliOperator`.

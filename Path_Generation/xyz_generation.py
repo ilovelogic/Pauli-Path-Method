@@ -18,7 +18,7 @@ class XYZGeneration:
         else:
             self.rnp_to_xyz(next_index)
 
-    # We traverse the Pauli path from left to right. 
+    # We traverse the Pauli path from left to right (moving from a prior index to this next_index). 
     # If we encounter an 'R' or 'N', we can do any of 'X', 'Y', and 'Z'.
     # If we encounter a 'P', we must use the Pauli at the same index in the prior layer 
     def rnp_to_xyz(self, next_index:int):
