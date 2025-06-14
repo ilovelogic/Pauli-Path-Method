@@ -59,7 +59,15 @@ Before we outline the method, we define relevant words that will come up in the 
    >### Definition 1 (Pauli Path Integral)
    > Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth. The Pauli path integral is written as: 
    >
-   > $$p(C, x) = \sum_{s_0, \ldots, s_d \in \mathcal{P}_n} \text{Tr}(|x\rangle \langle x| s_d) \, \text{Tr}(s_d U_d s_{d-1} U_d^\dagger) \cdots \text{Tr}(s_1 U_1 s_0 U_1^\dagger) \, \text{Tr}(s_0 | 0^n \rangle \langle 0^n |).$$
+   > $$
+p(C, x) = \sum_{s_0, \ldots, s_d \in \mathcal{P}_n}
+\mathrm{Tr}\left(|x\rangle \langle x| s_d\right)
+\, \mathrm{Tr}\left(s_d U_d s_{d-1} U_d^\dagger\right)
+\cdots
+\mathrm{Tr}\left(s_1 U_1 s_0 U_1^\dagger\right)
+\, \mathrm{Tr}\left(s_0 |0^n\rangle \langle 0^n|\right)
+$$
+
 
 Note that $p(C, x)$ is the output probability distribution for outcome $x$. Accordingly, to simualte a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit.
 
