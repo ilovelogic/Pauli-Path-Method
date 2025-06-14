@@ -107,7 +107,7 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 ## State of the Research 
 
 ### Research Question:
-Our original research questions were "Is RCS a worthwhile approach to proving quantum supremacy? Should we focus our attempts elsewhere?" Our program significantly speeds up runtime by the path truncation approach, so it appears that working with a different benchmark may be in order.
+Our original research question was "Is RCS a worthwhile approach to proving quantum supremacy? Should we focus our attempts elsewhere?" Our program significantly speeds up classical simulation runtime by the path truncation approach, so it appears that working with a different benchmark may be in order. If we want to demonstrate quantum supremacy, we need a task that is more resilient against classical simulation and enjoys a greater difference in runtime as compared to classcial computers.
 
 Below, we outline what each one of us contributed to answering the research question.
 
