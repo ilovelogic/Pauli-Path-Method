@@ -24,26 +24,25 @@ Before we outline the method, we define relevant words that will come up in the 
 
    > ### Pauli Basis Terminology
    >- **Pauli**: The four Pauli matrices comprise the Pauli basis. They are as follows:
-   >$$I = 
-   >\begin{pmatrix}
-   >1 & 0 \\
-   >0 & 1
-   >\end{pmatrix}, \quad
-   >X = 
-   >\begin{pmatrix}
-   >0 & 1 \\
-   >1 & 0
-   >\end{pmatrix}, \quad
-   Y = 
-   \begin{pmatrix}
+   \[
+   I = \begin{pmatrix}
+   1 & 0 \\
+   0 & 1
+   \end{pmatrix}, \quad
+   X = \begin{pmatrix}
+   0 & 1 \\
+   1 & 0
+   \end{pmatrix}, \quad
+   Y = \begin{pmatrix}
    0 & -i \\
    i & 0
    \end{pmatrix}, \quad
-   Z = 
-   \begin{pmatrix}
+   Z = \begin{pmatrix}
    1 & 0 \\
    0 & -1
-   \end{pmatrix}.$$
+   \end{pmatrix}
+   \]
+
    >- **Tensor Product**: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property 
    >$$\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$$ 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
@@ -94,6 +93,7 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 ### Determining Probalities:
 [Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8/Pauli_Amplitude/ProbCalcREADME/)
 
+### Pauli Path Generation:
 [Lemma 8 README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8#readme)
 
 ### Fourier Coefficient Calculation:
