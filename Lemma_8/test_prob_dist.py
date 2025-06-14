@@ -4,7 +4,7 @@ from typing import List, Tuple, DefaultDict
 from collections import defaultdict
 from circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
-from prob_dist import ProbDist
+from Lemma_8.get_prob_dist import GetProbDist
 from qiskit import circuit
 from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
@@ -67,7 +67,7 @@ class TestProbDist(unittest.TestCase):
         circuit = CircuitSim(self.numQubits, (self.depth+1)*self.numQubits, gate_pos) # 1D, keeps all paths
         #circuit = CircuitSim(self.numQubits, self.depth+1, gate_pos) # 1D, keeps all paths
 
-        self.prob_dist = ProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
+        self.prob_dist = GetProbDist(circuit, gates, self.numQubits,self.depth, self.bruteForceQC)
 
         end = time.time()
         duration = end - start

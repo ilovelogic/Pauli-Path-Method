@@ -16,7 +16,7 @@ import itertools
 import requests
 
 
-class ProbDist:
+class GetProbDist:
     """
     
     """

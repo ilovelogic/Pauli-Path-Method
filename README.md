@@ -87,9 +87,13 @@ As a result, our code functions as follows:
 - Then the `Fourier Coefficient` code calculuates the Pauli path integral based off of the Pauli paths from the `Lemma 8` code. 
 - Lastly, `Brute Force RCS` verfies the resulting output distribution using statistical measurements XEB and TVD.
 
+These componenets come together via the `NoisyProbDist` and `GetProbDist` classes, which are described in the first README file below.
+
 ## User Guides
 
 ### Pauli Path Generation:
+[Noisy Probability Distribution README](/workspaces/Lemma-8/Lemma_8/Pauli_Amplitude/ProbCalcREADME/README.md)
+
 [Lemma 8 README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8#readme)
 
 ### Fourier Coefficient Calculation:
