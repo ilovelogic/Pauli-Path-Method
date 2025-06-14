@@ -1,124 +1,83 @@
-# Fourier Coefficient and Marginal Sampling
+# Fourier Coefficient Calculation
 
-This module implements the core calculation for the Fourier-based quasi-probability approximation \(\bar{q}(C, x)\) used to simulate noisy quantum circuits. It evaluates path-summed Fourier coefficients using legal Pauli operator sequences (Pauli paths) and supports marginal sampling using Lemma 9 from Aharonov et al. The module is  integrated with the Pauli path generator and supports both full output and partial (marginal) probability estimation.
+The Fourier coefficient calculation module implements the core mathematical engine of the Pauli path method, which allows classically estimating noisy output probabilities from a quantum circuit. The implementation is based on the Fourier decomposition of quantum processes described in Aharonov et al., and it supports both full bitstring probability computations and marginal sampling over partial outputs.
 
 ---
 
 ## Table of Contents
-
 - [Introduction](#introduction)
-- [Architecture Overview](#architecture-overview)
-- [Function Documentation](#function-documentation)
-  - [compute_noisy_fourier](#compute_noisy_fourier)
-  - [compute_marginal_noisy_fourier](#compute_marginal_noisy_fourier)
-- [Supporting Functions](#supporting-functions)
+- [Key Equation](#key-equation)
+- [Function Overview](#function-overview)
 - [Usage Example](#usage-example)
-- [Equations](#equations)
-- [Future Improvements](#future-improvements)
+- [Marginal Sampling](#marginal-sampling)
+- [Performance Considerations](#performance-considerations)
 
 ---
 
 ## Introduction
 
-This module provides two main capabilities:
+This module enables the computation of noisy output probabilities `q̄(C, x)` for a given output bitstring `x`, or marginal probabilities over subsets of qubits, using a truncated Fourier expansion. The computation avoids summing over all `2^n` output strings and instead aggregates legal Pauli paths `s = (s_0, ..., s_d)` with bounded Hamming weight.
 
-- Compute the quasi-probability \(\bar{q}(C, x)\) for a specific output string \(x\) using truncated Pauli paths.
-- Compute marginal probabilities over a subset of qubits by reordering summation and applying Lemma 9 from Aharonov et al.
-
-These features enable efficient simulation of noisy random quantum circuits, even under the presence of depolarizing noise.
-
----
-
-## Architecture Overview
-
-### Fourier Coefficient Computation
-
-- Traverses the Pauli path trees (generated using sibling operators or XYZGenerations).
-- At each layer, computes the trace transition amplitude \(\text{Tr}(s_i U_i s_{i-1} U_i^\dagger)\).
-- Applies noise attenuation factor \((1 - \gamma)^{|s_i|}\) at each step.
-- Final contribution is weighted by input and output overlaps (or partial overlap if computing marginals).
-
-### Marginal Sampling
-
-- Uses bit-by-bit sampling strategy:
-  - At each step, compute conditional marginals \(\bar{q}(x_i = 0 \mid x_{<i})\) and \(\bar{q}(x_i = 1 \mid x_{<i})\)
-  - Normalize, sample, and append to fixed bits.
-- Based on the summation reordering enabled by Lemma 9.
+The implementation supports two use cases:
+- `compute_noisy_fourier(C, heads, x, n, gamma)` — full bitstring probability
+- `compute_marginal_noisy_fourier(C, heads, fixed_bits, n, gamma)` — marginal over a partial assignment
 
 ---
 
-## Function Documentation
+## Key Equation
 
-### `compute_noisy_fourier(C, sib_op_heads, x, n, gamma)`
+The Fourier coefficient `f(C, s, x)` for a Pauli path `s` and bitstring `x` is computed as:
 
-**Purpose:**  
-Compute the Fourier coefficient sum \(\bar{q}(C, x)\) for a full output bitstring \(x\).
+f(C, s, x) = Tr(|x⟩⟨x| ⋅ s_d) ⋅ ∏{i=1}^d Tr(s_i ⋅ U_i ⋅ s{i−1} ⋅ U_i†) ⋅ Tr(s₀ ⋅ |0ⁿ⟩⟨0ⁿ|)
 
-**Parameters:**
-
-| Name          | Type         | Description |
-|---------------|--------------|-------------|
-| `C`           | list         | Preprocessed circuit layers with gates |
-| `sib_op_heads`| list         | Pauli path tree roots |
-| `x`           | str          | Output bitstring (e.g., "0110") |
-| `n`           | int          | Number of qubits |
-| `gamma`       | float        | Depolarizing noise rate |
-
-**Returns:** `float` — Approximated output probability
+To account for noise, each path is scaled by `(1 - γ)^|s|`, where `|s|` is the total number of non-identity Paulis.
 
 ---
 
-### `compute_marginal_noisy_fourier(C, sib_op_heads, fixed_bits, n, gamma)`
+## Function Overview
 
-**Purpose:**  
-Compute the marginal probability \(\sum_{x: x_T = \text{fixed\_bits}} \bar{q}(C, x)\) where `fixed_bits` specifies the known qubit outcomes.
+### `compute_noisy_fourier(C, heads, x, n, gamma)`
+- **Purpose**: Computes `q̄(C, x)` for a specific bitstring `x`
+- **Parameters**:
+  - `C`: Circuit (as list of gate layers)
+  - `heads`: Root nodes of the Pauli path trees
+  - `x`: Output bitstring (e.g., `'0010'`)
+  - `n`: Number of qubits
+  - `gamma`: Depolarizing noise rate
+- **Returns**: Approximate probability of observing bitstring `x`
 
-**Parameters:**
+### `compute_marginal_noisy_fourier(C, heads, fixed_bits, n, gamma)`
+- **Purpose**: Computes marginal probability `∑_{x: x_T = fixed_bits} q̄(C, x)`
+- **Parameters**:
+  - `fixed_bits`: Dictionary `{qubit_index: '0' or '1'}` specifying a partial bitstring
+- **Returns**: Marginal probability over all bitstrings consistent with `fixed_bits`
 
-| Name          | Type         | Description |
-|---------------|--------------|-------------|
-| `C`           | list         | Preprocessed circuit layers |
-| `sib_op_heads`| list         | Pauli path tree roots |
-| `fixed_bits`  | dict         | Partial bitstring (e.g., `{0: '1', 2: '0'}`) |
-| `n`           | int          | Number of qubits |
-| `gamma`       | float        | Depolarizing noise rate |
-
-**Returns:** `float` — Marginal output probability
-
----
-
-## Supporting Functions
-
-These helper functions support the main computations:
-
-- `calculate_gate_transition_amplitude(sd, sd_minus_1, gate, qubits)`
-- `calculate_layer_transition_amplitude(sd, sd_minus_1, layer_gates, n)`
-- `calculate_input_overlap(s0)`
-- `calculate_output_overlap(x, sd)`
-- `calculate_partial_overlap(fixed_bits, sd)`
-- `preprocess_circuit_gates(raw_gate_data, n)`
-
-Each ensures proper normalization of Pauli matrices and compatibility with Qiskit’s endianness.
+### Helper Functions
+- `calculate_input_overlap(s0)`: Computes `Tr(s₀ ⋅ |0ⁿ⟩⟨0ⁿ|)`
+- `calculate_output_overlap(x, s_d)`: Computes `Tr(|x⟩⟨x| ⋅ s_d)`
+- `calculate_partial_overlap(fixed_bits, s_d)`: Computes marginal trace term per Lemma 9
+- `calculate_layer_transition_amplitude(...)`: Handles product of traces across layers
 
 ---
 
 ## Usage Example
+from Lemma_8.FourierCoeff import compute_noisy_fourier, preprocess_circuit_gates
 
-```python
-from Lemma_8.Pauli_Amplitude.fourier_coeff import compute_noisy_fourier, compute_marginal_noisy_fourier
-from Lemma_8.path_generation import generate_pauli_path_tree
-from Brute_Force_RCS.circuit_utils import extract_gates_info, random_circuit
+# Assume circuit C is generated and Pauli paths are available
+x = "0101"
+gamma = 0.001
+preprocessed = preprocess_circuit_gates(raw_gates, n)
+prob = compute_noisy_fourier(preprocessed, heads, x, n, gamma)
+print(f"Probability of {x}: {prob:.6f}")
 
-# Generate circuit and extract gates
-qc = random_circuit(num_qubits=4, depth=3)
-gates = extract_gates_info(qc)
-layers = preprocess_circuit_gates(gates, 4)
+Marginal Sampling:
+To compute a marginal probability for e.g., qubit 0 = 1 and qubit 2 = 0:
 
-# Generate legal Pauli paths with truncation ℓ
-sib_op_heads = generate_pauli_path_tree(num_qubits=4, depth=3, hamming_weight_cutoff=2)
+fixed_bits = {0: '1', 2: '0'}
+prob = compute_marginal_noisy_fourier(preprocessed, heads, fixed_bits, n, gamma)
+This avoids summing over all 2^n bitstrings and uses partial overlap:
 
-# Compute full output probability
-prob_x = compute_noisy_fourier(layers, sib_op_heads, x="0110", n=4, gamma=0.01)
+Tr(s_d ⋅ (⨂_{i ∈ T} |x_i⟩⟨x_i| ⊗ ⨂_{j ∉ T} I))
 
-# Compute marginal probability for qubit 0 = 1 and qubit 2 = 0
-marginal_prob = compute_marginal_noisy_fourier(layers, sib_op_heads, fixed_bits={0: '1', 2: '0'}, n=4, gamma=0.01)
+Performance Considerations
+Runtime scales exponentially in truncation parameter ℓ (max Hamming weight), but polynomially in number of qubits n and depth d. We can use marginal sampling to reduce complexity from O(2^n) to O(n) per sample.
