@@ -3,10 +3,11 @@ This is a repo for implementing the Pauli Path Algorithm used for Noisy Random C
 The project is separated into three main components, the Pauli Path generation, the regular brute force version + evaluation metrics, and the fourier coefficient calculation.
 
 ### Table of Contents
-- [User Guides | READMES](#user-guides)
+- [Overview of Research](#overview-of-research)
+- [User Guides](#user-guides)
 - [State of the Research](#state-of-the-research)
 
-## User Guides
+## Overview of Research
 This program plays a key role in classically simulating noisy random circuit sampling in polynomial time. It accomplishes this by using an approach known as the Pauli path method. 
 
 Before we outline the method, we define relevant words that will come up in the method description.
@@ -49,8 +50,8 @@ Before we outline the method, we define relevant words that will come up in the 
    >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form
    >$$P=P_1 \otimes P_2 \otimes \dots \otimes P_n$$
    >where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
-   >- **Hamming weight**: Counts the number of non-identity Paulis ($X,Y,Z$) present. For example, the Hamming weight of $I \otimes X \otimes Y$ is 2. 
-   >- **Pauli path**: A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of Pauli operators representing the evolution of quantum states during a circuit's operation. Pauli paths are used to calculuate the Pauli path integral, which is a means of determining the output probability distribution of the circuit. 
+   >- **Hamming weight**: Counts the number of non-identity Paulis ($X,Y,Z$) present in Pauli operators. For example, the Hamming weight of $I \otimes X \otimes Y$ is 2. When we discuss the Hamming weight of a Pauli path $s$, we denote it by $|s|$, and it is the sum of the number of non-identity Paulis in the Pauli operatrs of $s$.
+   >- **Pauli path**: A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of Pauli operators representing the evolution of quantum states during a circuit's operation. Pauli paths are used to calculuate the Pauli path integral, which is a means of determining the output probability distribution of the circuit.
    
 
    With the basic terminology clarified, we define the Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
@@ -60,9 +61,9 @@ Before we outline the method, we define relevant words that will come up in the 
    >
    > $$p(C, x) = \sum_{s_0, \ldots, s_d \in \mathcal{P}_n} \text{Tr}(|x\rangle \langle x| s_d) \, \text{Tr}(s_d U_d s_{d-1} U_d^\dagger) \cdots \text{Tr}(s_1 U_1 s_0 U_1^\dagger) \, \text{Tr}(s_0 | 0^n \rangle \langle 0^n |).$$
 
-Note that $p(C, x) = |\langle x | C | 0^n \rangle|^2$ is the output probability distribution for outcome $x$. 
+Note that $p(C, x)$ is the output probability distribution for outcome $x$. Accordingly, to simualte a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit.
 
-To calculate the above expression, we first need to know all possible legal Pauli paths. According to the aforementioned paper, a legal Pauli path is defined as follows.
+Determining all possible Pauli paths seems rather involved. Thankfully, there are some simplications. To calculate the above expression, we only need to know all legal Pauli paths rather than all Pauli paths in general. Below, we define a legal Pauli path.
 
    >### Definition 6 (Legal Pauli Path)
    >For a given circuit architecture, a Pauli path $s = (s_0, s_1, \ldots, s_d)$ is legal if the following two conditions are satisfied:
@@ -72,12 +73,26 @@ To calculate the above expression, we first need to know all possible legal Paul
    >
    > The reason for considering legal Pauli paths is that the illegal ones are irrelevant, as they contribute 0 to the Pauli path integral.
 
-The `Lemma 8` code generates all legal Pauli paths that fit the specified depth, number of qubits, gate positions, and upperbound on Hamming weight. It accomplishes this task using 5 classes, which are outlined in the `Lemma 8` README. Then the `Fourier Coefficient` code calculuates the Pauli path integral based off of the Pauli paths from the `Lemma 8` code. Lastly, `Brute Force RCS` verfies the resulting output distribution using statistical measurements XEB and TVD.
+   Calculating all of the legal Pauli paths would still take an exponenetial amount of time, so it is impractical to take that approach. Instead we will capitalize on the noise present in current quantum computers.
+
+   > ### Effect of noise
+   > The amount that a Pauli path contributes to the output probability distribution of a noisy quantum circuit decreases exponentially as the Hamming weight of the Pauli path increases. Thus, we can estimate the output probability distribution of a noisy quantum circuit by only considering low weight paths.
+
+Let $\gamma$ be the noise rate of our quantum circuit and $l$ be our upper bound on the Hamming weight of Pauli paths. Then we can approximate the probability distribution of outcome $x$ using
+
+$$\tilde{p}(C, x) \approx \sum_{s \in \mathbb{P}_{n}^{d+1} : |s| \leq \ell} (1 - \gamma)^{|s|} f(C, s, x)$$
+
+As a result, our code functions as follows:
+- The `Lemma 8` code generates all legal Pauli paths that fit the specified depth, number of qubits, gate positions, and upperbound on Hamming weight. It accomplishes this task using 5 classes, which are outlined in the `Lemma 8` README. 
+- Then the `Fourier Coefficient` code calculuates the Pauli path integral based off of the Pauli paths from the `Lemma 8` code. 
+- Lastly, `Brute Force RCS` verfies the resulting output distribution using statistical measurements XEB and TVD.
+
+## User Guides
 
 ### Pauli Path Generation:
 [Lemma 8 README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8#readme)
 
-### Fourier Coefficient Calculation
+### Fourier Coefficient Calculation:
 [Fourier Coefficent README]()
 
 ### Brute Force Simulation:
@@ -85,7 +100,10 @@ The `Lemma 8` code generates all legal Pauli paths that fit the specified depth,
 
 ## State of the Research 
 
-#### Pauli Path:
+### Pauli Path State of Research:
+Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight. Can encapsulate all possible paths in either tree format, which speeds up Fourier coefficient calculations, or list format. Handles both 1D brickwork circuit architecture and 2D brickwork. 
+
+A further optimization would be to generalize to the gate sets used by Google and USTC.
 
 ### Brute Force Simulation State of the Research:
 Currently, random sampling is working for 1d brickwork circuits. Adopting 2D circuit generation for sampling shouldn't be difficult. It's merely making sure the labels work similarly as in the 1D case.

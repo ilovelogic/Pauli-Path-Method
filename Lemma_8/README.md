@@ -14,7 +14,6 @@ A Python implementation of the algorithm described in Lemma 8 from the work of [
   - [PauliPathTrav](#paulipathtrav)
   - [XYZGeneration](#xyzgeneration)
   - [CircuiSim](#circuitsim)
-  - [TestCircuit](#testcircuit)
 
 ---
 
@@ -32,8 +31,6 @@ The `Lemma_8` program generates all legal Pauli paths that fit the specified dep
    - [PauliPathTrav](#paulipathtrav): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
    - [CircuitSim](#circuitsim): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
    - [XYZGeneration](#xyzgeneration): Builds a list (`next_gen`) of all `XYZGeneration` objects that can come after this `XYZGeneration` to form valid Pauli path traversals.
-2. **Testing**:
-   - [TestCircuits](#testcircuits): A suite of tests to validate functionality, both in general use cases and edge cases. Restricted to circuits with 0 to 25 qubits.
 
 ---
 
@@ -238,8 +235,3 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
 
    - **`rn_to_z(first_op:PauliOperator)`**\
    A static method that replaces all "R"s and "N"s in the first `PauliOperator` of a path with "Z"s, in order to satisfy the second requirement to be a legal Pauli path.
-
-
-   ---
-
-## TestCircuit
