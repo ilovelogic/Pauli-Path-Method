@@ -91,8 +91,8 @@ Let $\gamma$ be the noise rate of our quantum circuit and $l$ be our upper bound
 $$\tilde{p}(C, x) \approx \sum_{s \in \mathbb{P}_{n}^{d+1} : |s| \leq \ell} (1 - \gamma)^{|s|} f(C, s, x)$$
 
 As a result, our code functions as follows:
-- The `Lemma 8` code generates all legal Pauli paths that fit the specified depth, number of qubits, gate positions, and upperbound on Hamming weight. It accomplishes this task using 5 classes, which are outlined in the `Lemma 8` README. 
-- Then the `Fourier Coefficient` code calculuates the Pauli path integral based off of the Pauli paths from the `Lemma 8` code. 
+- The `Path Generation` code generates all legal Pauli paths that fit the specified depth, number of qubits, gate positions, and upperbound on Hamming weight. It accomplishes this task using 5 classes, which are outlined in the `Path Generation` README. 
+- Then the `Fourier Coefficient` code calculuates the Pauli path integral based off of the Pauli paths from the `Path Generation` code. 
 - Lastly, `Brute Force RCS` verfies the resulting output distribution using statistical measurements XEB and TVD.
 
 These componenets come together via the `NoisyProbDist` and `GetProbDist` classes, which are described in the first README file below.
@@ -100,18 +100,17 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 ## User Guides
 
 ### Determining Probalities:
-[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8/Pauli_Amplitude/ProbCalcREADME/)
+[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Pauli_Path_Method/ProbCalc/README/)
 
-### Pauli Path Generation:
-[Lemma 8 README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8#readme)
+### Legal Pauli Path Generation:
+[Path Generation README](https://github.com/ilovelogic/Lemma-8/tree/main/Pauli_Path_Method/Path_Generation/#readme)
 
 ### Fourier Coefficient Calculation:
-[Fourier Coefficent README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8/Pauli_Amplitude/FourierCoeffREADME)
+[Fourier Coefficent README](https://github.com/ilovelogic/Lemma-8/tree/main/Pauli_Path_Method/Pauli_Amplitude/FourierCoeffREADME)
 
 ### Brute Force Simulation:
-[Brute Force RCS README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Lemma_8/Brute_Force_RCS/README.md)
-\
-\
+[Brute Force RCS README](/workspaces/Lemma-8/Pauli_Path_Method/Brute_Force_RCS/README.md)
+
 ## State of the Research 
 
 ### Research Question:
@@ -119,7 +118,7 @@ Our original research question was "Is RCS a worthwhile approach to proving quan
 
 Below, we outline what each one of us contributed to answering the research question.
 
-### Anne Kelley:
+### Pauli Path Generation (Anne Kelley):
 I handled generating the legal Pauli paths restricted by an upper bound on Hamming weight. The Pauli path generation is essential to classically simulating RCS, given that you can't compute the probability distribution without tracing the Fourier coefficients of the paths. My code:
 - Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight.
 - Can encapsulate all possible paths in either tree format, which speeds up Fourier coefficient calculations, or list format. 
@@ -127,7 +126,7 @@ I handled generating the legal Pauli paths restricted by an upper bound on Hammi
 
 A further optimization would be to generalize to the gate sets used by Google and USTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
-### Brute Force Simulation State of the Research (Jesus Azpitarte):
+### Brute Force Simulation (Jesus Azpitarte):
 Currently, random sampling is working for 1d brickwork circuits. Adopting 2D circuit generation for sampling shouldn't be difficult. It's merely making sure the labels work similarly as in the 1D case.
 
 ##### Explanation of 2D brickwork: 
@@ -137,7 +136,7 @@ The evaluation metrics available are XEB, TVD, and Fideity (similar to TVD). Its
 
 For the future, the brute force simulation should be adapted to 2D case.
 
-### Fourier Coefficient and Marginal Sampling State of the Research (Erika Lee):
+### Fourier Coefficient and Marginal Sampling (Erika Lee):
 I was responsible for implementing the Fourier coefficient calculation component of the project, which is the calculation computed for each Pauli path, which we use to produce the output distribution of noisy quantum circuits using the Pauli path framework. The Fourier coefficient module is now fully operational. It computes the quasi-probability amplitude f(C, s, x) for each legal Pauli path s = (s₀, ..., s_d), based on the expansion introduced in Aharonov et al. The implementation accounts for gate-local transitions by computing traces of the form Tr(sᵢ ⋅ Uᵢ ⋅ sᵢ₋₁ ⋅ Uᵢ†), and handles both full circuit output overlaps and partial marginal overlaps. Depolarizing noise is incorporated through a factor of (1 − γ)^|s|, where |s| denotes the Hamming weight of the path.
 
 The code has been tested and validated on circuits of varying depth and architecture. It supports full compatibility with Pauli paths generated from the Lemma 8 module and works correctly on 1D architecture, and since it uses qubit indexing it should also work on 2D brickwork circuits though that has not been testsed yet. It also correctly aligns with Qiskit’s qubit ordering by reversing indices internally where needed. The Fourier coefficient routine is designed to be modular and composable, with functions for each subcomponent: input overlap, transition amplitudes per layer, and final output overlap.
