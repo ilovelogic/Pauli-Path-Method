@@ -100,16 +100,16 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 ## User Guides
 
 ### Determining Probalities:
-[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Pauli_Path_Method/ProbCalc/README/)
+[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Prob_Calc/README.md)
 
 ### Legal Pauli Path Generation:
-[Path Generation README](https://github.com/ilovelogic/Lemma-8/tree/main/Pauli_Path_Method/Path_Generation/#readme)
+[Path Generation README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Path_Generation/README.md)
 
 ### Fourier Coefficient Calculation:
-[Fourier Coefficent README](https://github.com/ilovelogic/Lemma-8/tree/main/Pauli_Path_Method/Pauli_Amplitude/FourierCoeffREADME)
+[Fourier Coefficent README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Pauli_Amplitude/README.md)
 
 ### Brute Force Simulation:
-[Brute Force RCS README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Pauli_Path_Method/Brute_Force_RCS/README.md)
+[Brute Force RCS README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Brute_Force_RCS/README.md)
 
 ## State of the Research 
 
