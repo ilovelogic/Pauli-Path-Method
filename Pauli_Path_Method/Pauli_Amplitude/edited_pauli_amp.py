@@ -244,39 +244,7 @@ def preprocess_circuit_gates(raw_gate_data, n):
         layers[layer].append((gate_matrix, reversed_qubits))
     return [layers[i] for i in sorted(layers)]
 
-<<<<<<< HEAD
-def compute_marginal_noisy_fourier(C, sib_op_heads, fixed_bits, n, gamma):
-    """
-    Computes ∑_{x ∈ {0,1}^n: x_T = fixed_bits} q̄(C, x) as per Lemma 9.
-    """
-    total = 0.0
-    fourier_coeffs_for_paths = []
-    visited_roots = set()  
-
-    for root in sib_op_heads:
-        if id(root) in visited_roots:
-            continue
-        visited_roots.add(id(root)) 
-        traverse_tree_with_noise(
-            root,
-            fourier_coeffs_for_paths,
-            1.0,
-            [],
-            -1,
-            C,
-            x=None,
-            n=n,
-            gamma=gamma,
-            fixed_bits=fixed_bits
-        )
-    #print(f"[DEBUG] Total paths contributing to marginal {fixed_bits}: {len(fourier_coeffs_for_paths)}")
-
-    return sum(fourier_coeffs_for_paths)
-
-
-=======
 '''
->>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8
 def compute_noisy_fourier(C, sib_op_heads, x, n, gamma):
     #pdb.set_trace()
     """
@@ -354,20 +322,7 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         n (int): Number of qubits.
     """
 
-<<<<<<< HEAD
-    if visited is None:
-        visited = set()
-
-    sib_id = id(sib)
-    if sib_id in visited:
-        print(f"[CYCLE DETECTED] Already visited sib at index {index}")
-        return
-    visited.add(sib_id)
-
-    for op in sib.pauli_ops:
-=======
     for op in sib.parent_ops:
->>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8
 
 
         cur_op = op.operator #[::-1] # reverses the operator to match Qiskit
@@ -392,45 +347,7 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         ham_weight = sum(p != 'I' for p in cur_op) # accounting for noise
         branched_cur_fourier *= (1 - gamma) ** ham_weight
         
-<<<<<<< HEAD
-        #print(f"[DEBUG] depth {index+1} | cur_op = {cur_op}, prev_op = {prev_op}")
-        #MAX_DEPTH = len(C)
-
-        if sib.next_sibs is None:
-            print(f"[DEBUG] FINAL layer | cur_op = {cur_op}")
-
-            if fixed_bits is not None:
-                final_fourier = branched_cur_fourier * calculate_partial_overlap(fixed_bits, cur_op)
-            else:
-                final_fourier = branched_cur_fourier * calculate_output_overlap(x, cur_op)
-
-            if final_fourier != 0:
-                fourier_coeffs_for_paths.append(final_fourier)
-            return
-
-        else:
-            for next_sib in sib.next_sibs:
-                print(f"[RECURSE] Going deeper: index = {index+1}, cur_op = {cur_op}")
-                traverse_tree_with_noise(
-                    next_sib,
-                    fourier_coeffs_for_paths,
-                    branched_cur_fourier,
-                    cur_op,
-                    index + 1,
-                    C,
-                    x,
-                    n,
-                    gamma,
-                    fixed_bits,
-                    visited
-                )
-
-
-        ''' 
-        if sib.next_sibs is None:
-=======
         if sib.next_xyz_sibs is None:
->>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8
             final_fourier = branched_cur_fourier * calculate_output_overlap(x, cur_op)
             if final_fourier != 0:
                 fourier_coeffs_for_paths.append(final_fourier)
@@ -440,9 +357,6 @@ def traverse_tree_with_noise(sib, fourier_coeffs_for_paths, cur_fourier, prev_op
         else: 
             for next_sib in sib.next_xyz_sibs:
                 traverse_tree_with_noise(next_sib, fourier_coeffs_for_paths, branched_cur_fourier, cur_op, index+1, C, x, n, gamma)
-<<<<<<< HEAD
-     '''
-=======
      
     def calculate_partial_overlap(fixed_bits, sd):
         """Tr(sd ⋅ (⨂_{i ∈ T} |x_i⟩⟨x_i| ⊗ ⨂_{j ∉ T} I)) from Lemma 9. 
@@ -645,4 +559,3 @@ def traverse_tree_with_noise(xyz_gen, fourier_coeffs_for_paths, cur_fourier, pre
                     return 0.0
                 
         return sign * (1 / np.sqrt(2 ** n)) * (2 ** (n - k))
->>>>>>> e83a229f564247badbff2b7036acf2aede9da2b8

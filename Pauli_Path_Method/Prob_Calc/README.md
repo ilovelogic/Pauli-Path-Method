@@ -11,7 +11,6 @@ The `NoisyProbDist` class uses the `GetProbDist` class to derive noisy quantum c
 - [Class Documentation](#class-documentation)
   - [GetProbDist](#getprobdist)
   - [NoisyProbDist](#noisyprobdist)
-- [Usage Example](#usage-example)
 - [Output Metrics](#output-metrics)
 - [References](#references)
 
@@ -113,22 +112,6 @@ noise_rate: float = 0.001
 - `prob_dist`: `GetProbDist` — The probability distribution object for the circuit.
 - `duration`: `float` — Time taken (seconds) for probability distribution generation.
 - `bruteForceQC`: `QuantumCircuit` — The randomly generated Qiskit circuit.
-
----
-
->## Usage Example
-    >from Brute_Force_RCS.circuit_utils import random_circuit, extract_gates_info\
-    >from Lemma_8.get_prob_dist import GetProbDist, NoisyProbDist\
-    >\
-    >dist = NoisyProbDist(4, 3, 2, 0.001) \# 4-qubit, depth-3, truncation=2, noise=0.001\
-    >\
-    > \#Access probability distribution and metrics\
-    >print(f"TVD: {dist.prob_dist.tvd:.4f}")\
-    >print(f"XEB: {dist.prob_dist.xeb:.4f}")\
-    >print(f"Fidelity: {dist.prob_dist.fidelity:.4f}")\
-    >print(f"Time taken: {dist.duration:.2f} seconds")
-
-
 
 ---
 

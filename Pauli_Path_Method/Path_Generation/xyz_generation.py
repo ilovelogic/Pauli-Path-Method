@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy
 from typing import List
-from pauli_operator import PauliOperator
+from Pauli_Path_Method.Path_Generation.pauli_operator import PauliOperator
 
 class XYZGeneration:
     """

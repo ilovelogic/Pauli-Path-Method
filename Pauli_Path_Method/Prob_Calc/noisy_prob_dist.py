@@ -1,12 +1,12 @@
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
-from circuit_sim import CircuitSim
-from Brute_Force_RCS import circuit_utils
-from Lemma_8.get_prob_dist import GetProbDist
+from Pauli_Path_Method.Path_Generation.circuit_sim import CircuitSim
+from Pauli_Path_Method.Brute_Force_RCS import circuit_utils
+from Pauli_Path_Method.Prob_Calc.get_prob_dist import GetProbDist
 from qiskit import circuit
 from itertools import product
-from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
-from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
+from Pauli_Path_Method.Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
+from Pauli_Path_Method.Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution
 import math
 import numpy as np
 import warnings

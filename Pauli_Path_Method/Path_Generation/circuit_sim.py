@@ -2,9 +2,9 @@ import pdb
 import copy
 import math
 from typing import List
-from pauli_operator import PauliOperator
-from pauli_path_trav import PauliPathTrav
-from xyz_generation import XYZGeneration
+from Pauli_Path_Method.Path_Generation.pauli_operator import PauliOperator
+from Pauli_Path_Method.Path_Generation.pauli_path_trav import PauliPathTrav
+from Pauli_Path_Method.Path_Generation.xyz_generation import XYZGeneration
 
 class CircuitSim:
     """

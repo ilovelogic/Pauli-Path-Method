@@ -2,7 +2,7 @@
 import unittest
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
-from circuit_sim import CircuitSim
+from Pauli_Path_Method.Pauli_Amplitude.Path_Generation.circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
 from Lemma_8.get_prob_dist import GetProbDist
 from qiskit import circuit

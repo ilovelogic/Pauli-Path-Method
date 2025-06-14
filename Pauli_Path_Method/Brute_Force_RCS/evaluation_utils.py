@@ -12,7 +12,7 @@ from qiskit_aer import AerSimulator
 from qiskit_aer.primitives import SamplerV2 as Sampler
 from qiskit_aer.noise import NoiseModel, depolarizing_error
 
-from Brute_Force_RCS.circuit_utils import random_circuit, create_noise_model, generate_emp_distribution
+from Pauli_Path_Method.Brute_Force_RCS.circuit_utils import random_circuit, create_noise_model, generate_emp_distribution
 
 
 # Returns the true distribution of a circuit's outcome basis states. (Including 0 probability outcomes)

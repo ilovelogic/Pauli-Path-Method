@@ -3,8 +3,8 @@ import copy
 from collections import defaultdict
 from typing import List, DefaultDict
 from itertools import combinations
-from pauli_operator import PauliOperator
-from pauli_op_layer import PauliOpLayer
+from Pauli_Path_Method.Path_Generation.pauli_operator import PauliOperator
+from Pauli_Path_Method.Path_Generation.pauli_op_layer import PauliOpLayer
 
 class PauliPathTrav:
 

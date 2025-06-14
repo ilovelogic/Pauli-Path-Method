@@ -1,10 +1,10 @@
 import unittest
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
-from pauli_operator import PauliOperator
-from pauli_op_layer import PauliOpLayer
-from pauli_path_trav import PauliPathTrav
-from circuit_sim import CircuitSim
+from Pauli_Path_Method.Path_Generation.pauli_operator import PauliOperator
+from Pauli_Path_Method.Path_Generation.pauli_op_layer import PauliOpLayer
+from Pauli_Path_Method.Path_Generation.pauli_path_trav import PauliPathTrav
+from Pauli_Path_Method.Path_Generation.circuit_sim import CircuitSim
 
 class TestCircuits(unittest.TestCase):
     @classmethod
