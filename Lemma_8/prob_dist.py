@@ -57,7 +57,6 @@ class ProbDist:
 
 
     # Algorithm 1 from the rcs paper
-    #@profile
     def calc_noisy_prob_dist(self):
       
       print()

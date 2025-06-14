@@ -40,16 +40,15 @@ class TestNoisyProbDist(unittest.TestCase):
 
         gate_pos = []
 
-        #endian order indexing
         for i in range(len(gates)):
             layer_num = gates[i][2]
             if layer_num+1 > len(gate_pos):
                 gate_pos.append([])
             a, b = gates[i][1]
             gate_pos[layer_num].append((self.numQubits - a - 1, self.numQubits - b - 1))
-            #gate_pos[layer_num].append(gates[i][1])
 
-        noise_rate = 0.001
+
+        noise_rate = 0.001 # expected amount of noise per qubit per layer in reak-world circuits
 
         print()
         print(f'Noise rate: {noise_rate}')
@@ -57,7 +56,7 @@ class TestNoisyProbDist(unittest.TestCase):
 
         start = time.time()
 
-        circuit = CircuitSim(self.numQubits, l, gate_pos) # 1D, keeps all paths
+        circuit = CircuitSim(self.numQubits, l, gate_pos) # 1D architecuture
         self.prob_dist = ProbDist(circuit, gates, self.numQubits, self.depth, self.bruteForceQC, noise_rate)
 
         end = time.time()
