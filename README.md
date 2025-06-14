@@ -24,25 +24,26 @@ Before we outline the method, we define relevant words that will come up in the 
 
    > ### Pauli Basis Terminology
    >- **Pauli**: The four Pauli matrices comprise the Pauli basis. They are as follows:
-   \[
-   I = \begin{pmatrix}
-   1 & 0 \\
-   0 & 1
-   \end{pmatrix}, \quad
-   X = \begin{pmatrix}
-   0 & 1 \\
-   1 & 0
-   \end{pmatrix}, \quad
-   Y = \begin{pmatrix}
+   >$$I = 
+   >\begin{pmatrix}
+   >1 & 0 \\
+   >0 & 1
+   >\end{pmatrix}, \quad
+   >X = 
+   >\begin{pmatrix}
+   >0 & 1 \\
+   >1 & 0
+   >\end{pmatrix}, \quad
+   Y = 
+   \begin{pmatrix}
    0 & -i \\
    i & 0
    \end{pmatrix}, \quad
-   Z = \begin{pmatrix}
+   Z = 
+   \begin{pmatrix}
    1 & 0 \\
    0 & -1
-   \end{pmatrix}
-   \]
-
+   \end{pmatrix}.$$
    >- **Tensor Product**: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property 
    >$$\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$$ 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
@@ -107,7 +108,7 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 ### Pauli Path State of Research:
 Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight. Can encapsulate all possible paths in either tree format, which speeds up Fourier coefficient calculations, or list format. Handles both 1D brickwork circuit architecture and 2D brickwork. 
 
-A further optimization would be to generalize to the gate sets used by Google and USTC.
+A further optimization would be to generalize to the gate sets used by Google and USTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
 ### Brute Force Simulation State of the Research:
 Currently, random sampling is working for 1d brickwork circuits. Adopting 2D circuit generation for sampling shouldn't be difficult. It's merely making sure the labels work similarly as in the 1D case.
