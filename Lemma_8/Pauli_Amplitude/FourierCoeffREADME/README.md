@@ -60,24 +60,24 @@ To account for noise, each path is scaled by `(1 - γ)^|s|`, where `|s|` is the 
 
 ---
 
+
 ## Usage Example
-from Lemma_8.FourierCoeff import compute_noisy_fourier, preprocess_circuit_gates
 
-# Assume circuit C is generated and Pauli paths are available
-x = "0101"
-gamma = 0.001
-preprocessed = preprocess_circuit_gates(raw_gates, n)
-prob = compute_noisy_fourier(preprocessed, heads, x, n, gamma)
-print(f"Probability of {x}: {prob:.6f}")
+```python
+from Lemma_8.Pauli_Amplitude.fourier_coeff import compute_noisy_fourier, compute_marginal_noisy_fourier
+from Lemma_8.path_generation import generate_pauli_path_tree
+from Brute_Force_RCS.circuit_utils import extract_gates_info, random_circuit
 
-Marginal Sampling:
-To compute a marginal probability for e.g., qubit 0 = 1 and qubit 2 = 0:
+# Generate circuit and extract gates
+qc = random_circuit(num_qubits=4, depth=3)
+gates = extract_gates_info(qc)
+layers = preprocess_circuit_gates(gates, 4)
 
-fixed_bits = {0: '1', 2: '0'}
-prob = compute_marginal_noisy_fourier(preprocessed, heads, fixed_bits, n, gamma)
-This avoids summing over all 2^n bitstrings and uses partial overlap:
+# Generate legal Pauli paths with truncation ℓ
+sib_op_heads = generate_pauli_path_tree(num_qubits=4, depth=3, hamming_weight_cutoff=2)
 
-Tr(s_d ⋅ (⨂_{i ∈ T} |x_i⟩⟨x_i| ⊗ ⨂_{j ∉ T} I))
+# Compute full output probability
+prob_x = compute_noisy_fourier(layers, sib_op_heads, x="0110", n=4, gamma=0.01)
 
-Performance Considerations
-Runtime scales exponentially in truncation parameter ℓ (max Hamming weight), but polynomially in number of qubits n and depth d. We can use marginal sampling to reduce complexity from O(2^n) to O(n) per sample.
+# Compute marginal probability for qubit 0 = 1 and qubit 2 = 0
+marginal_prob = compute_marginal_noisy_fourier(layers, sib_op_heads, fixed_bits={0: '1', 2: '0'}, n=4, gamma=0.01)
