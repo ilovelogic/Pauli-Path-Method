@@ -54,7 +54,7 @@ to store each individual combination of choosing either "X", "Y", or "Z" for all
 
 Later, using the class `XYZGeneration`, we will replace each `PauliOperator`'s "R", "N", and "P" with "X", "Y", and "Z", yet we will do so in a tree-like structure that handles the memory problem. \
 \
-<img src="/workspaces/Lemma-8/images/PauliOperator_ops.png" width="450" />\
+<img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/PauliOperator_ops.png" width="450" />\
 **Immediate Neighbors**\
 It is also essential that we situate each Pauli operator in terms of its neighbors in a legal Pauli path. Thus, we store a reference (`prior_ops`) to the `PauliOperator` objects that can directly precede this `PauliOperator` in a legal Pauli path. Likewise, we maintain an attribute (`next_ops`) for the `PauliOperator` objects that can come directly after this `PauliOperator`.
 
@@ -87,7 +87,7 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
 
 ### PauliOpLayer
 
-<img src="/workspaces/Lemma-8/images/backward_forward_sibs.png" width="400" />
+<img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/backward_forward_sibs.png" width="400" />
 
 **Sorting for Propagation**\
 We determine all possibile Pauli paths by working terms of layers, which are represented by the object `PauliOpLayer`. Each `PauliOpLayer` stores all the `PauliOperator` objects which could be the Pauli operator for some particular position in a legal Pauli path. 
@@ -120,7 +120,7 @@ We store each backward-twinning list in a DefaultDict (`backward_rnp_sibs`), whe
 ### PauliPathTrav
 
 **Overview**\
-<img src="/workspaces/Lemma-8/images/PauliPath_layers.png" width="800" />
+<img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/PauliPath_layers.png" width="800" />
 Given a circuit architecture and weight configuration, we generate a list of `PauliOpLayer` objects (`layers`), which encapsulates all the possibilities of what `PauliOperator` objects we are free to use at each index of a legal Pauli path. 
 
 **Initialization**\
@@ -155,7 +155,7 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
 
 ### XYZGeneration
 
-<img src="/workspaces/Lemma-8/images/xyz_gen.png" width="700" />\
+<img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/xyz_gen.png" width="700" />\
 
 **Nesting Structure**\
 The `XYZGeneration` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`parent_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `parent_ops` list. 
