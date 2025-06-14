@@ -91,8 +91,8 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 
 ## User Guides
 
-### Pauli Path Generation:
-[Noisy Probability Distribution README](/workspaces/Lemma-8/Lemma_8/Pauli_Amplitude/ProbCalcREADME/README.md)
+### Determining Probalities:
+[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8/Pauli_Amplitude/ProbCalcREADME/)
 
 [Lemma 8 README](https://github.com/ilovelogic/Pauli-Path-Method/tree/main/Lemma_8#readme)
 
