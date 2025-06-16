@@ -12,7 +12,10 @@ This program plays a key role in classically simulating noisy random circuit sam
 
 Before we outline the method, we define relevant words that will come up in the method description.
    >### Quantum Circuit Terminology
-   >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: $$\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}$$, where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
+   >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: $$
+\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
+$$
+, where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
    >- **Gate**: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
    >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate.
    >- **Measurement**: Measuring a qubit causes its superposition of 1 and 0 to collapse to exactly one of these outcomes. Measurement cannot be undone, so once you measure a qubit, there is no way to return it to its prior state.
@@ -24,26 +27,7 @@ Before we outline the method, we define relevant words that will come up in the 
 
    > ### Pauli Basis Terminology
    >- **Pauli**: The four Pauli matrices comprise the Pauli basis. They are as follows:
-   >$$I = 
-   >\begin{pmatrix}
-   >1 & 0 \\
-   >0 & 1
-   >\end{pmatrix}, \quad
-   >X = 
-   >\begin{pmatrix}
-   >0 & 1 \\
-   >1 & 0
-   >\end{pmatrix}, \quad
-   Y = 
-   \begin{pmatrix}
-   0 & -i \\
-   i & 0
-   \end{pmatrix}, \quad
-   Z = 
-   \begin{pmatrix}
-   1 & 0 \\
-   0 & -1
-   \end{pmatrix}.$$
+   $$I = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}, \quad X = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \quad Y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}, \quad Z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}.$$
    >- **Tensor Product**: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property 
    >$$\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$$ 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
@@ -128,7 +112,7 @@ Its main optimizations include:
 - Grouping Pauli operators at each layer of the path generation so that you only needed to determine the next possible Pauli operators for one operator in each grouping, rather than for all of the Pauli operators at the layer.
 - Building the tree version of all possible paths, which speeds up Fourier coefficient calculation.
 
-A further line of research would be to generalize to the gate sets used by Google and USTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
+A further line of research would be to generalize to the gate sets used by Google and USSTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
 ### Brute Force Simulation (Jesus Azpitarte):
 Currently, random sampling is working for 1d brickwork circuits. Adopting 2D circuit generation for sampling shouldn't be difficult. It's merely making sure the labels work similarly as in the 1D case.
