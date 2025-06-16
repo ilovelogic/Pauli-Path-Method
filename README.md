@@ -1,4 +1,4 @@
-This is a repo for implementing the Pauli Path Algorithm used for Noisy Random Circuit Sampling proposed in the Dorit Aharnov paper.
+This is a repo for implementing the Pauli Path Algorithm used for Noisy Random Circuit Sampling proposed in the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
 The project is separated into three main components, the Pauli Path generation, the regular brute force version + evaluation metrics, and the fourier coefficient calculation.
 
@@ -71,7 +71,7 @@ $$
 
 Note that $p(C, x)$ is the output probability distribution for outcome $x$. Accordingly, to simualte a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit.
 
-Determining all possible Pauli paths seems rather involved. Thankfully, there are some simplications. To calculate the above expression, we only need to know all legal Pauli paths rather than all Pauli paths in general. Below, we define a legal Pauli path.
+Determining all possible Pauli paths would be rather involved. Thankfully, there are some simplifications. To calculate the above expression, we only need to know all legal Pauli paths rather than all Pauli paths in general. Below, we give the definition of legal Paulis paths provided by [Aharonav et al.](https://arxiv.org/pdf/2211.03999).
 
    >### Definition 6 (Legal Pauli Path)
    >For a given circuit architecture, a Pauli path $s = (s_0, s_1, \ldots, s_d)$ is legal if the following two conditions are satisfied:
@@ -99,9 +99,6 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 
 ## User Guides
 
-### Determining Probalities:
-[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Prob_Calc/README.md)
-
 ### Legal Pauli Path Generation:
 [Path Generation README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Path_Generation/README.md)
 
@@ -111,6 +108,9 @@ These componenets come together via the `NoisyProbDist` and `GetProbDist` classe
 ### Brute Force Simulation:
 [Brute Force RCS README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Brute_Force_RCS/README.md)
 
+### Determining Probalities:
+[Noisy Probability Distribution README](https://github.com/ilovelogic/Pauli-Path-Method/blob/main/Prob_Calc/README.md)
+
 ## State of the Research 
 
 ### Research Question:
@@ -119,12 +119,16 @@ Our original research question was "Is RCS a worthwhile approach to proving quan
 Below, we outline what each one of us contributed to answering the research question.
 
 ### Pauli Path Generation (Anne Kelley):
-I handled generating the legal Pauli paths restricted by an upper bound on Hamming weight. The Pauli path generation is essential to classically simulating RCS, given that you can't compute the probability distribution without tracing the Fourier coefficients of the paths. My code:
+I implemented legal Pauli path generation based on Lemma 8 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper. Pauli path generation is essential to classically simulating RCS, given that you can't compute the probability distribution without tracing the Fourier coefficients of the paths. My code:
 - Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight.
-- Can encapsulate all possible paths in either tree format, which speeds up Fourier coefficient calculations, or list format. 
+- Can encapsulate all possible paths in either tree format or list format. 
 - Handles both 1D brickwork circuit architecture and 2D brickwork. 
 
-A further optimization would be to generalize to the gate sets used by Google and USTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
+Its main optimizations include:
+- Grouping Pauli operators at each layer of the path generation so that you only needed to determine the next possible Pauli operators for one operator in each grouping, rather than for all of the Pauli operators at the layer.
+- Building the tree version of all possible paths, which speeds up Fourier coefficient calculation.
+
+A further line of research would be to generalize to the gate sets used by Google and USTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
 ### Brute Force Simulation (Jesus Azpitarte):
 Currently, random sampling is working for 1d brickwork circuits. Adopting 2D circuit generation for sampling shouldn't be difficult. It's merely making sure the labels work similarly as in the 1D case.
