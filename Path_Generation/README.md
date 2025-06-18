@@ -71,16 +71,16 @@ It is also essential that we situate each Pauli operator in terms of its neighbo
 
 **Methods:**
 
-- **`weight_to_operators(sib_ops: List[PauliOperator], next_weight: int, pos_to_fill: List[tuple], backward: int)`**  
+- **`weight_to_operators(sib_ops:List[PauliOperator], next_weight:int, pos_to_fill:List[tuple], backward:int):void`**  
   If `backward` is 1, this method determines all possible `PauliOperator` objects that can directly precede the given `PauliOperator` in a legal Pauli path. These objects are appended to the `prior_ops` attribute of the class, with their `operator` atributes being in terms of "I", "R", "N", and "P". Otherwise, it determines all possible `PauliOperator` objects that can directly follow the given one in a legal Pauli path and appends them to the `next_ops` attribute.
 
-- **`list_allocs(num_p: int, num_w: int)`**  
+- **`list_allocs(num_p:int, num_w:int):List[List[int]]`**  
   A static method that calculates the number of ways to distribute `num_w` (the total Hamming weight) across `num_p` non-identity gate positions. It returns a 2D integer array where each entry `(i, j)` represents the number of ways to fill `i` gates with a total Hamming weight of `j`.
 
-- **`find_next_operators(sibs: List[PauliOperator], num_RRs: int, pos_to_fill: List[tuple], r_start: int)`**  
+- **`find_neighb_operators(self, sibs:List[PauliOperator], num_RRs:int, pos_to_fill:List[tuple], r_start:int):void`**  
   A helper method of `weight_to_operators` which recursively fills the next non-identity I/O gate positions with either "I" and "R", "R" and "I", or "R" and "R", until we reach the bases case where `num_RRs` is 0 or the number of positions left to fill is equal to `num_RRs`.
 
-- **`edit_ops(sibs: List[PauliOperator], indices: tuple, strs: tuple, r_start: int, r_end: int)`**  
+- **`edit_ops(sibs:List[PauliOperator], indices:tuple, strs:tuple, r_start:int, r_end:int):void`**  
   A static method that fills the first index of `indices` with the first str of `strs` and the second index with the second str for the `operator` attribute of all `PauliOperator` objects of `sibs` in the range [`r_start`,`r_end`).
 
 ---
@@ -98,21 +98,21 @@ We store each backward-twinning list in a DefaultDict (`backward_rnp_sibs`), whe
 
 **Initialization**\
    `PauliOpLayer(gate_pos:List[tuple]=None, backward:int=-1,pauli_ops:DefaultDict[tuple, List[PauliOperator]]=None)`
-   >Takes as argument `pauli_ops`, a `DefaultDict` that is either sorted according to backward or forward propagation at this layer of the Pauli path. Calls methods `check_qubits` and `group_sibs` to group the `PauliOperator` objects in `pauli_ops` based off of the opposite propagation direction. Assigns attribute `forward_rnp_sibs` to be the `DefaultDict` sorted by which propagate forward together and `backward_rnp_sibs` to be the `DefaultDict` that groups based on backward propagation.
+   >Takes as argument `pauli_ops`, a DefaultDict that is either sorted according to backward or forward propagation at this layer of the Pauli path. Calls methods `check_qubits` and `group_sibs` to group the `PauliOperator` objects in `pauli_ops` based off of the opposite propagation direction. Assigns attribute `forward_rnp_sibs` to be the DefaultDict sorted by which propagate forward together and `backward_rnp_sibs` to be the DefaultDict that groups based on backward propagation.
 
 **Attributes**
    - `backward`: An int that is 1 if we need to propagate backward from this `PauliOpLayer` and 0 otherwise.
    - `gate_pos`: A list of int tuples, where each int tuple stores the two I/O indices of a gate between this PauliOpLayer and either the prior PauliOpLayer (if backward) or the next `PauliOpLayer` (otherwise).
    - `pos_to_fill`: A DefaultDict whose keys are the `PauliOperator` objects at this `PauliOpLayer` and whose values are lists of int tuples containing the non-identity I/O gate positions between the `PauliOperator` key and the `PauliOpLayer` to which we're propagating.
    - `forward_rnp_sibs`: A DefaultDict that sorts all the `PauliOperator` objects at this `PauliOpLayer` according to their having matching gate positions with non-identity I/O and the same non-gate qubits when propagating forward. The non-identity I/O gate positions list and the list of non-gate qubit strs are both converted into tuples and used as the key for the DefaultDict. The list of "family" PauliOperator objects is the value for the DefaultDict.
-   - `bacward_sibs`: A DefaultDict with the same setup as `forward_rnp_sibs` except that it is sorted according to matching the attributes when propagating backward. Both `forward_rnp_sibs` and `backward_rnp_sibs` enjoy the property that each of their "family" lists contain a grouping of `PauliOperator` objects that all propagate to the same list of `PauliOperator` objects at a neighboring circuit Layer.
+   - `backward_rnp_sibs`: A DefaultDict with the same setup as `forward_rnp_sibs` except that it is sorted according to matching the attributes when propagating backward. Both `forward_rnp_sibs` and `backward_rnp_sibs` enjoy the property that each of their "family" lists contain a grouping of `PauliOperator` objects that all propagate to the same list of `PauliOperator` objects at a neighboring circuit Layer.
    - `carry_over_qubits`: A list of lists of strs, where each list of strs is a copy of one the `PauliOperator` object's operator at this `PauliOpLayer` with the edit that its qubits at gate positions are all set to "I". This allows us to check equality of non-gate qubits for `PauliOperator` objects by simply comparing their lists in `carry_over_qubits`. 
 
 **Methods**
-   - **`check_qubits(unsorted_pauli_ops:List[PauliOperator])`**\
+   - **`check_qubits(unsorted_pauli_ops:List[PauliOperator]):void`**\
    Uses the attribute `gate_pos` to determine which gate positions have non-identity I/O, for each `PauliOperator` in `unsorted_pauli_ops`, in order to fill out the attribute `pos_to_fill`. Also uses `gate_pos` to correctly edit `carry_over_qubits` so that each of its entries only characterizes non-gate qubits, for each `PauliOperator` in `unsorted_pauli_ops`. 
 
-   - **`group_sibs(unsorted_pauli_ops:List[PauliOperator])`**\
+   - **`group_sibs(unsorted_pauli_ops:List[PauliOperator]):void`**\
    Relies on the information obtained from calling `check_qubits` to sort all the `PauliOperator` objects of this `PauliOpLayer` into lists according to which have the same set of non-gate qubits and non-identity I/O gate positions. Accomplishes that using a DefaultDict where the keys are tuples comprised of a `PauliOperator` object's associated entry of `pos_to_fill` and `carry_over_qubits`. 
 
 ---
@@ -135,19 +135,19 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
    - `layers`: A list of `PauliOpLayer` objects, where the ith `PauliOpLayer` object keeps track of all possible ith Pauli operators in our Pauli path.
 
 **Methods**
-   - **`build_min_configs()`**\
+   - **`build_min_configs():List[PauliOperator],List[tuple[int,int]],List[tuple[int,int]],int`**\
    Determines and returns the index of the lowest Hamming weight layer and all possible `PauliOperator` objects at that layer. Also returns the non-identity gate positions between the min weight layer and its prior layer and the non-identity gate positions between the min layer and its next layer, both as `List[tuple]`. Uses helper methods `unsorted_min_layer_ops`, `min_backward`, and `min_forward`.
 
-   - **`unsorted_min_layer_ops(min_weight)`**\
+   - **`unsorted_min_layer_ops(min_weight:int):List[PauliOperator]`**\
     Returns an unsorted list of all PauliOperators whose number of qubits match the attribute `num_qubits` and whose Hamming weight equals `min_weight`.
 
-   - **`min_backward(min_layers:List[PauliOperator],min_depth:int)`**\
-   Instantiates the `PauliOpLayer` object `min_layer_ops` and sets its `backward_rnp_sibs` attribute, which is a `DefaultDict` whose values are `PauliOperator` objects (in "R", "N", "P, and "I") that are grouped by the key of the tuple of their gate positions and non-gate qubits in the backward direction. As a result, `backward_rnp_sibs` stores the `PauliOperator` objects at index `min_index` in the Pauli path sorted according to which propagate *backward* to the same list of `PauliOperator` objects. Returns `backward_rnp_sibs` and a `DefaultDict` that, for every `PauliOperator` possible at this layer, keeps track of all positions in the `PauliOperator` immediately prior to this `PauliOperator` that will require non-identity Paulis.
+   - **`min_backward(min_layers:List[PauliOperator], min_depth:int):PauliOpLayer,DefaultDict[PauliOperator, List[tuple[int, int]]]`**\
+   Instantiates the `PauliOpLayer` object `min_layer_ops` and sets its `backward_rnp_sibs` attribute, which is a DefaultDict whose values are `PauliOperator` objects (in "R", "N", "P, and "I") that are grouped by the key of the `tuple` of their gate positions and non-gate qubits in the backward direction. As a result, `backward_rnp_sibs` stores the `PauliOperator` objects at index `min_index` in the Pauli path sorted according to which propagate *backward* to the same list of `PauliOperator` objects. Returns `backward_rnp_sibs` and a DefaultDict that, for every `PauliOperator` possible at this layer, keeps track of all positions in the `PauliOperator` immediately prior to this `PauliOperator` that will require non-identity Paulis.
 
-   - **`min_forward(min_layers:List[PauliOperator],min_layer_ops:PauliOplayer,min_depth:int)`**\
-   Given the `PauliOpLayer` object `min_layer_ops`, instantiates its `forward_rnp_sibs` attribute. Its `forward_rnp_sibs` is a `DefaultDict` with values of `PauliOperator` objects categorized by their gate positions and non-gate qubits in the context of moving forward in the circuit. As a result, `forward_rnp_sibs` stores the `PauliOperator` objects at index `min_index` in the Pauli path organized by which propagate *forward* to the same list of `PauliOperator` objects. Returns `forward_rnp_sibs` and the `DefaultDict` that stores, for every `PauliOperator` at this layer, all qubit indices in the `PauliOperator` directly preceding this `PauliOperator` that need non-identity Paulis.
+   - **`min_forward(min_layers:List[PauliOperator], min_layer_ops:PauliOplayer, min_depth:int):DefaultDict[PauliOperator, List[tuple[int, int]]]`**\
+   Given the `PauliOpLayer` object `min_layer_ops`, instantiates its `forward_rnp_sibs` attribute. Its `forward_rnp_sibs` is a DefaultDict with values of `PauliOperator` objects categorized by their gate positions and non-gate qubits in the context of moving forward in the circuit. As a result, `forward_rnp_sibs` stores the `PauliOperator` objects at index `min_index` in the Pauli path organized by which propagate *forward* to the same list of `PauliOperator` objects. Returns `forward_rnp_sibs` and the DefaultDict that stores, for every `PauliOperator` at this layer, all qubit indices in the `PauliOperator` directly preceding this `PauliOperator` that need non-identity Paulis.
 
-   - **`propagate_next(all_sibs:DefaultDict[tuple, List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int)`**\
+   - **`propagate_next(all_sibs:DefaultDict[tuple[int,int], List[PauliOperator]], pos_to_fill:DefaultDict[PauliOperator,List], backward:int, depth:int):DefaultDict[tuple,List[PauliOperator]]`**\
    Takes in a list of forward or backward sibling operators at a layer (`all_sibs`), and determines the new sibling operators that each sibling operators list in the input list propagate to. Uses helper function weight_to_operaters from the PauliOperator class to get the sibling operators that all the PauliOperators in any given sibling operators of the input propagate to.
    
 
@@ -161,30 +161,30 @@ Given a circuit architecture and weight configuration, we generate a list of `Pa
 The `XYZGeneration` class uses a recursive structure to generate Pauli paths. The constructor takes as input a list of `PauliOperator` objects (`parent_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path, and the parameter `next_index` lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the `parent_ops` list. 
 
 **Initialization**\
-   `XYZGeneration(pauli_ops:List[PauliOperator],next_index:int,pauli_path:List[PauliOperator])`
+   `XYZGeneration(pauli_ops:List[PauliOperator], next_index:int, pauli_path:List[PauliOperator])`
 
 **Attributes**
    - `parent_ops`: The list of `PauliOperator` objects for a particular index in the Pauli path that have the same selection from "X", "Y", and "Z" for their non-gate non-identity qubits.
    - `next_gen`: A list of `XYZGeneration` objects, where the `parent_ops` attribute of each of these `XYZGeneration` contains all the `PauliOperator` objects that could come directly after any of the `PauliOperator` objects in a valid Pauli path.
 
 **Methods**
-   - **`rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator])`**\
-      - Generates `filled_rn_list`, which contains a `List` object for each grouping of `PauliOperator` objects at the `next_index` of `pauli_path` that made the same selection of "X", "Y", or "Z" for each "N". In other words, if one of the `PauliOperators` in one of these lists choose an "X" to replace the "N" at position 2 and a "Z" for the "N" at position 5, then all the other `PauliOperator` objects in its list also selected an "X" and "Z" at those positions.
+   - **`rnp_to_xyz(next_index:int, pauli_path:List[PauliOperator]):void`**\
+      - Generates `filled_rn_list`, which contains a List object for each grouping of `PauliOperator` objects at the `next_index` of `pauli_path` that made the same selection of "X", "Y", or "Z" for each "N". In other words, if one of the `PauliOperators` in one of these lists choose an "X" to replace the "N" at position 2 and a "Z" for the "N" at position 5, then all the other `PauliOperator` objects in its list also selected an "X" and "Z" at those positions.
 
-      - These `Lists` of `PauliOperators` sort the `PauliOperators` at path position `next_index` according to which have the same grouping of next possible `PauliOperators` after them in the path. Accordingly, we instantiate an `XYZGeneration` for each of these `Lists`, with the index parameter of `next_index+1`, and append all these to the attribute `next_gen`. By creating `XYZGeneration` objects for each of these next `Lists`, we continually build our `XYZGeneration` nested tree, since these `XYZGeneration` objects will also instantiate `XYZGenerations`  to represent the `PauliOperators` that can come after them, and so on. Evantually, our tree building will stop when we instantiate the `XYZGenerations` with index parameter `len(self.pauli_path)`, in which case the constructor sets their `next_gen = None`.
+      - These Lists of `PauliOperators` sort the `PauliOperators` at path position `next_index` according to which have the same grouping of next possible `PauliOperators` after them in the path. Accordingly, we instantiate an `XYZGeneration` for each of these Lists, with the index parameter of `next_index+1`, and append all these to the attribute `next_gen`. By creating `XYZGeneration` objects for each of these next Lists, we continually build our `XYZGeneration` nested tree, since these `XYZGeneration` objects will also instantiate `XYZGenerations`  to represent the `PauliOperators` that can come after them, and so on. Evantually, our tree building will stop when we instantiate the `XYZGenerations` with index parameter `len(self.pauli_path)`, in which case the constructor sets their `next_gen = None`.
 
-   - **`fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int])`**\
+   - **`fill_pos_lists(next_op:PauliOperator, r_pos_list: List[int], n_pos_list: List[int]):void`**\
    Fills `r_pos_list` with all "R" qubit positions and `n_pos_list` with all non-carry "N" qubit positions in `next_op`. Note that an "N" that carries is a qubit position that remains a non-gate position in every following `PauliOperator` in the Pauli path. Replaces any "P"s it encounters with the non-identity Pauli at the same index in the immediately preceding `PauliOperator`.
 
-   - **`fill_in_pos(filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int)`**\
+   - **`fill_in_pos(filled_pos:List[PauliOperator], pos_list:List[int], pauli:str, index:int, start:int):void`**\
    Updates `filled_pos` to contain all `PauliOperator` objects whose qubits at the positions in specified by `pos_list` hold all possible combinations of "X", "Y", and "Z".
    
-   - **`carries_to_the_end(pauli_path_index:int, i:int)`**\
+   - **`carries_to_the_end(pauli_path_index:int, i:int):int`**\
    Checks if the non-gate qubit at index `i` in the Pauli operator at index `pauli_path_index`
-   in the Pauli path carries to the end of the Pauli path. In other words, investigates if it remains a non-gate qubit until the last layer of the Pauli path. In this is the case, that position in that Pauli operator and onward in the path would be forced to be a "Z" to meet the all "I"s and "Z" at last layer requirement.
+   in the Pauli path carries to the end of the Pauli path. In other words, investigates if it remains a non-gate qubit until the last layer of the Pauli path. In this is the case, that position in that Pauli operator and onward in the path would be forced to be a "Z" to meet the all "I"s and "Z" at last layer requirement. Returns a 1 if the qubit "carries to the end" and a 0 otherwise.
 
-   - **`rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator])`**\
-   Replaces all "R"s and "P"s in the last layer with "Z"s to meet the restriction of only "I"s and "Z" being present in the last `PauliOperator` of the Pauli path.
+   - **`rp_to_z(next_op:PauliOperator, pauli_path:List[PauliOperator]):int`**\
+   Replaces all "R"s and "P"s in the last layer with "Z"s to meet the restriction of only "I"s and "Z" being present in the last `PauliOperator` of the Pauli path. Returns 1 if conversion was successful and a 0 if there are any "N"s in the last layer.
   
 
 ---
@@ -206,34 +206,35 @@ The `CircuitSim` class represents a classical simulation of a noisy random circu
    - `max_weight`: An int that is the upper bound on the total Hamming weight of any Pauli path used for the simulation.
    - `weight_combos`: A list of lists of ints, where each list of ints represents an indexed assignment of weights to Pauli operators in a legal Pauli path.
    - `pauli_paths`: A list of all possible PauliPathTrav objects, given the upper bound on Hamming weight and circuit architecture.
+   - xyz_gen_heads, rnp_pauli_paths
 
 **Methods**
-   - **`valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]])`**\
-    A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture.
+   - **`valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]]):bool`**\
+    A static method that checks whether the specified number of qubits (`num_qubits`) and gate position array (`gate_pos`) comprise a valid circuit architecture. Returns `True` if the input is a valid circuit set up and `False` otherwise.
 
-   - **`enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int)`**\
+   - **`enumerate_weights(weight_list:List[int], wiggle_room:int, num_layers_left:int):void`**\
     Recursively fills the `weight_combo` attribute of the `CircuitSim` with each distinct list that specifies the Hamming weights of a legal Pauli path, taking into account the restrictions of the circuit architecture. For each list, the ith int in the list assigns the Hamming weight of the ith Pauli operator of the Pauli path.
 
-   - **`init_pauli_paths()`**\
+   - **`init_pauli_paths():void`**\
     Initiates the list of all `PauliPathTrav` objects that fit the circuit architecture and upper bound on Hamming weight.
 
-   - **`travs_to_list()`**\
+   - **`travs_to_list():void`**\
    Translates each `PauliPathTrav` in `pauli_path_travs` into a list of Pauli paths, still in "R", "N", "P", and "I", and stores these lists in attribute `rnp_pauli_paths`. Calls helper function `trav_to_list(trav:PauliPathTrav)` on each `PauliPathTrav` object to obtain its corresponding list of paths.
 
-   - **`trav_to_list(trav:PauliPathTrav)`**\
+   - **`trav_to_list(trav:PauliPathTrav):List[List[PauliOperator]]`**\
    For every `PauliOperator` in the `forward_rnp_sibs` attribute of `trav`, calls on helper function `pauli_op_hopping`. Uses `pauli_op_hopping` to append all Pauli paths starting with that `PauliOperator` and taking some traversal through `trav` to the `List[List[PauliOperator]]` `trav_list`. Returns `trav_list` once it is filled.
 
-   - **`trav_branching(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator)`**\
+   - **`trav_branching(trav_list:List[List[PauliOperator]], partial_pauli_path:List[PauliOperator], pauli_op:PauliOperator):void`**\
    Recursively traverses every Pauli path through a `PauliPathTrav` and appends them to `trav_list`. The initial call must be on an empty `partial_pauli_path` and one of the `PauliOperator` objects in the first layer of a `PauliPathTrav`.
 
-   - **`build_xyz_trees()`**\
+   - **`build_xyz_trees():void`**\
    For each Pauli path list in `rnp_pauli_paths`, constructs its corresponding `XYZGeneration` tree, with the tree's branching representing different valid selections of"X", "Y", and "Z". Stores the root of each tree in attribute `xyz_gen_heads`.
 
-   - **`trees_to_lists()`**\
+   - **`trees_to_lists():void`**\
    Turns each `XYZGeneration` tree into lists representing Pauli paths, with the lists being appended to the attribute `xyz_pauli_paths`
 
-   - **`xyz_tree_branching(cur_xyz_gen:XYZGeneration, pauli_paths_in_womb:List[List[PauliOperator]])`**\
+   - **`xyz_tree_branching(cur_xyz_gen:XYZGeneration, pauli_paths_in_womb:List[List[PauliOperator]]):void`**\
    Recursively traverses all possible Pauli paths along an `XYZGeneration` tree and appends them to `xyz_pauli_paths`.
 
-   - **`rn_to_z(first_op:PauliOperator)`**\
+   - **`rn_to_z(first_op:PauliOperator):List[PauliOperator]`**\
    A static method that replaces all "R"s and "N"s in the first `PauliOperator` of a path with "Z"s, in order to satisfy the second requirement to be a legal Pauli path.
