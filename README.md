@@ -12,8 +12,10 @@ This program plays a key role in classically simulating noisy random circuit sam
 
 Before we outline the method, we define relevant words that will come up in the method description.
    >### Quantum Circuit Terminology
-   >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: 
-$$\big| \psi \rangle = \alpha \big|0 \rangle + \beta \big|1 \rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix},$$
+   >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as:
+   ```math
+   \big| \psi \rangle = \alpha \big|0 \rangle + \beta \big|1 \rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
+   ```
    >where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
    >- **Gate**: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
    >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate.
@@ -30,7 +32,11 @@ $$\big| \psi \rangle = \alpha \big|0 \rangle + \beta \big|1 \rangle = \begin{bma
 
    >- **Tensor Product**: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property $\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$ 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
-   >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form $P = P_1 \otimes P_2 \otimes \cdots \otimes P_{n}$, where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
+   >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form
+   ```math
+   P = P_1 \otimes P_2 \otimes \cdots \otimes P_{n},
+   ```
+   >where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
    >- **Hamming weight**: Counts the number of non-identity Paulis $\left( X,Y,Z\right)$ present in Pauli operators. For example, the Hamming weight of $I \otimes X \otimes Y$ is 2. When we discuss the Hamming weight of a Pauli path $s$, we denote it by $|s|$, and it is the sum of the number of non-identity Paulis in the Pauli operatrs of $s$.
    >- **Pauli path**: A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of Pauli operators representing the evolution of quantum states during a circuit's operation. Pauli paths are used to calculuate the Pauli path integral, which is a means of determining the output probability distribution of the circuit.
    
@@ -38,10 +44,10 @@ $$\big| \psi \rangle = \alpha \big|0 \rangle + \beta \big|1 \rangle = \begin{bma
    With the basic terminology clarified, we define the Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
 
    >### Definition 1 (Pauli Path Integral)
-   >Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth, and let $p(C, x) := \left| \langle x | C | 0^n \rangle \right|^2$ be the output probability distribution. The Pauli path integral is written as 
-   $$
+   >Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth, and let $p(C, x) := \left| \langle x | C | 0^n \rangle \right|^2$ be the output probability distribution. The Pauli path integral is written as
+   ```math
    p(C, x) = \sum_{s \in \mathbb{P}_n^{d+1}} f(C, s, x)
-   $$
+   ```
    >where $f(C,s,x)$ is the Fourier coefficient for output $x$ and Pauli path $s$, representing the contribution of that Pauli path in giving rise to outcome $x$.
 
 
