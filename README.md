@@ -12,7 +12,11 @@ This program plays a key role in classically simulating noisy random circuit sam
 
 Before we outline the method, we define relevant words that will come up in the method description.
    >### Quantum Circuit Terminology
-   >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: $\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}$, where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
+   >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: 
+   $$
+|\psi\rangle = \alpha |0\rangle + \beta |1\rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix},
+$$
+   >where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
    >- **Gate**: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
    >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate.
    >- **Measurement**: Measuring a qubit causes its superposition of 1 and 0 to collapse to exactly one of these outcomes. Measurement cannot be undone, so once you measure a qubit, there is no way to return it to its prior state.
@@ -24,10 +28,20 @@ Before we outline the method, we define relevant words that will come up in the 
 
    > ### Pauli Basis Terminology
    >- **Pauli**: The four Pauli matrices comprise the Pauli basis. They are as follows:
-   $I = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}, \quad X = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \quad Y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}, \quad Z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}.$
+   $$
+I = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}, \quad
+X = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \quad
+Y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}, \quad
+Z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}.
+$$
+
    >- **Tensor Product**: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property $\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$ 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
-   >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form $P=P_1 \otimes P_2 \otimes \dots \otimes P_n$ where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
+   >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form 
+   $$
+P = P_1 \otimes P_2 \otimes \cdots \otimes P_{n},
+$$
+   >where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
    >- **Hamming weight**: Counts the number of non-identity Paulis ($X,Y,Z$) present in Pauli operators. For example, the Hamming weight of $I \otimes X \otimes Y$ is 2. When we discuss the Hamming weight of a Pauli path $s$, we denote it by $|s|$, and it is the sum of the number of non-identity Paulis in the Pauli operatrs of $s$.
    >- **Pauli path**: A Pauli path $s = (s_0, \ldots, s_d) \in \mathcal{P}_n^{d+1}$ is a sequence of Pauli operators representing the evolution of quantum states during a circuit's operation. Pauli paths are used to calculuate the Pauli path integral, which is a means of determining the output probability distribution of the circuit.
    
@@ -35,8 +49,11 @@ Before we outline the method, we define relevant words that will come up in the 
    With the basic terminology clarified, we define the Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
 
    >### Definition 1 (Pauli Path Integral)
-   > Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth. Then the Fourier coefficient for output $x$ and Pauli path $s$ is defined as: 
-   > $$f(C, s, x) := \mathrm{Tr}(|x\rangle\langle x| s_d) \mathrm{Tr}\Big(s_d U_d s_{d-1} U_d^\dagger\Big)\ \cdots \mathrm{Tr}\Big(s_1 U_1 s_0 U_1^\dagger\Big) \mathrm{Tr}\big(s_0 |0^n\rangle\langle 0^n|\big)$$
+   >Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth. Then the Fourier coefficient for output $x$ and Pauli path $s$ is defined as: 
+   $$
+   p(C, x) = \sum_{s \in \mathbb{P}_n^{d+1}} f(C, s, x),\text{ where}
+   $$
+   $$f(C, s, x) := \mathrm{Tr}(|x\rangle\langle x| s_d) \mathrm{Tr}\Big(s_d U_d s_{d-1} U_d^\dagger\Big)\ \cdots \mathrm{Tr}\Big(s_1 U_1 s_0 U_1^\dagger\Big) \mathrm{Tr}\big(s_0 |0^n\rangle\langle 0^n|\big)$$
 
 
 Note that $p(C, x)$ is the output probability distribution for outcome $x$. Accordingly, to simualte a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit.
