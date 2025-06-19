@@ -1,36 +1,52 @@
 This is a repo for implementing the Pauli Path Algorithm used for Noisy Random Circuit Sampling proposed in the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
-The project is separated into three main components, the Pauli Path generation, the regular brute force version + evaluation metrics, and the fourier coefficient calculation.
+Our program uses three main components: Pauli Path generation, evaluation metrics, and Fourier coefficient calculation. It brings these pieces together in the class `NoisyProbDist`, which allows us to simulate a quantum experiment on our standard laptops.
 
 ### Table of Contents
+- [Motivation](#motivation)
 - [Overview of Research](#overview-of-research)
 - [User Guides](#user-guides)
 - [State of the Research](#state-of-the-research)
 
+### Motivation
+By leveraging the principles of quantum mechanics to process information, quantum computing has the potential to revolutionize fields such as cryptography, materials science, and drug discovery. Unfortunately, current quantum computers are not yet accurate enough to implement the groundbreaking algorithms developed for them. To unlock their potential, we need more research and investment in quantum computing.
+
+To increase public support of quantum computing development, corporations often turn to a task known as random circuit sampling (RCS). Random circuit sampling can be efficiently carried out an a quantum computer, while it is generally believed that no classical computer (such as your laptop) could simulate it in polynomial time. As a result, companies such as Google tend to use it as a benchmark to establish quantum supremacy, which is the claim that quantum computers can outperform classical systems for specific tasks.
+
+Recent work by Ahanorav et al. questions the supposed divide between classical and quantum computers for RCS. In their 2022 paper ["A polynomial-time classical algorithm for noisy random circuit sampling"](https://arxiv.org/pdf/2211.03999), the researchers present an efficient classical simulation for RCS. 
+
+They share the theoretical algorithm and extend to future researchers the opportunity to determine how to practically implement the algorithm. If the algorithm can be efficiently implemented on a classical computer, then we must seek a task that is a more robust demonstration of quantum supremacy. We programmed the simultation outlined by [Ahanorav et al., 2022](https://arxiv.org/pdf/2211.03999) in python, implying the need of a new quantum supremacy benchmark.
+
 ## Overview of Research
-This program plays a key role in classically simulating noisy random circuit sampling in polynomial time. It accomplishes this by using an approach known as the Pauli path method. 
+This program classically simulates a quantum computing task known as noisy random circuit sampling. It accomplishes this by using an approach known as the Pauli path method. 
 
 Before we outline the method, we define relevant words that will come up in the method description.
    >### Quantum Circuit Terminology
    >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as:
    ```math
-   \big| \psi \rangle = \alpha \big|0 \rangle + \beta \big|1 \rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
+   \big| \psi \rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
    ```
-   >where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
-   >- **Gate**: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
-   >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate.
+   >where $\alpha,\beta \in \mathbb{C}$ are amplitudes determining the probabilities of measuring the qubit in the 0 state or 1 state, respectively. 
+   >- **Born Rule**: The probability of measuring an outcome is the squared magnitude of its amplitude. In the above example, $|\alpha|^2$ is the liklihood of measuring 0 and $|\beta|^2$ is the probability of measuring 1.
+   >- **Gate**: A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
+   >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate. To apply a gate to a qubit, we multiply its corresponding unitary with the qubit's vector. 
    >- **Measurement**: Measuring a qubit causes its superposition of 1 and 0 to collapse to exactly one of these outcomes. Measurement cannot be undone, so once you measure a qubit, there is no way to return it to its prior state.
    >- **Circuit**: Refers to a quantum circuit. Quantum circuits start with some fixed number of input qubits and then apply a sequence of gates on the input. The qubits may be measured at any point in the circuit, and upon measurement, collapse irreversibly to a particular outcome.
    >- **Random Circuit Sampling**: RCS is a benchmarking task designed to demonstrate quantum supremacy. The process involves repeatedly obtaining samples from the output distribution of randomly chosen quantum circuits. These circuits are characterized by an arbitrary set of gates and some fixed circuit architecture. In other words, the placement of the gates in the circuit is constant while the gates themselves are chosen arbitrarily.
+   > - **Depth**: The number of gate layers in a quantum circuit. In the below example, it is 5.
    >- **Noise**: In the real world, quantum computers are susceptible to noise. Noise is errors caused by unexpected effects from neighboring qubits or external sources like radiation, magnetic field, electrical field, etc. As seen in the below figure, ideal RCS has no noise at all (a). Noise is indicated by the blue dots as seen in the noisy RCS diagram (b).
-   > <img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/RCS_circuit.png" width="900" />
-   >- **Depth**: The number of gate layers in a quantum circuit. In the above circuit example, the depth is 5.
+   > <p align="center">
+   >   <img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/RCS_circuit.png" width="800" />
+   > </p>
 
 
    > ### Pauli Basis Terminology
    >- **Pauli**: The $2 \times 2$ Pauli matrices are denoted $I$, $X$, $Y$, and $Z$, and they comprise the Pauli basis.
 
-   >- **Tensor Product**: A product defined in such a way that, for matrices $U \in \mathbb{C}^a$ and >$V \in \mathbb{C}^b$, it preserves the property $\left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)$ 
+   >- **Tensor Product**: A product defined in a way that, for unitaries $U \in \mathbb{C}^a$ and $V \in \mathbb{C}^b$, it preserves the property 
+   ```math
+   \left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)
+   ``` 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
    >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form
    ```math
@@ -44,7 +60,7 @@ Before we outline the method, we define relevant words that will come up in the 
    With the basic terminology clarified, we define the Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
 
    >### Definition 1 (Pauli Path Integral)
-   >Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth, and let $p(C, x) := \left| \langle x | C | 0^n \rangle \right|^2$ be the output probability distribution. The Pauli path integral is written as
+   >Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth, and let $p(C, x)$ be the output probability distribution. The Pauli path integral is written as
    ```math
    p(C, x) = \sum_{s \in \mathbb{P}_n^{d+1}} f(C, s, x)
    ```
