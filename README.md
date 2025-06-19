@@ -15,7 +15,7 @@ To increase public support of quantum computing development, corporations often 
 
 Recent work by Ahanorav et al. questions the supposed divide between classical and quantum computers for RCS. In their 2022 paper ["A polynomial-time classical algorithm for noisy random circuit sampling"](https://arxiv.org/pdf/2211.03999), the researchers present an efficient classical simulation for RCS. 
 
-They share the theoretical algorithm and extend to future researchers the opportunity to determine how to practically implement the algorithm. If the algorithm can be efficiently implemented on a classical computer, then we must seek a task that is a more robust demonstration of quantum supremacy. We programmed the simultation outlined by [Ahanorav et al., 2022](https://arxiv.org/pdf/2211.03999) in python, implying the need of a new quantum supremacy benchmark.
+They share the theoretical algorithm and extend to future researchers the opportunity to determine how to practically implement the algorithm. If the algorithm can be efficiently implemented on a classical computer, then we must seek a task that is a more robust demonstration of quantum supremacy. We programmed the simultation outlined by [Ahanorav et al.](https://arxiv.org/pdf/2211.03999) in python, implying the need of a new quantum supremacy benchmark.
 
 ## Overview of Research
 This program classically simulates a quantum computing task known as noisy random circuit sampling. It accomplishes this by using an approach known as the Pauli path method. 
@@ -24,7 +24,7 @@ Before we outline the method, we define relevant words that will come up in the 
    >### Quantum Circuit Terminology
    >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as:
    ```math
-   \big| \psi \rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
+   \big|\psi\rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
    ```
    >where $\alpha,\beta \in \mathbb{C}$ are amplitudes determining the probabilities of measuring the qubit in the 0 state or 1 state, respectively. 
    >- **Born Rule**: The probability of measuring an outcome is the squared magnitude of its amplitude. In the above example, $|\alpha|^2$ is the liklihood of measuring 0 and $|\beta|^2$ is the probability of measuring 1.
@@ -45,12 +45,12 @@ Before we outline the method, we define relevant words that will come up in the 
 
    >- **Tensor Product**: A product defined in a way that, for unitaries $U \in \mathbb{C}^a$ and $V \in \mathbb{C}^b$, it preserves the property 
    ```math
-   \left( U \otimes V\right)\left( v \otimes w\right)=\left( U v\right) \otimes \left( V w\right)
+   \left(U \otimes V\right)\left(v\otimes w\right)=\left(Uv\right) \otimes \left(Vw\right)
    ``` 
    >for all states $v \in \mathbb{C}^a$ and $w \in \mathbb{C}^b$.
    >- **Pauli operator**: For an $n$-qubit system, the corresponding Pauli operators are of the form
    ```math
-   P = P_1 \otimes P_2 \otimes \cdots \otimes P_{n},
+   P=P_1\otimes P_2\otimes\cdots\otimes P_{n},
    ```
    >where $P_i \in \{ I,X,Y,Z\}$, for every $1 \leq i \leq n$. Put equivalently, Pauli operators are a tensor product of Pauli matrices. The prized property of Pauli operators is that every quantum state can be expressed as a linear combination of Pauli operators.
    >- **Hamming weight**: Counts the number of non-identity Paulis $\left( X,Y,Z\right)$ present in Pauli operators. For example, the Hamming weight of $I \otimes X \otimes Y$ is 2. When we discuss the Hamming weight of a Pauli path $s$, we denote it by $|s|$, and it is the sum of the number of non-identity Paulis in the Pauli operatrs of $s$.
@@ -62,7 +62,7 @@ Before we outline the method, we define relevant words that will come up in the 
    >### Definition 1 (Pauli Path Integral)
    >Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth, and let $p(C, x)$ be the output probability distribution. The Pauli path integral is written as
    ```math
-   p(C, x) = \sum_{s \in \mathbb{P}_n^{d+1}} f(C, s, x)
+   p(C,x)=\sum_{s\in\mathbb{P}_n^{d+1}}f(C,s,x)
    ```
    >where $f(C,s,x)$ is the Fourier coefficient for output $x$ and Pauli path $s$, representing the contribution of that Pauli path in giving rise to outcome $x$.
 
