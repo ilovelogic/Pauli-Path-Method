@@ -35,16 +35,8 @@ Before we outline the method, we define relevant words that will come up in the 
    With the basic terminology clarified, we define the Pauli path integral is defined as follows, according to the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999)
 
    >### Definition 1 (Pauli Path Integral)
-   > Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth. The Pauli path integral is written as: 
-   > 
-   
-$$f(C, s, x) :=
-\mathrm{Tr}(|x\rangle\langle x|\, s_d)\,
-\mathrm{Tr}\Big(s_d U_d s_{d-1} U_d^\dagger\Big)\,
-\cdots\,
-\mathrm{Tr}\Big(s_1 U_1 s_0 U_1^\dagger\Big)\,
-\mathrm{Tr}\big(s_0\,|0^n\rangle\langle 0^n|\big)
-$$
+   > Let $C = U_d U_{d-1} \cdots U_1$ be a quantum circuit acting on $n$ qubits, where $U_i$ is a layer of 2-qubit gates and $d$ is the circuit depth. Then the Fourier coefficient for output $x$ and Pauli path $s$ is defined as: 
+   > $$f(C, s, x) := \mathrm{Tr}(|x\rangle\langle x| s_d) \mathrm{Tr}\Big(s_d U_d s_{d-1} U_d^\dagger\Big)\ \cdots \mathrm{Tr}\Big(s_1 U_1 s_0 U_1^\dagger\Big) \mathrm{Tr}\big(s_0 |0^n\rangle\langle 0^n|\big)$$
 
 
 Note that $p(C, x)$ is the output probability distribution for outcome $x$. Accordingly, to simualte a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit.
