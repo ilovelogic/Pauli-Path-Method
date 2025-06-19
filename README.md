@@ -13,9 +13,7 @@ This program plays a key role in classically simulating noisy random circuit sam
 Before we outline the method, we define relevant words that will come up in the method description.
    >### Quantum Circuit Terminology
    >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: 
-   > <p align="center"><strong>$
-\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
-$</strong></p>
+   > <p align="center"><strong>$\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \begin{bmatrix} \alpha \\ \beta \end{bmatrix}$</strong></p>
 , where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
    >- **Gate**: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
    >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate.
