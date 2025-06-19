@@ -13,9 +13,7 @@ This program plays a key role in classically simulating noisy random circuit sam
 Before we outline the method, we define relevant words that will come up in the method description.
    >### Quantum Circuit Terminology
    >- **Qubit**: Quantum computers work with qubits, the counterpart of classical bits in quantum computing. Qubits exist in a superposition of classical states 0 and 1. This is mathematically represented as: 
-   $$
-|\psi\rangle = \alpha |0\rangle + \beta |1\rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix},
-$$
+$$\big| \psi \rangle = \alpha \big|0 \rangle + \beta \big|1 \rangle = \begin{bmatrix} \alpha \\ \beta \end{bmatrix},$$
    >where $\alpha$ and $\beta$ are complex amplitudes determining the probabilities of measuring the qubit in $\ket{0}$ or $\ket{1}$.
    >- **Gate**: In the context of our program, gate refers to a quantum gate. A quantum gate transforms qubits in such a way that they preserve the qubits' valid probability distribution (i.e. the probability of all outcomes summing to 1). Unlike a classical gate, a quantum gate must have the same number of outputs as there are inputs. Thus, the 2-qubit gates in our program take 2 qubits as input and output 2 qubits.
    >- **Unitary**: A matrix that mathematically specifies the operation of a quantum gate.
@@ -23,8 +21,8 @@ $$
    >- **Circuit**: Refers to a quantum circuit. Quantum circuits start with some fixed number of input qubits and then apply a sequence of gates on the input. The qubits may be measured at any point in the circuit, and upon measurement, collapse irreversibly to a particular outcome.
    >- **Random Circuit Sampling**: RCS is a benchmarking task designed to demonstrate quantum supremacy. The process involves repeatedly obtaining samples from the output distribution of randomly chosen quantum circuits. These circuits are characterized by an arbitrary set of gates and some fixed circuit architecture. In other words, the placement of the gates in the circuit is constant while the gates themselves are chosen arbitrarily.
    >- **Noise**: In the real world, quantum computers are susceptible to noise. Noise is errors caused by unexpected effects from neighboring qubits or external sources like radiation, magnetic field, electrical field, etc. As seen in the below figure, ideal RCS has no noise at all (a). Noise is indicated by the blue dots as seen in the noisy RCS diagram (b).
+   > <img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/RCS_circuit.png" width="900" />
    >- **Depth**: The number of gate layers in a quantum circuit. In the above circuit example, the depth is 5.
-   > <img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/RCS_circuit.png" width="400" />
 
 
    > ### Pauli Basis Terminology
@@ -47,7 +45,7 @@ $$
    >where $f(C,s,x)$ is the Fourier coefficient for output $x$ and Pauli path $s$, representing the contribution of that Pauli path in giving rise to outcome $x$.
 
 
-Accordingly, to simualte a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit. The result would be the theoretical probability distribution of our quantum circuit, as desired.
+Accordingly, to simulate a quantum circuit, we could construct all possible Pauli paths and use them to compute the above expression for all outcomes $x$ of our circuit. The result would be the theoretical probability distribution of our quantum circuit, as desired.
 
 Determining all possible Pauli paths would be rather involved. Thankfully, there are some simplifications. To calculate the above expression, we only need to know all legal Pauli paths rather than all Pauli paths in general. Below, we give the definition of legal Paulis paths provided by [Aharonav et al.](https://arxiv.org/pdf/2211.03999).
 
