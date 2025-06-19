@@ -24,6 +24,7 @@ $$
    >- **Random Circuit Sampling**: RCS is a benchmarking task designed to demonstrate quantum supremacy. The process involves repeatedly obtaining samples from the output distribution of randomly chosen quantum circuits. These circuits are characterized by an arbitrary set of gates and some fixed circuit architecture. In other words, the placement of the gates in the circuit is constant while the gates themselves are chosen arbitrarily.
    >- **Noise**: In the real world, quantum computers are susceptible to noise. Noise is errors caused by unexpected effects from neighboring qubits or external sources like radiation, magnetic field, electrical field, etc. As seen in the below figure, ideal RCS has no noise at all (a). Noise is indicated by the blue dots as seen in the noisy RCS diagram (b).
    >- **Depth**: The number of gate layers in a quantum circuit. In the above circuit example, the depth is 5.
+   > <img src="https://github.com/ilovelogic/Pauli-Path-Method/blob/main/images/RCS_circuit.png" width="400" />
 
 
    > ### Pauli Basis Terminology
