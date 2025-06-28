@@ -211,9 +211,9 @@ The `CircuitSim` class generates all possible legal Pauli paths, given the circu
    - `max_weight`: An int that is the upper bound on the total Hamming weight of any Pauli path used for the simulation.
    - `weight_combos`: A list of lists of ints, where each list of ints represents an indexed assignment of weights to Pauli operators in a legal Pauli path.
    - `pauli_path_travs`: A list of all possible PauliPathTrav objects, given the upper bound on Hamming weight and circuit architecture.
-   - `rnp_pauli_paths`
-   - `xyz_gen_heads`
-   - `xyz_pauli_paths`
+   - `rnp_pauli_paths`:  A list of lists of strs, where each inner list represents the structure of a legal Pauli path. The inner lists are in terms of "R", "N", "P", and "I", with each of these strs representing the different kinds of Paulis that are allowed in the respective position.
+   - `xyz_gen_heads`: A list of the `XYZGeneration` objects whose `parent_ops` attributes each hold the first `PauliOperator` object of some legal Pauli path.
+   - `xyz_pauli_paths`: A list of lists of strs, which contains all legal Pauli paths given the circuit architecture and upperbound on Hamming weight. Each list of strs constitutes a legal Pauli path.
 
 **Methods**
    - **`valid_gate_pos(num_qubits:int, gate_pos:List[List[tuple]]):bool`**\
