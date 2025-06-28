@@ -117,14 +117,14 @@ Our original research question was "Is RCS a worthwhile approach to proving quan
 Below, we outline what each one of us contributed to answering the research question.
 
 ### Pauli Path Generation (Anne Kelley):
-I implemented legal Pauli path generation based on Lemma 8 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper. Pauli path generation is essential to classically simulating RCS, given that you can't compute the probability distribution without tracing the Fourier coefficients of the paths. My code:
+I implemented legal Pauli path generation based on Lemma 8 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper. My code:
 - Correctly generates all legal Pauli paths given the number of qubits, depth, circuit archicture, and upper bound on Hamming weight.
-- Can encapsulate all possible paths in either tree format or list format. 
+- Can encapsulate all possible paths in either tree format or list format.
 - Handles both 1D brickwork circuit architecture and 2D brickwork. 
 
-Its main optimizations include:
-- Grouping Pauli operators at each layer of the path generation so that you only needed to determine the next possible Pauli operators for one operator in each grouping, rather than for all of the Pauli operators at the layer.
-- Building the tree version of all possible paths, which speeds up Fourier coefficient calculation.
+My main optimizations include:
+- Grouping Pauli operators at each layer of the path generation. Because of the grouping, you only needed to determine the next possible Pauli operators for one operator in each grouping, rather than for all of the Pauli operators at the layer.
+- Building the tree version of all possible paths to speed up Fourier coefficient calculation. I then changed the original Fourier coefficient calculuation code, which used lists, to compute the Fourier coefficients during tree traversal.
 
 A further line of research would be to generalize to the gate sets used by Google and USSTC, which are discussed in Section 4 of the [Aharonav et al.](https://arxiv.org/pdf/2211.03999) paper.
 
