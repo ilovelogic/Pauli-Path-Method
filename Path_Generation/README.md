@@ -31,8 +31,8 @@ The `Lemma_8` program generates all legal Pauli paths that fit the specified dep
    - [PauliOperator](#paulioperator): Stores a Pauli operator, the list of all `PauliOperator` objects that can precede this operator in a legal Pauli path, and a list of those that can come after it. Can generate both of these lists. Each Pauli operator is represented as a list of strs, where each str represents which Pauli matrices can be at that particular index in the tensor product comprising the Pauli operator.
    - [PauliOpLayer](#paulioplayer): Keeps track of all the `PauliOperator` objects that can be the ith Pauli operator in a legal Pauli path, restricted by the circuit architecture and weight configuration. Uses two hash maps, one containing lists sorted according to which `PauliOperator` objects propagate backward to the same list of `PauliOperator` objects and one sorted according to which `PauliOperator` objects propagate forward to the same `PauliOperator` list.
    - [PauliPathTrav](#paulipathtrav): For traversing different possibile branches of our Pauli path. Builds a list of `PauliOpLayer` objects, where the ith `PauliOpLayer` in the list contains all the possibilities for the ith Pauli operator of the Pauli path.
-   - [CircuitSim](#circuitsim): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
    - [XYZGeneration](#xyzgeneration): Builds a list of all `XYZGeneration` objects that can come after this `XYZGeneration` to form valid Pauli path traversals.
+   - [CircuitSim](#circuitsim): Constructs a list of all possible `PauliPathTrav` objects for a given circuit architecture and upperbound on Hamming weight.
 
 ---
 
@@ -165,7 +165,7 @@ The `XYZGeneration` class uses a recursive approach to generate all possible Pau
 
 **Initialization**\
    `XYZGeneration(pauli_ops:List[PauliOperator], next_index:int, pauli_path:List[PauliOperator])`
-   > Takes as input a list of PauliOperator objects (`parent_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path in terms of "I", "R", "N", and "P", and the last parameter, `next_index`, lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the parent_ops list.
+   >Takes as input a list of PauliOperator objects (`parent_ops`), which all share the same list of `PauliOperator` objects that could come after them in a legal Pauli path. It also takes a `List[PauliOperator]` (`pauli_path`), which stores the current Pauli path in terms of "I", "R", "N", and "P", and the last parameter, `next_index`, lets us know which index will hold the `PauliOperator` object that directly comes after one of the Pauli operators of the parent_ops list.
 
 **Attributes**
    - `parent_ops`: The list of `PauliOperator` objects for a particular index in the Pauli path that have the same selection from "X", "Y", and "Z" for their non-gate non-identity qubits.
@@ -203,6 +203,7 @@ The `CircuitSim` class generates all possible legal Pauli paths, given the circu
 
 **Initialization**\
    `CircuitSim(num_qubits:int, l:int, gate_pos:List[List[tuple]])`
+   > Constructs a tree-like structure using `XYZGeneration` objects, which encapsulates all legal Pauli paths given the circuit architecture and Hamming weight upper bound. The tree is accessible from its "roots" stored in the attribute `xyz_gen_heads`. Also builds `xyz_pauli_paths`, which is a list of all list representations of legal Pauli paths fitting the parameters.
 
 **Attributes**
    - `num_qubits`: An int that is the number of qubits in the circuit.
