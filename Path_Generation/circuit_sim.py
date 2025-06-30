@@ -13,7 +13,7 @@ class CircuitSim:
     Also fills out a list of all list representations of legal Pauli paths given the circuit architecture
     and Hamming weight upper bound.
     """
-    def __init__(self, num_qubits:int, l:int, gate_pos:List[List[tuple]]):
+    def __init__(self, num_qubits:int, max_weight:int, gate_pos:List[List[tuple]]):
 
         if not self.valid_gate_pos(num_qubits,gate_pos):
             print(gate_pos)
@@ -22,7 +22,7 @@ class CircuitSim:
         self.num_qubits = num_qubits
         self.num_op_layers = len(gate_pos)+1
         self.gate_pos = gate_pos
-        self.max_weight = l # upper bound on a Pauli path's Hamming weight
+        self.max_weight = max_weight # upper bound on a Pauli path's Hamming weight
 
         if self.max_weight < self.num_op_layers: # we cannot make a valid Pauli path
             raise ValueError
