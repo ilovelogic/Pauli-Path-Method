@@ -1,12 +1,13 @@
 # Pauli Path Generation
 
-A Python implementation of the algorithm described in Lemma 8 from the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999). Constructs a list of all possible legal Pauli paths given the depth, number of qubits, gate positions, and upperbound on Hamming weight for a 2D architecture quantum circuit.
+A Python implementation of the algorithm described in Lemma 8 from the work of [Aharonav et al.](https://arxiv.org/pdf/2211.03999). Constructs a tree-structure and a list of all legal Pauli paths given the depth, number of qubits, gate positions, and upperbound on Hamming weight for a 2D architecture quantum circuit.
 
 ---
 
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Usage](#usage)
 - [Architecture Overview](#architecture-overview)
 - [Class Documentation](#class-documentation)
   - [PauliOperator](#paulioperator)
@@ -19,7 +20,15 @@ A Python implementation of the algorithm described in Lemma 8 from the work of [
 
 ## Introduction
 
-The `Lemma_8` program generates all legal Pauli paths that fit the specified depth, number of qubits, gate positions, and upperbound on Hamming weight. It accomplishes this task using 5 classes, which are outlined below.
+This program uses 5 classes.
+
+
+
+---
+
+## Usage
+
+To obtain all legal Pauli paths for the circuit set up and upperbound on Hamming weight, one can instantiate a `CircuitSim` object using the constructor `CircuitSim(num_qubits:int, max_weight:int, gate_pos:List[List[tuple]])`. The `CircuitSim`'s attributes of `xyz_gen_heads` and `xyz_pauli_paths` encapsulate the legal Pauli paths. 
 
 
 
@@ -202,7 +211,7 @@ The `XYZGeneration` class uses a recursive approach to generate all possible Pau
 The `CircuitSim` class generates all possible legal Pauli paths, given the circuit architecture and an upperbound on Hamming weight. It stores the paths in 
 
 **Initialization**\
-   `CircuitSim(num_qubits:int, l:int, gate_pos:List[List[tuple]])`
+   `CircuitSim(num_qubits:int, max_weight:int, gate_pos:List[List[tuple]])`
    > Constructs a tree-like structure using `XYZGeneration` objects, which encapsulates all legal Pauli paths given the circuit architecture and Hamming weight upper bound. The tree is accessible from its "roots" stored in the attribute `xyz_gen_heads`. Also builds `xyz_pauli_paths`, which is a list of all list representations of legal Pauli paths fitting the parameters.
 
 **Attributes**
