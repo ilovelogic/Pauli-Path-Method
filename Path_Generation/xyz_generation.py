@@ -1,4 +1,6 @@
 from __future__ import annotations
+import traceback # for detailed error messages
+
 import copy
 from typing import List
 from Path_Generation.pauli_operator import PauliOperator
@@ -88,7 +90,13 @@ class XYZGeneration:
         void : Updates filled_pos to contain all PauliOperators whose qubits at the positions in pos_list
         contain all possible combinations of "X", "Y", and "Z".
     """
-    def fill_in_pos(self,filled_pos:List[PauliOperator],pos_list:List[int], index:int, pauli:str, start:int):
+    def fill_in_pos(self,filled_pos:List[PauliOperator],pos_list:List[int], pauli:str, index:int, start:int):
+        if not isinstance(index, int):
+            print("ERROR: 'index' is not an int. Value:", index)
+            print("Full traceback:")
+            traceback.print_stack()  # prints detailed current stack trace to terminal
+        index = int(index)  # optionally cast if you want to force conversion after alert
+
         if index == len(pos_list): # We have filled all positions in pos_list
             return
         

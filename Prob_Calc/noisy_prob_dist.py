@@ -29,25 +29,27 @@ class NoisyProbDist:
     
     self.l = (self.d+1)*self.n - truncation_param
 
-    self.bruteForceQC = circuit_utils.random_circuit(self.n, self.d) # Qiskit Representation of a random circuit.
+    self.bruteForceQC = circuit_utils.random_circuit(self.n, self.d) # Qiskit Representation of a random circuit
 
     print()
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     print(self.bruteForceQC)
 
+    # Stores a list of tuples, where each tuple is (gate matrix, qubits applied to, layer number)
+    # List is ordered so that gates on earlier layers appear first
     gates = circuit_utils.extract_gates_info(self.bruteForceQC)
 
     gate_pos = []
 
     for i in range(len(gates)):
         layer_num = gates[i][2]
-        if layer_num+1 > len(gate_pos):
-            gate_pos.append([])
-        a, b = gates[i][1]
-        gate_pos[layer_num].append((self.n - a - 1, self.n - b - 1))
+        while layer_num+1 > len(gate_pos): # if gate_pos doesn't have a list for this layer yet
+          gate_pos.append([])
+        a, b = gates[i][1] # qubit positions where the gate is applied
+        gate_pos[layer_num].append((self.n - a - 1, self.n - b - 1)) # reverse qubit order to be consistent with circuit_sim.py
 
 
-    noise_rate = 0.001 # expected amount of noise per qubit per layer in reak-world circuits
+    noise_rate = 0.001 # expected amount of noise per qubit per layer in real-world circuits
 
     print()
     print(f'Noise rate: {noise_rate}')

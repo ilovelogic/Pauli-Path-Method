@@ -32,14 +32,14 @@ class GetProbDist:
         self.depth = depth
         self.n = num_qubs
 
-        #test on this one, right now the values aren't looking right 
-        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) # initializes self.s_list, which contains all pauli paths
+        # initializes self.s_list, which contains all pauli paths
+        self.pauli_ops_to_strs(circuit_sim.xyz_pauli_paths) 
 
-        #self.C = gates
-        self.C = preprocess_circuit_gates(gates, self.n) # list of tuples, containing the layer of each gate, the matrix, and the qubit indicices its acting on
+        # list of tuples, (the layer of each gate, the matrix, and the qubit indicices it acts on)
+        self.C = preprocess_circuit_gates(gates, self.n) 
+
         self.probs = DefaultDict(float) # hash function mapping outcomes to their probabilities
         
-
         # tree roots for Pauli path traversal
         self.sib_op_heads = circuit_sim.xyz_gen_heads
 

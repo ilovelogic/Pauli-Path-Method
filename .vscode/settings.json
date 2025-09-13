@@ -1,5 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./Lemma_8/Pauli_Amplitude"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }

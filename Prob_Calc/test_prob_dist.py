@@ -2,15 +2,15 @@
 import unittest
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
-from Pauli_Path_Method.Pauli_Amplitude.edited_pauli_amp import preprocess_circuit_gates
-from Pauli_Path_Method.Pauli_Amplitude.MarginalSampler import MarginalSampler
-from Pauli_Path_Method.Path_Generation.circuit_sim import CircuitSim
-from Pauli_Path_Method.Brute_Force_RCS import circuit_utils
-from Pauli_Path_Method.Prob_Calc.get_prob_dist import GetProbDist
+from Pauli_Amplitude.edited_pauli_amp import preprocess_circuit_gates
+from Pauli_Amplitude.MarginalSampler import MarginalSampler
+from Path_Generation.circuit_sim import CircuitSim
+from Brute_Force_RCS import circuit_utils
+from Prob_Calc.get_prob_dist import GetProbDist
 from qiskit import circuit
 from itertools import product
-from Pauli_Path_Method.Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
-from Pauli_Path_Method.Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution, reverse_keys
+from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb, classical_fidelity
+from Brute_Force_RCS.circuit_utils import  complete_distribution, generate_emp_distribution, reverse_keys
 import numpy as np
 import time
 import warnings

@@ -1,10 +1,11 @@
 #!pip install import-ipynb
 import unittest
+
 from typing import List, Tuple, DefaultDict
 from collections import defaultdict
-from Pauli_Path_Method.Pauli_Amplitude.Path_Generation.circuit_sim import CircuitSim
+from Path_Generation.circuit_sim import CircuitSim
 from Brute_Force_RCS import circuit_utils
-from Lemma_8.get_prob_dist import GetProbDist
+from Prob_Calc.get_prob_dist import GetProbDist
 from qiskit import circuit
 from itertools import product
 from Brute_Force_RCS.evaluation_utils import total_variation_distance, calculate_true_distribution, compute_xeb
