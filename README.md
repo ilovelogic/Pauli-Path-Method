@@ -5,6 +5,7 @@ Our program uses three main components: Pauli Path generation, evaluation metric
 ### Table of Contents
 - [Motivation](#motivation)
 - [Overview of Research](#overview-of-research)
+- [Program Demo](#program-demo)
 - [User Guides](#user-guides)
 - [State of the Research](#state-of-the-research)
 
@@ -94,6 +95,10 @@ As a result, our code functions as follows:
 - Lastly, `Brute Force RCS` verfies the resulting output distribution using statistical measurements XEB and TVD.
 
 These componenets come together via the `NoisyProbDist` and `GetProbDist` classes, which are described in the first README file below.
+
+
+## Program Demo
+Team member Anne Kelley walks us through the hands-on results of our work via this [YouTube video](https://youtu.be/wP1iSZfHU5k?si=hX0XzLtL1ZsAJo0U)
 
 ## User Guides
 
